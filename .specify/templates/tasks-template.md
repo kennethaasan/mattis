@@ -54,33 +54,42 @@
 - [ ] T006 [P] Integration test user registration in tests/integration/test_registration.py
 - [ ] T007 [P] Integration test auth flow in tests/integration/test_auth.py
 
-## Phase 3.3: Core Implementation (ONLY after tests are failing)
-- [ ] T008 [P] User model in src/models/user.py
-- [ ] T009 [P] UserService CRUD in src/services/user_service.py
-- [ ] T010 [P] CLI --create-user in src/cli/user_commands.py
-- [ ] T011 POST /api/users endpoint
-- [ ] T012 GET /api/users/{id} endpoint
-- [ ] T013 Input validation
-- [ ] T014 Error handling and logging
+## Phase 3.2a: Pre-Implementation Compliance Gates (MUST PASS BEFORE 3.3)
+*Objective: Block core implementation until foundational quality & risk controls are established.*
+- [ ] T008 SAST baseline scan configured & report generated (e.g., CodeQL) → reports/security/sast-baseline.md
+- [ ] T009 Dependency & license audit (no untriaged HIGH/CRITICAL) → reports/security/deps-audit.md
+- [ ] T010 Secret scan & commit hygiene verification (no secrets; pre-commit hook added) → .husky/ or scripts/
+- [ ] T011 Accessibility test scaffolding (axe / Playwright a11y baseline) → tests/accessibility/
+- [ ] T012 Supply chain integrity checks (CI actions pinned, lockfile integrity hashed) → reports/security/supply-chain.md
+
+## Phase 3.3: Core Implementation (ONLY after tests & compliance gates failing/passing as appropriate)
+- [ ] T013 [P] User model in src/models/user.py
+- [ ] T014 [P] UserService CRUD in src/services/user_service.py
+- [ ] T015 [P] CLI --create-user in src/cli/user_commands.py
+- [ ] T016 POST /api/users endpoint
+- [ ] T017 GET /api/users/{id} endpoint
+- [ ] T018 Input validation
+- [ ] T019 Error handling and logging
 
 ## Phase 3.4: Integration
-- [ ] T015 Connect UserService to DB
-- [ ] T016 Auth middleware
-- [ ] T017 Request/response logging
-- [ ] T018 CORS and security headers
+- [ ] T020 Connect UserService to DB
+- [ ] T021 Auth middleware
+- [ ] T022 Request/response logging
+- [ ] T023 CORS and security headers
 
 ## Phase 3.5: Polish
-- [ ] T019 [P] Unit tests for validation in tests/unit/test_validation.py
-- [ ] T020 Performance tests (<200ms)
-- [ ] T021 [P] Update docs/api.md
-- [ ] T022 Remove duplication
-- [ ] T023 Run manual-testing.md
+- [ ] T024 [P] Unit tests for validation in tests/unit/test_validation.py
+- [ ] T025 Performance tests (<200ms)
+- [ ] T026 [P] Update docs/api.md
+- [ ] T027 Remove duplication
+- [ ] T028 Run manual-testing.md
 
 ## Dependencies
-- Tests (T004-T007) before implementation (T008-T014)
-- T008 blocks T009, T015
-- T016 blocks T018
-- Implementation before polish (T019-T023)
+- Tests (T004-T007) before implementation (T013-T019)
+- Compliance gates (T008-T012) must be completed before Phase 3.3 tasks
+- T013 blocks T014, T020
+- T021 blocks T023
+- Implementation before polish (T024-T028)
 
 ## Parallel Example
 ```

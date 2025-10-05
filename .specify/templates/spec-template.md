@@ -84,6 +84,49 @@ When creating this spec from a user prompt:
 
 ---
 
+## Non-Functional Requirements *(include applicable subsections; remove entirely if not relevant)*
+
+### Accessibility & Inclusion *(mandatory for any UI impact)*
+- Affected UI surfaces: [list or NEEDS CLARIFICATION]
+- High-level impacts (focus order, keyboard, semantics, contrast, error messaging): [summary]
+- Assistive tech considerations (screen reader announcements, landmark usage): [summary]
+- Internationalization / localization concerns: [if any or remove]
+
+### Security & Supply Chain *(mandatory)*
+- Data sensitivity classification: [e.g., public / internal / confidential / regulated]
+- AuthN/AuthZ touch points: [high-level; no implementation detail]
+- Threat / abuse scenarios considered: [bullets]
+- Secrets involved: [list categories only; HOW omitted]
+- Third-party / dependency introduction: [list or NONE]
+- License / compliance concerns: [if any]
+- Open questions: [NEEDS CLARIFICATION markers]
+
+### Observability *(mandatory if user journey or reliability impact)*
+- Key user journey success events: [list]
+- Key failure events: [list]
+- Metrics (counters, timers, gauges): [list names only]
+- Log categories (structure-level): [list]
+- Tracing spans (if applicable): [list high-level]
+
+### Performance & Scale *(include if performance claims or constraints)*
+- Target throughput: [value or NEEDS CLARIFICATION]
+- Latency objectives (e.g., p95): [value]
+- Resource constraints (memory / storage / CPU): [value]
+- Concurrency considerations: [summary]
+
+### Data / Privacy / Retention *(mandatory if storing/modifying user or behavioral data)*
+- Data created / mutated: [list]
+- Retention period: [value or NEEDS CLARIFICATION]
+- Deletion / purge triggers: [conditions]
+- PII categories involved: [list or NONE]
+- Compliance considerations (GDPR/CCPA/etc): [summary]
+
+### Assumptions & Out of Scope *(mandatory)*
+- Assumptions: [bullets]
+- Explicitly out of scope: [bullets]
+
+*Use [NEEDS CLARIFICATION: ...] inside any subsection where information is missing. Do NOT add implementation plans (leave for later phases).*
+
 ## Review & Acceptance Checklist
 *GATE: Automated checks run during main() execution*
 
@@ -92,6 +135,15 @@ When creating this spec from a user prompt:
 - [ ] Focused on user value and business needs
 - [ ] Written for non-technical stakeholders
 - [ ] All mandatory sections completed
+
+### Non-Functional Coverage
+- [ ] Accessibility impacts enumerated OR explicitly no UI surfaces
+- [ ] Security classification & threat scenarios documented
+- [ ] Observability events, metrics, and log categories defined where journey/reliability impacted
+- [ ] Performance targets stated OR deferred with [NEEDS CLARIFICATION]
+- [ ] Data retention & deletion rules stated if data created/modified
+- [ ] Assumptions & Out of Scope section present
+- [ ] Non-functional subsections included/removed appropriately (no empty headers)
 
 ### Requirement Completeness
 - [ ] No [NEEDS CLARIFICATION] markers remain

@@ -47,7 +47,42 @@
 ## Constitution Check
 *GATE: Must pass before Phase 0 research. Re-check after Phase 1 design.*
 
-[Gates determined based on constitution file]
+The following MUST be satisfied or explicitly justified (see Complexity Tracking) per Constitution v1.1.0:
+
+**Mandatory (MUST) Gates**
+1. **Architectural Simplicity**: No unnecessary layers/abstractions; any deviation justified.
+2. **Security & Supply Chain**:
+   - SAST: No unresolved HIGH/CRITICAL findings planned for implementation phase.
+   - Dependency & License: No critical vulnerabilities or disallowed licenses; remediation path noted if transient.
+   - Secret Exposure: Plan contains no hardcoded secrets; secret handling described at requirement level only.
+   - Action Pinning: All referenced CI actions will be pinned (major tag or commit SHA).
+3. **CI Integrity & Controls**:
+   - Least-privilege `GITHUB_TOKEN` permissions enumerated (write perms only when needed).
+   - Concurrency group strategy defined for workflows touching shared resources.
+   - Job/workflow timeouts identified (no unbounded long-running jobs).
+4. **Accessibility & Inclusion**:
+   - New/changed UI surfaces listed.
+   - WCAG 2.2 AA impact statements (focus, keyboard, contrast, forms, semantics) captured at requirement level (no implementation detail).
+5. **Observability Baseline**:
+   - Key user journey success + failure events named (what to observe, not how to implement).
+   - Minimum metrics/log categories enumerated (auth, errors, latency buckets if performance-relevant).
+6. **Testing Gates Defined**:
+   - Contract, integration, accessibility test scenario categories enumerated.
+   - Performance / scale tests identified if any performance constraints in Technical Context.
+7. **Data / Privacy / Retention** (if applicable): Retention & deletion expectations or clarification markers.
+8. **Performance & Scale** (if applicable): High-level targets restated (NOT low-level tuning steps).
+
+**Advisory (SHOULD) Gates**
+A. Artifact/image signing strategy noted (or deferred rationale).
+B. Progressive delivery (feature flag / canary) considered for risky changes.
+C. Expanded tracing / metrics beyond baseline (optional roadmap).
+D. Incident rollback criteria sketched (success & abort signals).
+
+**Violation Handling**
+- Any unmet MUST → either add requirement or justify in Complexity Tracking before progressing.
+- Unmet SHOULD may proceed but are candidates for follow-up tasks.
+
+Fill this section with the concrete gate checklist derived from the feature spec; remove inapplicable items entirely (do not leave empty placeholders).
 
 ## Project Structure
 
@@ -216,4 +251,4 @@ directories captured above]
 - [ ] Complexity deviations documented
 
 ---
-*Based on Constitution v1.0.0 - See `/memory/constitution.md`*
+*Based on Constitution v1.1.0 - See `/memory/constitution.md`*
