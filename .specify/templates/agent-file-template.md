@@ -19,14 +19,15 @@ Auto-generated from all feature plans. Last updated: [DATE]
 ## Recent Changes
 [LAST 3 FEATURES AND WHAT THEY ADDED]
 
-## Principles & Mandatory Gates (Cross-Feature)
+## Principles & Mandatory Gates (Cross-Feature) (Constitution v1.1.0)
 | Principle | MUST Gates | SHOULD Gates |
 |-----------|------------|--------------|
-| Accessibility | Identify affected UI surfaces; baseline keyboard + landmark checks; add a11y test scaffolding before core impl | Contrast review, assistive tech announcement notes |
-| Security & Supply Chain | Data classification; SAST baseline; dependency & license audit; secret scan; actions pinned | Threat modeling notes; periodic re-audit automation |
-| Observability | Define success/failure events; minimal metrics list before implementation | Trace span design; dashboard stub |
-| Performance & Scale | State latency/throughput targets or mark NEEDS CLARIFICATION | Add perf budget test harness |
-| Data & Retention | List created/modified data; retention & deletion rules | Privacy review checklist linkage |
+| Accessibility | Identify affected UI surfaces; baseline keyboard + landmark checks; a11y test scaffolding before core impl; role/label based E2E assertions planned | Contrast review; assistive tech announcement notes; visual regression plan |
+| Security & Supply Chain | Data classification; SAST baseline (no High/Critical unresolved); dependency & license audit; secret scan; actions pinned; no hardcoded secrets; transitive vuln mitigation path | Threat modeling notes; artifact/image signing pilot; OIDC creds plan; periodic automated re-audit |
+| CI/CD Integrity & Reliability | Job timeouts enumerated; least-privilege GITHUB_TOKEN plan; concurrency group for deploys; immutable artifact reuse defined; gating sequence listed (lint→tests→SAST→deps/secret→a11y) | Provenance/SBOM exploration; artifact signing enforcement escalation path |
+| Observability | Success & failure events; minimal metrics & log categories before implementation; correlation id propagation noted | Trace span design; dashboard stub; alert thresholds draft |
+| Performance & Scale | Latency/throughput targets or NEEDS CLARIFICATION; performance-sensitive paths identified | Perf budget test harness; progressive optimization roadmap |
+| Data & Retention | Created/modified data enumerated; retention & deletion rules or clarification markers | Privacy review checklist linkage; data minimization opportunities |
 | Assumptions & Scope | Assumptions and explicit Out-of-Scope enumerated | Risk register linkage |
 
 <!-- MANUAL ADDITIONS START -->
