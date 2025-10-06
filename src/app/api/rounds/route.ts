@@ -1,7 +1,6 @@
 import { type NextRequest, NextResponse } from 'next/server';
 import { z } from 'zod';
-
-import { insertRound } from '../../../src/lib/db-client';
+import { insertRound } from '@/lib/db-client';
 
 const bodySchema = z.object({
   createdBy: z.string().uuid(),

@@ -1,7 +1,6 @@
 import { type NextRequest, NextResponse } from 'next/server';
 import { z } from 'zod';
-
-import { queryLeaderboard } from '../../../lib/db-client';
+import { queryLeaderboard } from '@/lib/db-client';
 
 const querySchema = z.object({
   year: z

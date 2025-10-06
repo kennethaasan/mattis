@@ -1,7 +1,6 @@
 import { type NextRequest, NextResponse } from 'next/server';
 import { z } from 'zod';
-
-import { insertFettMattis } from '../../../src/lib/db-client';
+import { insertFettMattis } from '@/lib/db-client';
 
 const bodySchema = z.object({
   playerId: z.string().uuid(),
