@@ -1,0 +1,510 @@
+openapi: 3.1.0
+info:
+  title: Mattis Stats API
+  version: 1.0.0
+  description: |
+    API for tracking player statistics for the card game "Mattis".
+
+    **Key Features**:
+    - Manage players.
+    - Record game rounds and identify a single loser.
+    - Grant and revoke special "Fettmattis".
+    - View leaderboards for regular play (loss percentage) and Fettmattis.
+
+    **Authentication**:
+    - Write operations (`POST`, `PUT`, `DELETE`) require authentication. The exact scheme is TBD (Phase 1 uses a placeholder `X-User-Id` header).
+    - Read operations (`GET`) are public.
+
+    **Error Handling**:
+    - The API uses RFC 9457 for problem details in error responses.
+servers:
+  - url: /api
+paths:
+  /players:
+    get:
+      summary: List Players
+      operationId: listPlayers
+      tags:
+        - Players
+      responses:
+        '200':
+          description: A list of players.
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/Player'
+    post:
+      summary: Create Player
+      operationId: createPlayer
+      tags:
+        - Players
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/PlayerCreate'
+      responses:
+        '201':
+          description: Player created successfully.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Player'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '409':
+          $ref: '#/components/responses/Conflict'
+
+  /players/{playerId}:
+    get:
+      summary: Get Player Details
+      operationId: getPlayer
+      tags:
+        - Players
+      parameters:
+        - name: playerId
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+            description: UUID v7, time-ordered identifier.
+      responses:
+        '200':
+          description: Player details.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Player'
+        '404':
+          $ref: '#/components/responses/NotFound'
+    put:
+      summary: Update Player
+      operationId: updatePlayer
+      tags:
+        - Players
+      parameters:
+        - name: playerId
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+            description: UUID v7, time-ordered identifier.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/PlayerUpdate'
+      responses:
+        '200':
+          description: Player updated successfully.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Player'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '404':
+          $ref: '#/components/responses/NotFound'
+
+  /rounds:
+    post:
+      summary: Record a Round
+      operationId: createRound
+      tags:
+        - Rounds
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/RoundCreate'
+      responses:
+        '201':
+          description: Round created successfully.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Round'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+
+  /rounds/{roundId}:
+    get:
+      summary: Get Round Details
+      operationId: getRound
+      tags:
+        - Rounds
+      parameters:
+        - name: roundId
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+            description: UUID v7, time-ordered identifier.
+      responses:
+        '200':
+          description: Round details.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Round'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '410':
+          $ref: '#/components/responses/Gone'
+    put:
+      summary: Edit a Round (within 24h)
+      operationId: updateRound
+      tags:
+        - Rounds
+      parameters:
+        - name: roundId
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+            description: UUID v7, time-ordered identifier.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/RoundUpdate'
+      responses:
+        '200':
+          description: Round updated successfully.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Round'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
+    delete:
+      summary: Soft Delete a Round (within 24h)
+      operationId: deleteRound
+      tags:
+        - Rounds
+      parameters:
+        - name: roundId
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+            description: UUID v7, time-ordered identifier.
+      responses:
+        '204':
+          description: Round deleted successfully.
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
+
+  /fettmattis:
+    post:
+      summary: Create FettMattis
+      operationId: createFettmattis
+      tags:
+        - FettMattis
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/FettMattisCreate'
+      responses:
+        '201':
+          description: FettMattis created successfully.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/FettMattis'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '409':
+          $ref: '#/components/responses/Conflict'
+
+  /fettmattis/{fettmattisId}:
+    delete:
+      summary: Delete FettMattis (within 24h)
+      operationId: deleteFettmattis
+      tags:
+        - FettMattis
+      parameters:
+        - name: fettmattisId
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+            description: UUID v7, time-ordered identifier.
+      responses:
+        '204':
+          description: FettMattis revoked successfully.
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
+
+  /leaderboard/regular:
+    get:
+      summary: Get Regular Leaderboard
+      operationId: getRegularLeaderboard
+      tags:
+        - Leaderboards
+      parameters:
+        - name: year
+          in: query
+          schema:
+            type: integer
+      responses:
+        '200':
+          description: The regular season leaderboard.
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/RegularLeaderboardItem'
+
+  /leaderboard/fettmattis:
+    get:
+      summary: Get Fettmattis Leaderboard
+      operationId: getFettmattisLeaderboard
+      tags:
+        - Leaderboards
+      parameters:
+        - name: year
+          in: query
+          schema:
+            type: integer
+      responses:
+        '200':
+          description: The Fettmattis leaderboard.
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/FettmattisLeaderboardItem'
+
+components:
+  schemas:
+    Player:
+      type: object
+      required:
+        - id
+        - display_name
+        - active
+      properties:
+        id:
+          type: string
+          format: uuid
+          description: UUID v7, time-ordered identifier.
+        display_name:
+          type: string
+        active:
+          type: boolean
+    PlayerCreate:
+      type: object
+      required:
+        - display_name
+      properties:
+        display_name:
+          type: string
+    PlayerUpdate:
+      type: object
+      properties:
+        display_name:
+          type: string
+        active:
+          type: boolean
+
+    Round:
+      type: object
+      required:
+        - id
+        - created_at
+        - participants
+        - loser
+      properties:
+        id:
+          type: string
+          format: uuid
+          description: UUID v7, time-ordered identifier.
+        created_at:
+          type: string
+          format: date-time
+        participants:
+          type: array
+          items:
+            $ref: '#/components/schemas/Player'
+        loser:
+          $ref: '#/components/schemas/Player'
+    RoundCreate:
+      type: object
+      required:
+        - participant_ids
+        - loser_id
+      properties:
+        participant_ids:
+          type: array
+          items:
+            type: string
+            format: uuid
+            description: UUID v7, time-ordered identifier.
+          minItems: 2
+        loser_id:
+          type: string
+          format: uuid
+          description: UUID v7, time-ordered identifier.
+    RoundUpdate:
+      type: object
+      properties:
+        participant_ids:
+          type: array
+          items:
+            type: string
+            format: uuid
+            description: UUID v7, time-ordered identifier.
+          minItems: 2
+        loser_id:
+          type: string
+          format: uuid
+          description: UUID v7, time-ordered identifier.
+
+    FettMattis:
+      type: object
+      required:
+        - id
+        - player
+        - created_at
+      properties:
+        id:
+          type: string
+          format: uuid
+          description: UUID v7, time-ordered identifier.
+        player:
+          $ref: '#/components/schemas/Player'
+        round_id:
+          type: string
+          format: uuid
+          description: UUID v7, time-ordered identifier.
+          nullable: true
+        created_at:
+          type: string
+          format: date-time
+    FettMattisCreate:
+      type: object
+      required:
+        - player_id
+      properties:
+        player_id:
+          type: string
+          format: uuid
+          description: UUID v7, time-ordered identifier.
+        round_id:
+          type: string
+          format: uuid
+          description: UUID v7, time-ordered identifier.
+          nullable: true
+
+    RegularLeaderboardItem:
+      type: object
+      required:
+        - player
+        - rank
+        - loss_percentage
+        - participation_count
+        - loss_count
+      properties:
+        player:
+          $ref: '#/components/schemas/Player'
+        rank:
+          type: integer
+        loss_percentage:
+          type: number
+          format: float
+        participation_count:
+          type: integer
+        loss_count:
+          type: integer
+    FettmattisLeaderboardItem:
+      type: object
+      required:
+        - player
+        - rank
+        - fettmattis_count
+      properties:
+        player:
+          $ref: '#/components/schemas/Player'
+        rank:
+          type: integer
+        fettmattis_count:
+          type: integer
+
+    Problem:
+      type: object
+      description: RFC 9457 Problem Details
+      required:
+        - type
+        - title
+        - status
+      properties:
+        type:
+          type: string
+          format: uri
+          default: "about:blank"
+        title:
+          type: string
+        status:
+          type: integer
+        detail:
+          type: string
+        instance:
+          type: string
+          format: uri
+
+  responses:
+    BadRequest:
+      description: The request body is invalid.
+      content:
+        application/problem+json:
+          schema:
+            $ref: '#/components/schemas/Problem'
+    NotFound:
+      description: The requested resource was not found.
+      content:
+        application/problem+json:
+          schema:
+            $ref: '#/components/schemas/Problem'
+    Forbidden:
+      description: The action is forbidden, e.g., editing an item outside the 24h window.
+      content:
+        application/problem+json:
+          schema:
+            $ref: '#/components/schemas/Problem'
+    Conflict:
+      description: The resource already exists or the request conflicts with the current state.
+      content:
+        application/problem+json:
+          schema:
+            $ref: '#/components/schemas/Problem'
+    Gone:
+      description: The resource has been deleted.
+      content:
+        application/problem+json:
+          schema:
+            $ref: '#/components/schemas/Problem'
