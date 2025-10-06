@@ -1,9 +1,9 @@
 import type { NextRequest } from "next/server";
 import { NextResponse } from "next/server";
 
-import { badRequest, conflict } from "@/lib/api/problem-details";
+import { badRequest, conflict, createProblemResponse } from "@/lib/api/problem-details";
 import { PlayerCreateSchema } from "@/lib/api/schemas";
-import { insertPlayer } from "@/lib/db-client";
+import { insertPlayer, listPlayers } from "@/lib/db-client";
 
 // Placeholder for authentication/user context
 const getUserId = (req: NextRequest): string => {
@@ -45,20 +45,17 @@ export async function POST(req: NextRequest) {
     });
 
     return NextResponse.json(newPlayer, { status: 201 });
-  } catch (error) {
+  } catch (_error) {
 
     // PostgreSQL unique_violation error code
-    if (typeof error === "object" && error !== null && "code" in error) {
-      const code = (error as { code?: unknown }).code;
+    if (typeof _error === "object" && _error !== null && "code" in _error) {
+      const code = (_error as { code?: unknown }).code;
       if (code === "23505") {
         return conflict("A player with this display name already exists.");
       }
     }
 
-    return NextResponse.json(
-      { error: "Internal Server Error" },
-      { status: 500 }
-    );
+    return createProblemResponse({ status: 500, title: "Internal Server Error", detail: "Internal Server Error" });
   }
 }
 
@@ -67,6 +64,10 @@ export async function POST(req: NextRequest) {
  * Lists all active players.
  */
 export async function GET(_req: NextRequest) {
-  // This will be implemented in T019
-  return NextResponse.json([]);
+  try {
+    const players = await listPlayers();
+    return NextResponse.json(players, { status: 200 });
+  } catch {
+    return createProblemResponse({ status: 500, title: "Internal Server Error", detail: "Internal Server Error" });
+  }
 }

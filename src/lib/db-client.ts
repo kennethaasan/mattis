@@ -160,3 +160,67 @@ export async function queryLeaderboard(query: { year?: number } = {}): Promise<A
     return { player_id: String(playerId), display_name: displayName, score };
   });
 }
+
+export async function listPlayers(): Promise<Array<InsertPlayerResult>> {
+  const rows = await db
+    .select({ id: players.id, display_name: players.displayName, active: players.active })
+    .from(players)
+    .where(eq(players.active, true))
+    .orderBy(sql`${players.displayName} ASC`);
+
+  function ensureRecord(x: unknown): asserts x is Record<string, unknown> {
+    if (typeof x !== "object" || x === null) throw new Error("listPlayers: unexpected row type");
+  }
+
+  return rows.map((r) => {
+    ensureRecord(r);
+    const idVal = r["id"];
+    const displayNameVal = r["display_name"];
+    const activeVal = r["active"];
+
+    if (typeof idVal !== "string" && typeof idVal !== "number") {
+      throw new Error("listPlayers: invalid id in row");
+    }
+    if (typeof displayNameVal !== "string") {
+      throw new Error("listPlayers: invalid display_name in row");
+    }
+    if (typeof activeVal !== "boolean") {
+      throw new Error("listPlayers: invalid active flag in row");
+    }
+
+    return { id: String(idVal), display_name: displayNameVal, active: activeVal };
+  });
+}
+
+export async function getPlayerById(id: string): Promise<InsertPlayerResult | null> {
+  if (typeof id !== "string" || id.trim() === "") {
+    throw new Error("getPlayerById: id must be a non-empty string");
+  }
+
+  const rows = await db
+    .select({ id: players.id, display_name: players.displayName, active: players.active })
+    .from(players)
+    .where(eq(players.id, id));
+
+  if (!Array.isArray(rows) || rows.length === 0) {
+    return null;
+  }
+
+  const r = rows[0] as Record<string, unknown>;
+  const idVal = r["id"];
+  const displayNameVal = r["display_name"];
+  const activeVal = r["active"];
+
+  if (typeof idVal !== "string" && typeof idVal !== "number") {
+    throw new Error("getPlayerById: invalid id in row");
+  }
+  if (typeof displayNameVal !== "string") {
+    throw new Error("getPlayerById: invalid display_name in row");
+  }
+  if (typeof activeVal !== "boolean") {
+    throw new Error("getPlayerById: invalid active flag in row");
+  }
+
+  return { id: String(idVal), display_name: displayNameVal, active: activeVal };
+}
+
