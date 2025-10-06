@@ -1,5 +1,6 @@
 import { type NextRequest, NextResponse } from 'next/server';
 import { z } from 'zod';
+
 import { insertFettMattis } from '@/lib/db-client';
 
 const bodySchema = z.object({
@@ -26,7 +27,7 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ id: result.id }, { status: 201 });
   } catch (err: unknown) {
     if (err instanceof z.ZodError) {
-      return NextResponse.json({ error: err.errors }, { status: 400 });
+      return NextResponse.json({ error: err.issues }, { status: 400 });
     }
     if (err instanceof Error) {
       return NextResponse.json({ error: err.message ?? 'internal error' }, { status: 500 });

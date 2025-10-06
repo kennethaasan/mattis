@@ -1,5 +1,6 @@
 import { type NextRequest, NextResponse } from 'next/server';
 import { z } from 'zod';
+
 import { queryLeaderboard } from '@/lib/db-client';
 
 const querySchema = z.object({
@@ -31,10 +32,13 @@ export async function GET(req: NextRequest) {
     }));
 
     return NextResponse.json({ data: payload }, { status: 200 });
-  } catch (err: any) {
+  } catch (err: unknown) {
     if (err instanceof z.ZodError) {
-      return NextResponse.json({ error: err.errors }, { status: 400 });
+      return NextResponse.json({ error: err.issues }, { status: 400 });
     }
-    return NextResponse.json({ error: err.message ?? 'internal error' }, { status: 500 });
+    if (err instanceof Error) {
+      return NextResponse.json({ error: err.message ?? 'internal error' }, { status: 500 });
+    }
+    return NextResponse.json({ error: 'internal error' }, { status: 500 });
   }
 }

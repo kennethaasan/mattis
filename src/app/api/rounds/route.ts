@@ -1,5 +1,6 @@
 import { type NextRequest, NextResponse } from 'next/server';
 import { z } from 'zod';
+
 import { insertRound } from '@/lib/db-client';
 
 const bodySchema = z.object({
@@ -28,10 +29,13 @@ export async function POST(req: NextRequest) {
     }
 
     return NextResponse.json({ id: result.id }, { status: 201 });
-  } catch (err: any) {
+  } catch (err: unknown) {
     if (err instanceof z.ZodError) {
-      return NextResponse.json({ error: err.errors }, { status: 400 });
+      return NextResponse.json({ error: err.issues }, { status: 400 });
     }
-    return NextResponse.json({ error: err.message ?? 'internal error' }, { status: 500 });
+    if (err instanceof Error) {
+      return NextResponse.json({ error: err.message }, { status: 500 });
+    }
+    return NextResponse.json({ error: 'internal error' }, { status: 500 });
   }
 }

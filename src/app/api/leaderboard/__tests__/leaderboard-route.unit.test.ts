@@ -1,19 +1,21 @@
-import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
-import { GET } from '../../src/app/api/leaderboard/route';
-import * as dbClient from '../../src/lib/db-client';
+import type { NextRequest } from 'next/server';
+import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
+
+import * as dbClient from '../../../../lib/db-client';
+import { GET } from '../route';
 
 function makeRequest(url: string) {
   return new Request(url);
 }
 
 describe('GET /api/leaderboard', () => {
-  const sampleRows = [
+  const sampleRows: Array<{ player_id: string; display_name: string; score: number }> = [
     { player_id: 'p1', display_name: 'Alice', score: 10 },
     { player_id: 'p2', display_name: 'Bob', score: 8 },
   ];
 
   beforeEach(() => {
-    vi.spyOn(dbClient, 'queryLeaderboard').mockResolvedValue(sampleRows as any);
+    vi.spyOn(dbClient, 'queryLeaderboard').mockResolvedValue(sampleRows);
   });
 
   afterEach(() => {
@@ -22,7 +24,7 @@ describe('GET /api/leaderboard', () => {
 
   it('returns leaderboard data', async () => {
     const req = makeRequest('http://localhost/api/leaderboard');
-    const res = await GET(req as any);
+    const res = await GET(req as unknown as NextRequest);
     const json = await res.json();
     expect(res.status).toBe(200);
     expect(json).toHaveProperty('data');
@@ -32,7 +34,7 @@ describe('GET /api/leaderboard', () => {
 
   it('accepts year and limit params', async () => {
     const req = makeRequest('http://localhost/api/leaderboard?year=2025&limit=1');
-    const res = await GET(req as any);
+    const res = await GET(req as unknown as NextRequest);
     const json = await res.json();
     expect(res.status).toBe(200);
     expect(json.data).toHaveLength(1);
@@ -40,16 +42,16 @@ describe('GET /api/leaderboard', () => {
 
   it('returns 400 for invalid query', async () => {
     const req = makeRequest('http://localhost/api/leaderboard?year=20ab');
-    const res = await GET(req as any);
+    const res = await GET(req as unknown as NextRequest);
     const json = await res.json();
     expect(res.status).toBe(400);
     expect(json).toHaveProperty('error');
   });
 
   it('returns 500 when db client throws', async () => {
-    (dbClient.queryLeaderboard as any).mockRejectedValue(new Error('boom'));
+    vi.spyOn(dbClient, 'queryLeaderboard').mockRejectedValueOnce(new Error('boom'));
     const req = makeRequest('http://localhost/api/leaderboard');
-    const res = await GET(req as any);
+    const res = await GET(req as unknown as NextRequest);
     const json = await res.json();
     expect(res.status).toBe(500);
     expect(json).toHaveProperty('error');

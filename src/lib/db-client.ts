@@ -1,4 +1,4 @@
-import { eq } from "drizzle-orm";
+import { eq, sql } from "drizzle-orm";
 
 import { db } from "./db";
 import { fettmattis,players, roundParticipants, rounds } from "./db/schema";
@@ -123,17 +123,40 @@ export async function queryLeaderboard(query: { year?: number } = {}): Promise<A
     ? { start: new Date(query.year, 0, 1), end: new Date(query.year + 1, 0, 1) }
     : undefined;
 
-  const whereClause = startEnd
-    ? fettmattis.createdAt.gte(startEnd.start).and(fettmattis.createdAt.lt(startEnd.end))
+  const scoreExpr = sql<number>`COALESCE(count(${fettmattis.id}), 0)`;
+
+  const whereConditions = startEnd
+    ? sql`${fettmattis.createdAt} >= ${startEnd.start} AND ${fettmattis.createdAt} < ${startEnd.end}`
     : undefined;
 
   const rows = await db
-    .select({ player_id: players.id, display_name: players.displayName, score: db.raw<number>("COALESCE(count(fettmattis.id), 0)") })
+    .select({ player_id: players.id, display_name: players.displayName, score: scoreExpr })
     .from(players)
     .leftJoin(fettmattis, eq(players.id, fettmattis.playerId))
-    .where(whereClause ?? undefined)
+    .where(whereConditions ?? undefined)
     .groupBy(players.id, players.displayName)
-    .orderBy(db.raw("score DESC, display_name ASC"));
+    .orderBy(sql`${scoreExpr} DESC, ${players.displayName} ASC`);
 
-  return rows.map((r: any) => ({ player_id: String(r.player_id), display_name: String(r.display_name), score: Number(r.score) }));
+  function ensureRecord(x: unknown): asserts x is Record<string, unknown> {
+    if (typeof x !== "object" || x === null) throw new Error("queryLeaderboard: unexpected row type");
+  }
+
+  return rows.map((r) => {
+    ensureRecord(r);
+    const playerId = r["player_id"];
+    const displayName = r["display_name"];
+    const scoreVal = r["score"];
+
+    if (typeof playerId !== "string" && typeof playerId !== "number") {
+      throw new Error("queryLeaderboard: invalid player_id in row");
+    }
+    if (typeof displayName !== "string") {
+      throw new Error("queryLeaderboard: invalid display_name in row");
+    }
+
+    const score = typeof scoreVal === "number" ? scoreVal : Number(scoreVal);
+    if (Number.isNaN(score)) throw new Error("queryLeaderboard: invalid score in row");
+
+    return { player_id: String(playerId), display_name: displayName, score };
+  });
 }
