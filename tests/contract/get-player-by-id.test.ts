@@ -27,7 +27,7 @@ beforeEach(() => {
 
 test("T011: GET /api/players/{id} should return 200 and player", async () => {
   const id = "00000000-0000-7000-0000-000000000030";
-  const player = { id, display_name: "Eve", active: true };
+  const player = { id, displayName: "Eve", active: true };
 
   getPlayerById.mockResolvedValueOnce(player);
 

@@ -1,37 +1,52 @@
-import { type NextRequest, NextResponse } from 'next/server';
-import { z } from 'zod';
+import type { NextRequest } from "next/server";
+import { NextResponse } from "next/server";
 
-import { insertFettMattis } from '@/lib/db-client';
+import { badRequest, createProblemResponse } from "@/lib/api/problem-details";
+import { FettMattisCreateSchema } from "@/lib/api/schemas";
+import { insertFettMattis } from "@/lib/db-client";
 
-const bodySchema = z.object({
-  playerId: z.string().uuid(),
-  roundId: z.string().uuid().optional(),
-  createdBy: z.string().uuid(),
-});
+// Placeholder for authentication/user context
+const getUserId = (req: NextRequest): string => {
+  // In a real app, this would come from a session or token.
+  // For development, we use a placeholder from the environment.
+  return req.headers.get("X-User-Id") || process.env.DEV_USER_ID!;
+};
 
+/**
+ * POST /api/fettmattis
+ * Creates a new fettmattis.
+ */
 export async function POST(req: NextRequest) {
-  try {
-    const body = await req.json();
-    const parsed = bodySchema.parse(body);
+  const userId = getUserId(req);
+  if (!userId) {
+    return badRequest("Authentication required.");
+  }
 
-    const result = await insertFettMattis({
-      playerId: parsed.playerId,
-      roundId: parsed.roundId,
-      createdBy: parsed.createdBy,
+  try {
+    let body: unknown;
+    try {
+      body = await req.json();
+    } catch {
+      return badRequest("Malformed JSON in request body.");
+    }
+
+    const validatedData = FettMattisCreateSchema.safeParse(body);
+
+    if (!validatedData.success) {
+      const validationMessages = (validatedData.error?.issues ?? []).map((issue) => issue.message);
+      return badRequest(`Invalid input: ${validationMessages.join(", ")}`);
+    }
+
+    const { player_id, round_id } = validatedData.data;
+
+    const newFettmattis = await insertFettMattis({
+      playerId: player_id,
+      roundId: round_id,
+      createdBy: userId,
     });
 
-    if (!result) {
-      return NextResponse.json({ error: 'failed to create fettmattis' }, { status: 500 });
-    }
-
-    return NextResponse.json({ id: result.id }, { status: 201 });
-  } catch (err: unknown) {
-    if (err instanceof z.ZodError) {
-      return NextResponse.json({ error: err.issues }, { status: 400 });
-    }
-    if (err instanceof Error) {
-      return NextResponse.json({ error: err.message ?? 'internal error' }, { status: 500 });
-    }
-    return NextResponse.json({ error: String(err) ?? 'internal error' }, { status: 500 });
+    return NextResponse.json(newFettmattis, { status: 201 });
+  } catch (_error) {
+    return createProblemResponse({ status: 500, title: "Internal Server Error", detail: "Internal Server Error" });
   }
 }

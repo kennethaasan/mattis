@@ -33,10 +33,10 @@ beforeEach(() => {
 });
 
 test("T008: POST /api/players should create a player and return 201", async () => {
-  const newPlayer = { display_name: "Test Player" };
+  const newPlayer = { displayName: "Test Player" };
   const mockPlayerResponse = {
     id: "00000000-0000-7000-0000-000000000001",
-    display_name: "Test Player",
+    displayName: "Test Player",
     active: true,
   };
 
@@ -51,12 +51,12 @@ test("T008: POST /api/players should create a player and return 201", async () =
 
   const body = await response.json();
   expect(() => PlayerSchema.parse(body)).not.toThrow();
-  expect(body.display_name).toBe(newPlayer.display_name);
+  expect(body.displayName).toBe(newPlayer.displayName);
   expect(insertPlayer).toHaveBeenCalled();
 });
 
 test("T008: POST /api/players should return 400 for invalid input", async () => {
-  const invalidPlayer = { display_name: "" }; // Empty string is invalid
+  const invalidPlayer = { displayName: "" }; // Empty string is invalid
 
   const request = createMockRequest(invalidPlayer);
   const response = await POST(request);
@@ -82,7 +82,7 @@ test("T008: POST /api/players should return 400 for invalid input", async () => 
 });
 
 test("T008: POST /api/players should return 409 for conflict (duplicate name)", async () => {
-  const newPlayer = { display_name: "Existing Player" };
+  const newPlayer = { displayName: "Existing Player" };
 
   // Mock database to throw a conflict error (e.g., unique constraint violation)
   // PostgreSQL error code 23505 is for unique_violation

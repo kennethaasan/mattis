@@ -161,20 +161,12 @@ export async function queryLeaderboard(query: { year?: number } = {}): Promise<A
   });
 }
 
-<<<<<<< Updated upstream
 export async function listPlayers(): Promise<Array<InsertPlayerResult>> {
-=======
-export async function listPlayers(): Promise<Array<{ id: string; display_name: string; active: boolean }>> {
->>>>>>> Stashed changes
   const rows = await db
     .select({ id: players.id, display_name: players.displayName, active: players.active })
     .from(players)
     .where(eq(players.active, true))
-<<<<<<< Updated upstream
     .orderBy(sql`${players.displayName} ASC`);
-=======
-    .orderBy(players.displayName);
->>>>>>> Stashed changes
 
   function ensureRecord(x: unknown): asserts x is Record<string, unknown> {
     if (typeof x !== "object" || x === null) throw new Error("listPlayers: unexpected row type");
@@ -182,7 +174,6 @@ export async function listPlayers(): Promise<Array<{ id: string; display_name: s
 
   return rows.map((r) => {
     ensureRecord(r);
-<<<<<<< Updated upstream
     const idVal = r["id"];
     const displayNameVal = r["display_name"];
     const activeVal = r["active"];
@@ -233,22 +224,3 @@ export async function getPlayerById(id: string): Promise<InsertPlayerResult | nu
   return { id: String(idVal), display_name: displayNameVal, active: activeVal };
 }
 
-=======
-    const maybeId = r["id"];
-    const maybeDisplayName = r["display_name"];
-    const maybeActive = r["active"];
-
-    if (typeof maybeId !== "string") {
-      throw new Error("listPlayers: invalid id in row");
-    }
-    if (typeof maybeDisplayName !== "string") {
-      throw new Error("listPlayers: invalid display_name in row");
-    }
-    if (typeof maybeActive !== "boolean") {
-      throw new Error("listPlayers: invalid active flag in row");
-    }
-
-    return { id: maybeId, display_name: maybeDisplayName, active: maybeActive };
-  });
-}
->>>>>>> Stashed changes

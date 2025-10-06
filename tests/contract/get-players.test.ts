@@ -2,11 +2,13 @@ import { test, expect, vi, beforeEach } from "vitest";
 import { PlayerSchema, ProblemDetailsSchema } from "@/lib/api/schemas";
 import { NextRequest } from "next/server";
 
-vi.mock("@/lib/db-client", () => ({
+const dbClient = await vi.importActual("@/lib/db-client");
+vi.doMock("@/lib/db-client", () => ({
+  ...dbClient,
   listPlayers: vi.fn(),
 }));
 
-const dbClient = (await import("@/lib/db-client")) as any;
+
 const listPlayers = dbClient.listPlayers as any;
 
 const { GET } = await import("@/app/api/players/route");
@@ -28,12 +30,12 @@ test("T009: GET /api/players should return list of players with 200", async () =
   const mockPlayers = [
     {
       id: "00000000-0000-7000-0000-000000000010",
-      display_name: "Alice",
+      displayName: "Alice",
       active: true,
     },
     {
       id: "00000000-0000-7000-0000-000000000011",
-      display_name: "Bob",
+      displayName: "Bob",
       active: true,
     },
   ];

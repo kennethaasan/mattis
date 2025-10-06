@@ -1,27 +1,25 @@
-import { type NextRequest,NextResponse } from "next/server";
+import { getPlayerById } from '@/lib/db/db-client';
+import { NextResponse } from 'next/server';
+import { z } from 'zod';
 
-import { badRequest, createProblemResponse, notFound } from "@/lib/api/problem-details";
-import { getPlayerById } from "@/lib/db-client";
+const getPlayerParamsSchema = z.object({
+  id: z.string().uuid(),
+});
 
-export async function GET(_req: NextRequest, { params }: { params: { id?: string } }) {
-  const id = params?.id;
-  if (!id || typeof id !== "string") {
-    return badRequest("Player id is required.");
-  }
-
+export async function GET(req: Request, { params }: { params: { id: string } }) {
   try {
+    const { id } = getPlayerParamsSchema.parse(params);
     const player = await getPlayerById(id);
 
-    if (player === null) {
-      return notFound("Player not found.");
+    if (!player) {
+      return NextResponse.json({ error: 'Player not found' }, { status: 404 });
     }
 
-    return NextResponse.json(player, { status: 200 });
-  } catch {
-    return createProblemResponse({
-      status: 500,
-      title: "Internal Server Error",
-      detail: "Failed to fetch player.",
-    });
+    return NextResponse.json(player);
+  } catch (error) {
+    if (error instanceof z.ZodError) {
+      return NextResponse.json({ error: error.issues }, { status: 400 });
+    }
+    return NextResponse.json({ error: 'Internal Server Error' }, { status: 500 });
   }
 }

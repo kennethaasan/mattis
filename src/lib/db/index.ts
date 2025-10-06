@@ -1,5 +1,7 @@
 import { neon } from "@neondatabase/serverless";
-import { drizzle } from "drizzle-orm/neon-http";
+import { drizzle as drizzleNeon } from "drizzle-orm/neon-http";
+import { drizzle as drizzlePg } from "drizzle-orm/node-postgres";
+import { Pool } from "pg";
 
 import * as schema from "./schema";
 
@@ -8,13 +10,23 @@ import * as schema from "./schema";
 // modules that reference `db` does not throw during tests. Any attempt to
 // actually use the proxy will throw a descriptive error.
 
-type Database = ReturnType<typeof drizzle>;
+type Database = ReturnType<typeof drizzlePg>;
 
 let dbInstance: unknown;
 
-if (process.env.DATABASE_URL) {
+if (process.env.NODE_ENV === "test") {
+  const url = new URL(process.env.DATABASE_URL!);
+  const pool = new Pool({
+    host: url.hostname,
+    port: Number(url.port),
+    user: url.username,
+    password: url.password,
+    database: url.pathname.slice(1),
+  });
+  dbInstance = drizzlePg(pool, { schema, logger: true }) as Database;
+} else if (process.env.DATABASE_URL) {
   const sql = neon(process.env.DATABASE_URL);
-  dbInstance = drizzle(sql, { schema, logger: process.env.NODE_ENV === "development" }) as Database;
+  dbInstance = drizzleNeon(sql, { schema, logger: process.env.NODE_ENV === "development" }) as ReturnType<typeof drizzleNeon>;
 } else {
   const handler: ProxyHandler<Record<string, unknown>> = {
     get() {

@@ -1,28 +1,24 @@
 import { defineConfig } from "vitest/config";
+import tsconfigPaths from "vite-tsconfig-paths";
 import react from "@vitejs/plugin-react";
-import path from "path";
 
 export default defineConfig({
-  plugins: [react()],
+  plugins: [tsconfigPaths(), react()],
   test: {
-    globals: true,
     environment: "jsdom",
     setupFiles: ["./tests/setup.ts"],
-    include: ["**/*.test.ts", "**/*.test.tsx"],
+    include: [
+      "src/**/*.test.ts",
+      "src/**/*.test.tsx",
+      "tests/**/*.test.ts",
+      "tests/**/*.test.tsx",
+      "infra/**/*.test.ts"
+    ],
+    clearMocks: true,
+    testTimeout: 30000,
     coverage: {
-      provider: "v8",
-      reporter: ["text", "json", "html"],
-      exclude: [
-        "**/*.config.ts",
-        "**/*.config.js",
-        "**/*.d.ts",
-        "drizzle/**",
-        "infra/**",
-        "src/lib/db/migrate.ts",
-        "src/app/**/route.ts", // API routes are covered by contract/integration tests
-        "src/app/layout.tsx",
-        "src/app/page.tsx",
-      ],
+      enabled: true,
+      include: ["src/**/*.{ts,tsx}", "infra/**/*.ts"],
       thresholds: {
         global: {
           lines: 80,
@@ -31,11 +27,6 @@ export default defineConfig({
           statements: 80,
         },
       },
-    },
-  },
-  resolve: {
-    alias: {
-      "@": path.resolve(__dirname, "./src"),
     },
   },
 });

@@ -1,57 +1,43 @@
-import { test, expect, vi, beforeEach } from "vitest";
-import { PlayerSchema } from "@/lib/api/schemas";
+import { test, expect, beforeEach, vi } from "vitest";
 import { NextRequest } from "next/server";
+import { POST as createPlayer } from "@/app/api/players/route";
+import { GET as listPlayers } from "@/app/api/players/route";
+import { db } from "@/lib/db";
+import { players } from "@/lib/db/schema";
 
-vi.mock("@/lib/db-client", () => ({
-  insertPlayer: vi.fn(),
-  listPlayers: vi.fn(),
-}));
+// Set a dummy DATABASE_URL so the db client is initialized.
 
-const dbClient = (await import("@/lib/db-client")) as any;
-const insertPlayer = dbClient.insertPlayer as any;
-const listPlayers = dbClient.listPlayers as any;
 
-const { POST, GET } = await import("@/app/api/players/route");
-
+// Mock the environment variable for the user ID
 const MOCK_USER_ID = "00000000-0000-7000-0000-000000000000";
 vi.stubEnv("DEV_USER_ID", MOCK_USER_ID);
 
-const createMockRequest = (body?: unknown) => {
+// Helper function to create a mock NextRequest
+const createMockRequest = (body?: any) => {
   return {
     json: async () => body,
     headers: new Headers({ "X-User-Id": MOCK_USER_ID }),
   } as unknown as NextRequest;
 };
 
-beforeEach(() => {
-  insertPlayer.mockClear();
-  listPlayers.mockClear();
+beforeEach(async () => {
+  // Truncate the players table before each test
+  await db.delete(players);
 });
 
-test("INT001: create player then list returns created player", async () => {
-  const newPlayer = { display_name: "Integration Player" };
-  const mockPlayerResponse = {
-    id: "00000000-0000-7000-0000-000000000099",
-    display_name: newPlayer.display_name,
-    active: true,
-  };
+test("T015: should be able to create a player and see them in the list", async () => {
+  // 1. Create a new player
+  const createPlayerRequest = createMockRequest({ display_name: "New Player" });
+  const createPlayerResponse = await createPlayer(createPlayerRequest);
+  expect(createPlayerResponse.status).toBe(201);
+  const newPlayer = await createPlayerResponse.json();
 
-  insertPlayer.mockResolvedValueOnce(mockPlayerResponse);
-  listPlayers.mockResolvedValueOnce([mockPlayerResponse]);
+  // 2. List all players
+  const listPlayersRequest = createMockRequest();
+  const listPlayersResponse = await listPlayers(listPlayersRequest);
+  expect(listPlayersResponse.status).toBe(200);
+  const playersList = await listPlayersResponse.json();
 
-  const postReq = createMockRequest(newPlayer);
-  const postRes = await POST(postReq);
-
-  expect(postRes.status).toBe(201);
-  const createdBody = await postRes.json();
-  expect(() => PlayerSchema.parse(createdBody)).not.toThrow();
-  expect(createdBody.id).toBe(mockPlayerResponse.id);
-
-  const getReq = createMockRequest();
-  const getRes = await GET(getReq);
-  expect(getRes.status).toBe(200);
-
-  const listBody = await getRes.json();
-  expect(Array.isArray(listBody)).toBe(true);
-  expect(listBody.some((p: any) => p.id === mockPlayerResponse.id)).toBe(true);
+  // 3. Assert that the newly created player is in the list
+  expect(playersList).toContainEqual(newPlayer);
 });
