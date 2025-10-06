@@ -1,0 +1,61 @@
+name: CI Build and Test
+
+on:
+  push:
+    branches:
+      - main
+      - develop
+      - 'feature/**'
+      - 'bugfix/**'
+  pull_request:
+    branches:
+      - main
+      - develop
+
+permissions:
+  contents: read # Default to read-only for security
+  checks: write  # Needed for reporting status checks
+
+jobs:
+  build-and-test:
+    name: Build, Lint, and Test
+    runs-on: ubuntu-latest
+    timeout-minutes: 15 # Enforce timeout (Constitution VI)
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 1 # Fast checkout (Constitution IV)
+
+      - name: Setup Node.js 22.x
+        uses: actions/setup-node@v4
+        with:
+          node-version: 22.x
+          cache: 'npm'
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Linting (ESLint)
+        run: npm run lint
+        timeout-minutes: 5
+
+      - name: Type Check (TypeScript)
+        run: npm run tsc
+        timeout-minutes: 5
+
+      # Placeholder for T036/T037: Tests will be added later
+      # - name: Run Unit and Integration Tests
+      #   run: npm test
+      #   timeout-minutes: 5
+
+      # Placeholder for SAST/Dependency Scan (Constitution V)
+      # - name: Run SAST Scan
+      #   uses: github/codeql-action/analyze@v3
+      #   with:
+      #     category: "/language:typescript"
+      #     # Configuration for CodeQL analysis...
+
+      # - name: Dependency Review
+      #   uses: actions/dependency-review-action@v4

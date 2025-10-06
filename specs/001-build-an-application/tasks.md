@@ -4,13 +4,13 @@
 
 ## Phase 3.1: Setup & Infrastructure
 
-- [ ] **T001**: Initialize a new Next.js application with the App Router and TypeScript.
-- [ ] **T002**: Install primary dependencies: `tailwindcss`, `drizzle-orm`, `pg`, `lucide-react`, `@t3-oss/env-nextjs`.
-- [ ] **T003**: Configure Tailwind CSS and initialize Shadcn UI.
-- [ ] **T004**: Set up ESLint, Prettier, and Husky for code quality, enforcing rules from the constitution.
-- [ ] **T005**: [P] Initialize AWS CDK stack in the `infra/` directory for AWS Lambda and Aurora Serverless.
-- [ ] **T006**: [P] Configure `drizzle-kit` for database migrations and define the local development database connection.
-- [ ] **T007**: Create a GitHub Actions workflow for CI (`.github/workflows/ci.yml`) that runs linting, type-checking, and tests on every push.
+- [X] **T001**: Initialize a new Next.js application with the App Router and TypeScript.
+- [X] **T002**: Install primary dependencies: `tailwindcss`, `drizzle-orm`, `pg`, `lucide-react`, `@t3-oss/env-nextjs`.
+- [X] **T003**: Configure Tailwind CSS and initialize Shadcn UI.
+- [X] **T004**: Set up ESLint and Prettier for code quality, enforcing rules from the constitution.
+- [X] **T005**: [P] Initialize AWS CDK stack in the `infra/` directory for AWS Lambda and Aurora Serverless.
+- [X] **T006**: [P] Configure `drizzle-kit` for database migrations and define the local development database connection.
+- [X] **T007**: Create a GitHub Actions workflow for CI (`.github/workflows/ci.yml`) that runs linting, type-checking, and tests on every push.
 
 ## Phase 3.2: Backend Development (TDD)
 
