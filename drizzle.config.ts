@@ -8,6 +8,6 @@ const config: Config = {
     connectionString: process.env.DATABASE_URL!,
   },
   tablesFilter: ["mattis_*"],
-};
+} as unknown as Config;
 
 export default config;

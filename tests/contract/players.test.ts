@@ -61,14 +61,7 @@ test("T008: POST /api/players should return 400 for invalid input", async () => 
   const request = createMockRequest(invalidPlayer);
   const response = await POST(request);
 
-  // Temporarily log response details for debugging (DO NOT commit)
-  // eslint-disable-next-line no-console
-  console.log("DEBUG response.status:", response.status);
-  // eslint-disable-next-line no-console
-  console.log("DEBUG content-type:", response.headers.get("Content-Type"));
   const rawText = await response.text();
-  // eslint-disable-next-line no-console
-  console.log("DEBUG rawBody:", rawText);
 
   // Reconstruct a Response-like object for subsequent json() call
   const parsedBody = (() => {

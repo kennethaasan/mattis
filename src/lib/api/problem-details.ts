@@ -27,7 +27,7 @@ export function createProblemResponse({
   ...rest
 }: Omit<ProblemDetails, 'type'> & { type?: string }): NextResponse {
   const safeType = typeof type === "string" ? type : "about:blank";
-  const safeStatus = Number.isInteger(status) ? status : 500;
+  const safeStatus = typeof status === "number" && Number.isInteger(status) ? status : 500;
 
   const problem: Record<string, unknown> = {
     type: safeType,
@@ -40,8 +40,8 @@ export function createProblemResponse({
   }
 
   // Preserve instance if provided as a string
-  if (typeof (rest as any).instance === "string") {
-    problem.instance = (rest as any).instance;
+  if (typeof rest.instance === "string") {
+    problem.instance = rest.instance;
   }
 
   // Only allow extension members with primitive values and do not allow

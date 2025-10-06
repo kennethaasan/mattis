@@ -12,10 +12,6 @@ export default defineConfig({
     coverage: {
       provider: "v8",
       reporter: ["text", "json", "html"],
-      lines: 80,
-      functions: 80,
-      branches: 80,
-      statements: 80,
       exclude: [
         "**/*.config.ts",
         "**/*.config.js",
@@ -27,6 +23,14 @@ export default defineConfig({
         "src/app/layout.tsx",
         "src/app/page.tsx",
       ],
+      thresholds: {
+        global: {
+          lines: 80,
+          functions: 80,
+          branches: 80,
+          statements: 80,
+        },
+      },
     },
   },
   resolve: {

@@ -40,17 +40,23 @@ export async function insertPlayer(input: InsertPlayerInput): Promise<InsertPlay
     return null;
   }
 
-  const row = result[0] as unknown;
+  const candidate = result[0];
 
-  if (
-    typeof row !== "object" ||
-    row === null ||
-    typeof (row as any).id !== "string" ||
-    typeof (row as any).display_name !== "string" ||
-    typeof (row as any).active !== "boolean"
-  ) {
+  if (typeof candidate !== "object" || candidate === null) {
+    throw new Error("insertPlayer: returned row is not an object");
+  }
+
+  const maybeId = (candidate as Record<string, unknown>)["id"];
+  const maybeDisplayName = (candidate as Record<string, unknown>)["display_name"];
+  const maybeActive = (candidate as Record<string, unknown>)["active"];
+
+  if (typeof maybeId !== "string" || typeof maybeDisplayName !== "string" || typeof maybeActive !== "boolean") {
     throw new Error("insertPlayer: returned row has unexpected shape");
   }
 
-  return row as InsertPlayerResult;
+  return {
+    id: maybeId,
+    display_name: maybeDisplayName,
+    active: maybeActive,
+  } as InsertPlayerResult;
 }
