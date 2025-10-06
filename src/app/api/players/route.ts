@@ -67,7 +67,12 @@ export async function GET(_req: NextRequest) {
   try {
     const players = await listPlayers();
     return NextResponse.json(players, { status: 200 });
+<<<<<<< Updated upstream
   } catch {
     return createProblemResponse({ status: 500, title: "Internal Server Error", detail: "Internal Server Error" });
+=======
+  } catch (error) {
+    return NextResponse.json({ error: "Internal Server Error" }, { status: 500 });
+>>>>>>> Stashed changes
   }
 }
