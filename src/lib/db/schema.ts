@@ -19,13 +19,28 @@ export const players = pgTable("players", {
   updatedAt: timestamp("updated_at", { withTimezone: true }).notNull().defaultNow(),
 });
 
-// Rounds table (to be completed in T017)
+// Rounds table
 export const rounds = pgTable("rounds", {
   id: uuid("id").primaryKey().defaultRandom(),
   createdBy: uuid("created_by").references(() => users.id).notNull(),
+  loserId: uuid("loser_id").references(() => players.id).notNull(),
   createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
   deletedAt: timestamp("deleted_at", { withTimezone: true }),
 });
 
-// Placeholder for other tables (round_participants, round_loser, fettmattis)
-// These will be fully defined in T017.
+// Round participants - many-to-many between rounds and players
+export const roundParticipants = pgTable("round_participants", {
+  id: uuid("id").primaryKey().defaultRandom(),
+  roundId: uuid("round_id").references(() => rounds.id).notNull(),
+  playerId: uuid("player_id").references(() => players.id).notNull(),
+});
+
+// FettMattis table (records special events/points awarded to a player)
+export const fettmattis = pgTable("fettmattis", {
+  id: uuid("id").primaryKey().defaultRandom(),
+  playerId: uuid("player_id").references(() => players.id).notNull(),
+  roundId: uuid("round_id").references(() => rounds.id),
+  createdBy: uuid("created_by").references(() => users.id).notNull(),
+  createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
+});
+
