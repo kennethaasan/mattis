@@ -1,7 +1,7 @@
 {
   "type": "module",
   "scripts": {
-    "dev": "node scripts/dev.mjs",
+    "dev": "next dev --turbopack",
     "build": "next build --turbopack",
     "start": "next start",
     "typegen": "next typegen",
