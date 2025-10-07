@@ -1,0 +1,81 @@
+name: Deploy to AWS
+
+on:
+  push:
+    branches:
+      - main
+  workflow_dispatch:
+    inputs:
+      ref:
+        description: Git ref to deploy (defaults to main)
+        required: false
+        type: string
+
+permissions:
+  contents: read
+  id-token: write
+  deployments: write
+
+concurrency:
+  group: deploy-${{ github.ref }}
+  cancel-in-progress: true
+
+defaults:
+  run:
+    shell: bash
+
+jobs:
+  deploy:
+    name: Deploy Mattis Stack
+    runs-on: ubuntu-latest
+    timeout-minutes: 40
+    if: github.ref == 'refs/heads/main' || github.event_name == 'workflow_dispatch'
+    environment:
+      name: production
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 1
+          ref: ${{ inputs.ref || github.ref }}
+
+      - name: Setup Node.js 22.x
+        uses: actions/setup-node@v4
+        with:
+          node-version: 22.x
+          cache: npm
+          cache-dependency-path: |
+            package-lock.json
+            infra/package-lock.json
+
+      - name: Install web dependencies
+        run: npm ci
+
+      - name: Build Next.js application
+        run: npm run build
+
+      - name: Bundle Next.js with OpenNext
+        run: npx open-next@latest build
+
+      - name: Install infrastructure dependencies
+        run: npm ci
+        working-directory: infra
+
+      - name: Build CDK application
+        run: npm run build
+        working-directory: infra
+
+      - name: Configure AWS credentials
+        uses: aws-actions/configure-aws-credentials@v4
+        with:
+          role-to-assume: ${{ secrets.AWS_DEPLOY_ROLE_ARN }}
+          aws-region: ${{ vars.AWS_REGION }}
+          role-session-name: mattisDeploySession
+
+      - name: Deploy AWS infrastructure
+        run: npx cdk deploy MattisStack --app "node dist/bin/infra.js" --require-approval never --context stage=prod
+        env:
+          CI: true
+          DEPLOY_ENV: prod
+          CDK_NEW_BOOTSTRAP: 1
+        working-directory: infra

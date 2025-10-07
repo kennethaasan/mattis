@@ -53,9 +53,9 @@
 
 - [X] **T036**: [P] Write unit tests for all critical service logic and utility functions.
 - [X] **T037**: [P] Write E2E tests with Playwright for the main user flows (creating a player, recording a round, viewing leaderboards).
-- [ ] **T038**: Configure the AWS CDK stack in `infra/lib/mattis-stack.ts` to deploy the Next.js app to AWS Lambda.
-- [ ] **T039**: Create a GitHub Actions workflow for deployment (`.github/workflows/deploy.yml`) that deploys the CDK stack.
-- [ ] **T040**: Manually validate all acceptance criteria from the `quickstart.md`.
+- [X] **T038**: Configure the AWS CDK stack in `infra/lib/mattis-stack.ts` to deploy the Next.js app to AWS Lambda.
+- [X] **T039**: Create a GitHub Actions workflow for deployment (`.github/workflows/deploy.yml`) that deploys the CDK stack.
+- [X] **T040**: Manually validate all acceptance criteria from the `quickstart.md`.
 
 ## Dependencies
 - **T008-T016** (Tests) must be completed before **T017-T026** (Core Implementation).

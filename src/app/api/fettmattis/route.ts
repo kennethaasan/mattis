@@ -3,7 +3,7 @@ import { NextResponse } from "next/server";
 
 import { badRequest, createProblemResponse } from "@/lib/api/problem-details";
 import { FettMattisCreateSchema } from "@/lib/api/schemas";
-import { insertFettMattis } from "@/lib/db-client";
+import { ConflictError, NotFoundError, createFettMattis } from "@/lib/db-client";
 
 // Placeholder for authentication/user context
 const getUserId = (req: NextRequest): string => {
@@ -37,16 +37,44 @@ export async function POST(req: NextRequest) {
       return badRequest(`Invalid input: ${validationMessages.join(", ")}`);
     }
 
-    const { player_id, round_id } = validatedData.data;
+    const { player_id: playerId, round_id: roundId } = validatedData.data;
 
-    const newFettmattis = await insertFettMattis({
-      playerId: player_id,
-      roundId: round_id,
+    const newFettmattis = await createFettMattis({
+      playerId,
+      roundId,
       createdBy: userId,
     });
 
-    return NextResponse.json(newFettmattis, { status: 201 });
-  } catch (_error) {
+    return NextResponse.json(toFettMattisResponse(newFettmattis), { status: 201 });
+  } catch (error) {
+    if (error instanceof NotFoundError) {
+      return createProblemResponse({ status: 404, title: "Not Found", detail: error.message });
+    }
+    if (error instanceof ConflictError) {
+      return createProblemResponse({ status: 409, title: "Conflict", detail: error.message });
+    }
     return createProblemResponse({ status: 500, title: "Internal Server Error", detail: "Internal Server Error" });
   }
+}
+
+function toFettMattisResponse(record: {
+  id: string;
+  player: { id: string; displayName: string; active: boolean };
+  roundId: string | null;
+  createdAt: Date;
+}) {
+  return {
+    id: record.id,
+    player: toPlayerResponse(record.player),
+    round_id: record.roundId,
+    created_at: record.createdAt.toISOString(),
+  };
+}
+
+function toPlayerResponse(player: { id: string; displayName: string; active: boolean }) {
+  return {
+    id: player.id,
+    display_name: player.displayName,
+    active: player.active,
+  };
 }

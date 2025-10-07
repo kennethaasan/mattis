@@ -1,8 +1,8 @@
-import { deleteFettMattis } from '@/lib/db/db-client';
-import { NextResponse } from 'next/server';
-import { NextRequest } from 'next/server';
-import { badRequest, createProblemResponse } from '@/lib/api/problem-details';
-import { uuidSchema } from '@/lib/api/schemas';
+import { NextRequest, NextResponse } from "next/server";
+
+import { badRequest, createProblemResponse } from "@/lib/api/problem-details";
+import { uuidSchema } from "@/lib/api/schemas";
+import { ForbiddenError, NotFoundError, revokeFettMattis } from "@/lib/db-client";
 
 // Placeholder for authentication/user context
 const getUserId = (req: NextRequest): string => {
@@ -11,26 +11,29 @@ const getUserId = (req: NextRequest): string => {
   return req.headers.get("X-User-Id") || process.env.DEV_USER_ID!;
 };
 
-export async function DELETE(req: NextRequest, { params }: { params: { fettmattisId: string } }) {
+export async function DELETE(req: NextRequest, context: { params: Promise<{ fettmattisId: string }> }) {
     const userId = getUserId(req);
     if (!userId) {
         return badRequest("Authentication required.");
     }
 
-    const validation = uuidSchema.safeParse(params.fettmattisId);
+    const { fettmattisId } = await context.params;
+
+    const validation = uuidSchema.safeParse(fettmattisId);
     if (!validation.success) {
         return NextResponse.json({ error: validation.error.issues }, { status: 400 });
     }
 
     try {
-        const deletedFettmattis = await deleteFettMattis(params.fettmattisId);
-
-        if (!deletedFettmattis) {
-            return NextResponse.json({ type: 'about:blank', title: 'Not Found', status: 404, detail: 'Fettmattis not found' }, { status: 404 });
-        }
-
+        await revokeFettMattis(fettmattisId);
         return new Response(null, { status: 204 });
-    } catch (_error) {
+    } catch (error) {
+        if (error instanceof NotFoundError) {
+            return createProblemResponse({ status: 404, title: "Not Found", detail: error.message });
+        }
+        if (error instanceof ForbiddenError) {
+            return createProblemResponse({ status: 403, title: "Forbidden", detail: error.message });
+        }
         return createProblemResponse({ status: 500, title: "Internal Server Error", detail: "Internal Server Error" });
     }
 }

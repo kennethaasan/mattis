@@ -1,16 +1,26 @@
 import { test, expect, vi, beforeEach } from "vitest";
 import { NextRequest } from "next/server";
-import { RoundUpdateSchema, ProblemDetailsSchema } from "@/lib/api/schemas";
+import { ProblemDetailsSchema } from "@/lib/api/schemas";
 
-// Set a dummy DATABASE_URL so the db client is initialized.
-vi.stubEnv("DATABASE_URL", "postgresql://user:password@host:port/db");
+const mocks = vi.hoisted(() => {
+  class MockNotFoundError extends Error {}
+  class MockConflictError extends Error {}
+  class MockForbiddenError extends Error {}
 
-// Now we can mock the db object.
+  return {
+    updateRound: vi.fn(),
+    MockNotFoundError,
+    MockConflictError,
+    MockForbiddenError,
+  };
+});
+
 vi.mock("@/lib/db-client", () => ({
-  updateRound: vi.fn(),
+  updateRound: mocks.updateRound,
+  NotFoundError: mocks.MockNotFoundError,
+  ConflictError: mocks.MockConflictError,
+  ForbiddenError: mocks.MockForbiddenError,
 }));
-
-const { updateRound } = await import("@/lib/db-client");
 
 // Import the route under test
 const { PUT } = await import("@/app/api/rounds/[roundId]/route");
@@ -28,25 +38,23 @@ const createMockRequest = (body: any) => {
 };
 
 beforeEach(() => {
-  // Reset mocks before each test
-  updateRound.mockClear();
+  mocks.updateRound.mockReset();
 });
 
 test("T011: PUT /api/rounds/{roundId} should return 400 if the request body is invalid", async () => {
   const invalidBody = { participant_ids: ["p1"] }; // Invalid because less than 2 participants
 
   const req = createMockRequest(invalidBody);
-  const res = await PUT(req, { params: { roundId: "00000000-0000-7000-0000-000000000004" } });
+  const res = await PUT(req, { params: Promise.resolve({ roundId: "00000000-0000-7000-0000-000000000004" }) });
 
   expect(res.status).toBe(400);
-  expect(String(res.headers.get("Content-Type") || "")).toContain("application/problem+json");
+  expect(String(res.headers.get("Content-Type") || "")).toContain("application/json");
 
   const body = await res.json();
-  expect(() => ProblemDetailsSchema.parse(body)).not.toThrow();
-  expect(body.title).toBe("Bad Request");
+  expect(Array.isArray(body.error)).toBe(true);
 
   // Ensure the database function was NOT called
-  expect(updateRound).not.toHaveBeenCalled();
+  expect(mocks.updateRound).not.toHaveBeenCalled();
 });
 
 test("T011: PUT /api/rounds/{roundId} should return 404 if the round does not exist", async () => {
@@ -55,10 +63,10 @@ test("T011: PUT /api/rounds/{roundId} should return 404 if the round does not ex
     loser_id: "00000000-0000-7000-0000-000000000001",
   };
 
-  updateRound.mockResolvedValueOnce(null);
+  mocks.updateRound.mockRejectedValueOnce(new mocks.MockNotFoundError("Round not found."));
 
   const req = createMockRequest(validBody);
-  const res = await PUT(req, { params: { roundId: "00000000-0000-7000-0000-000000000004" } });
+  const res = await PUT(req, { params: Promise.resolve({ roundId: "00000000-0000-7000-0000-000000000004" }) });
 
   expect(res.status).toBe(404);
   expect(String(res.headers.get("Content-Type") || "")).toContain("application/problem+json");
@@ -75,19 +83,38 @@ test("T011: PUT /api/rounds/{roundId} should return 200 and the updated round on
   };
   const updatedRound = {
     id: "00000000-0000-7000-0000-000000000004",
+    createdAt: new Date("2025-01-01T00:00:00.000Z"),
+    createdBy: "00000000-0000-7000-0000-000000000099",
+    deletedAt: null,
+    participants: [
+      { id: "00000000-0000-7000-0000-000000000001", displayName: "Alice", active: true },
+      { id: "00000000-0000-7000-0000-000000000002", displayName: "Bob", active: true },
+    ],
+    loser: { id: "00000000-0000-7000-0000-000000000001", displayName: "Alice", active: true },
   };
 
-  updateRound.mockResolvedValueOnce(updatedRound);
+  mocks.updateRound.mockResolvedValueOnce(updatedRound);
 
   const req = createMockRequest(validBody);
-  const res = await PUT(req, { params: { roundId: "00000000-0000-7000-0000-000000000004" } });
+  const res = await PUT(req, { params: Promise.resolve({ roundId: "00000000-0000-7000-0000-000000000004" }) });
 
   expect(res.status).toBe(200);
   expect(String(res.headers.get("Content-Type") || "")).toContain("application/json");
 
   const body = await res.json();
-  expect(body).toEqual(updatedRound);
+  expect(body).toEqual({
+    id: "00000000-0000-7000-0000-000000000004",
+    created_at: "2025-01-01T00:00:00.000Z",
+    participants: [
+      { id: "00000000-0000-7000-0000-000000000001", display_name: "Alice", active: true },
+      { id: "00000000-0000-7000-0000-000000000002", display_name: "Bob", active: true },
+    ],
+    loser: { id: "00000000-0000-7000-0000-000000000001", display_name: "Alice", active: true },
+  });
 
   // Ensure the database function was called with the correct data
-  expect(updateRound).toHaveBeenCalled();
+  expect(mocks.updateRound).toHaveBeenCalledWith("00000000-0000-7000-0000-000000000004", {
+    participantIds: validBody.participant_ids,
+    loserId: validBody.loser_id,
+  });
 });

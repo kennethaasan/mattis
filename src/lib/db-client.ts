@@ -1,226 +1,648 @@
-import { eq, sql } from "drizzle-orm";
+import { and, asc, eq, inArray, isNull, sql } from "drizzle-orm";
+import type { SQL } from "drizzle-orm";
 
-import { db } from "./db";
-import { fettmattis,players, roundParticipants, rounds } from "./db/schema";
+import { db } from "@/lib/db";
+import { fettmattis, players, roundLoser, roundParticipants, rounds, users } from "@/lib/db/schema";
 
-export type InsertPlayerInput = {
-  displayName: string;
-  userId: string;
-};
+const EDIT_WINDOW_MS = 24 * 60 * 60 * 1000;
 
-export type InsertPlayerResult = {
+type TransactionClient = Parameters<Parameters<typeof db.transaction>[0]>[0];
+type DbExecutor = typeof db | TransactionClient;
+
+type PlayerRow = typeof players.$inferSelect;
+type RoundRow = typeof rounds.$inferSelect;
+type FettMattisRow = typeof fettmattis.$inferSelect;
+
+export interface PlayerRecord {
   id: string;
-  display_name: string;
+  displayName: string;
   active: boolean;
-};
-
-export async function insertPlayer(input: InsertPlayerInput): Promise<InsertPlayerResult | null> {
-  if (!input || typeof input !== "object") {
-    throw new Error("insertPlayer: input must be an object");
-  }
-  if (typeof input.displayName !== "string" || input.displayName.trim() === "") {
-    throw new Error("insertPlayer: displayName must be a non-empty string");
-  }
-  if (typeof input.userId !== "string" || input.userId.trim() === "") {
-    throw new Error("insertPlayer: userId must be a non-empty string");
-  }
-
-  const result = await db
-    .insert(players)
-    .values({ displayName: input.displayName, userId: input.userId })
-    .returning({
-      id: players.id,
-      display_name: players.displayName,
-      active: players.active,
-    });
-
-  if (!Array.isArray(result) || result.length === 0) {
-    return null;
-  }
-
-  const candidate = result[0] as Record<string, unknown>;
-  const maybeId = candidate["id"];
-  const maybeDisplayName = candidate["display_name"];
-  const maybeActive = candidate["active"];
-
-  if (typeof maybeId !== "string" || typeof maybeDisplayName !== "string" || typeof maybeActive !== "boolean") {
-    throw new Error("insertPlayer: returned row has unexpected shape");
-  }
-
-  return {
-    id: maybeId,
-    display_name: maybeDisplayName,
-    active: maybeActive,
-  } as InsertPlayerResult;
+  userId: string | null;
+  createdAt: Date;
+  updatedAt: Date;
 }
 
-export type InsertRoundInput = {
+export interface RoundParticipantRecord {
+  id: string;
+  displayName: string;
+  active: boolean;
+}
+
+export interface RoundRecord {
+  id: string;
+  createdAt: Date;
   createdBy: string;
+  deletedAt: Date | null;
+  participants: RoundParticipantRecord[];
+  loser: RoundParticipantRecord;
+}
+
+export interface FettMattisRecord {
+  id: string;
+  player: RoundParticipantRecord;
+  roundId: string | null;
+  createdAt: Date;
+  createdBy: string;
+  revokedAt: Date | null;
+}
+
+export interface CreatePlayerInput {
+  displayName: string;
+  userId?: string | null;
+}
+
+export interface UpdatePlayerInput {
+  displayName?: string;
+  active?: boolean;
+}
+
+export interface CreateRoundInput {
   participantIds: string[];
   loserId: string;
-};
+  createdBy: string;
+}
 
-export async function insertRound(input: InsertRoundInput): Promise<{ id: string } | null> {
-  if (!input || typeof input !== "object") {
-    throw new Error("insertRound: input must be an object");
+export interface UpdateRoundInput {
+  participantIds?: string[];
+  loserId?: string;
+}
+
+export interface CreateFettMattisInput {
+  playerId: string;
+  roundId?: string | null;
+  createdBy: string;
+}
+
+export class NotFoundError extends Error {}
+export class ConflictError extends Error {}
+export class ForbiddenError extends Error {}
+
+function mapPlayer(row: PlayerRow): PlayerRecord {
+  return {
+    id: row.id,
+    displayName: row.displayName,
+    active: row.active,
+    userId: row.userId ?? null,
+    createdAt: row.createdAt,
+    updatedAt: row.updatedAt,
+  };
+}
+
+function mapParticipant(row: Pick<PlayerRow, "id" | "displayName" | "active">): RoundParticipantRecord {
+  return {
+    id: row.id,
+    displayName: row.displayName,
+    active: row.active,
+  };
+}
+
+function assertEditWindow(createdAt: Date, entity: string): void {
+  const now = Date.now();
+  if (now - createdAt.getTime() > EDIT_WINDOW_MS) {
+    throw new ForbiddenError(`${entity} is locked after 24 hours.`);
   }
-  if (typeof input.createdBy !== "string" || input.createdBy.trim() === "") {
-    throw new Error("insertRound: createdBy must be a non-empty string");
-  }
-  if (!Array.isArray(input.participantIds) || input.participantIds.length < 2) {
-    throw new Error("insertRound: participantIds must be an array with at least two ids");
-  }
-  if (typeof input.loserId !== "string" || input.loserId.trim() === "") {
-    throw new Error("insertRound: loserId must be a non-empty string");
-  }
-  if (!input.participantIds.includes(input.loserId)) {
-    throw new Error("insertRound: loserId must be one of participantIds");
+}
+
+async function ensureUser(client: DbExecutor, userId: string): Promise<void> {
+  if (!userId) {
+    throw new Error("User identifier is required.");
   }
 
-  const roundResult = await db
-    .insert(rounds)
-    .values({ createdBy: input.createdBy, loserId: input.loserId })
-    .returning({ id: rounds.id });
+  const existing = await client.query.users.findFirst({
+    where: eq(users.id, userId),
+  });
 
-  if (!Array.isArray(roundResult) || roundResult.length === 0) {
+  if (existing) {
+    return;
+  }
+
+  const username = `dev-${userId.slice(0, 8)}`;
+
+  await client
+    .insert(users)
+    .values({ id: userId, username })
+    .onConflictDoNothing();
+}
+
+async function loadRound(client: DbExecutor, roundId: string): Promise<RoundRecord | null> {
+  const [roundRow] = await client
+    .select()
+    .from(rounds)
+    .where(eq(rounds.id, roundId))
+    .limit(1);
+
+  if (!roundRow) {
     return null;
   }
 
-  const roundId = (roundResult[0] as Record<string, unknown>)["id"] as string;
+  const participantRows = await client
+    .select({
+      id: players.id,
+      displayName: players.displayName,
+      active: players.active,
+    })
+    .from(roundParticipants)
+    .innerJoin(players, eq(roundParticipants.playerId, players.id))
+    .where(eq(roundParticipants.roundId, roundId));
 
-  const participantValues = input.participantIds.map((pid) => ({ roundId, playerId: pid }));
-  await db.insert(roundParticipants).values(participantValues);
+  const [loserRow] = await client
+    .select({
+      id: players.id,
+      displayName: players.displayName,
+      active: players.active,
+    })
+    .from(roundLoser)
+    .innerJoin(players, eq(roundLoser.loserId, players.id))
+    .where(eq(roundLoser.roundId, roundId))
+    .limit(1);
 
-  return { id: roundId };
+  if (!loserRow) {
+    throw new ConflictError("Round is missing loser information.");
+  }
+
+  const participants = participantRows.map((entry) => mapParticipant(entry));
+
+  return {
+    id: roundRow.id,
+    createdAt: roundRow.createdAt,
+    createdBy: roundRow.createdBy,
+    deletedAt: roundRow.deletedAt ?? null,
+    participants,
+    loser: mapParticipant(loserRow),
+  };
 }
 
-export async function insertFettMattis(input: { playerId: string; roundId?: string; createdBy: string }): Promise<{ id: string } | null> {
-  if (!input || typeof input !== "object") {
-    throw new Error("insertFettMattis: input must be an object");
-  }
-  if (typeof input.playerId !== "string" || input.playerId.trim() === "") {
-    throw new Error("insertFettMattis: playerId must be a non-empty string");
-  }
-  if (typeof input.createdBy !== "string" || input.createdBy.trim() === "") {
-    throw new Error("insertFettMattis: createdBy must be a non-empty string");
-  }
-
-  const result = await db
-    .insert(fettmattis)
-    .values({ playerId: input.playerId, roundId: input.roundId ?? undefined, createdBy: input.createdBy })
-    .returning({ id: fettmattis.id });
-
-  if (!Array.isArray(result) || result.length === 0) {
-    return null;
-  }
-
-  const id = (result[0] as Record<string, unknown>)["id"] as string;
-  return { id };
+function uniqueIds(ids: string[]): string[] {
+  return Array.from(new Set(ids));
 }
 
-export async function queryLeaderboard(query: { year?: number } = {}): Promise<Array<{ player_id: string; display_name: string; score: number }>> {
-  const startEnd = typeof query.year === "number"
-    ? { start: new Date(query.year, 0, 1), end: new Date(query.year + 1, 0, 1) }
-    : undefined;
+function assertParticipantsContainLoser(participantIds: string[], loserId: string): void {
+  if (!participantIds.includes(loserId)) {
+    throw new ConflictError("Loser must be included in participant list.");
+  }
+}
 
-  const scoreExpr = sql<number>`COALESCE(count(${fettmattis.id}), 0)`;
+async function fetchPlayers(client: DbExecutor, ids: string[]): Promise<PlayerRow[]> {
+  if (ids.length === 0) {
+    return [];
+  }
 
-  const whereConditions = startEnd
-    ? sql`${fettmattis.createdAt} >= ${startEnd.start} AND ${fettmattis.createdAt} < ${startEnd.end}`
-    : undefined;
-
-  const rows = await db
-    .select({ player_id: players.id, display_name: players.displayName, score: scoreExpr })
+  const rows = await client
+    .select()
     .from(players)
-    .leftJoin(fettmattis, eq(players.id, fettmattis.playerId))
-    .where(whereConditions ?? undefined)
-    .groupBy(players.id, players.displayName)
-    .orderBy(sql`${scoreExpr} DESC, ${players.displayName} ASC`);
+    .where(inArray(players.id, ids));
 
-  function ensureRecord(x: unknown): asserts x is Record<string, unknown> {
-    if (typeof x !== "object" || x === null) throw new Error("queryLeaderboard: unexpected row type");
+  return rows;
+}
+
+export async function createPlayer(input: CreatePlayerInput): Promise<PlayerRecord> {
+  const now = new Date();
+
+  try {
+    const [row] = await db
+      .insert(players)
+      .values({
+        displayName: input.displayName,
+        userId: input.userId ?? null,
+        createdAt: now,
+        updatedAt: now,
+      })
+      .returning();
+
+    if (!row) {
+      throw new Error("Failed to insert player.");
+    }
+
+    return mapPlayer(row);
+  } catch (error) {
+    if (isUniqueViolation(error)) {
+      throw new ConflictError("A player with that display name already exists.");
+    }
+    throw error;
+  }
+}
+
+export async function listPlayers(): Promise<PlayerRecord[]> {
+  const rows = await db.select().from(players).orderBy(asc(players.displayName));
+  return rows.map(mapPlayer);
+}
+
+export async function getPlayerById(playerId: string): Promise<PlayerRecord> {
+  const row = await db.query.players.findFirst({
+    where: eq(players.id, playerId),
+  });
+
+  if (!row) {
+    throw new NotFoundError("Player not found.");
   }
 
-  return rows.map((r) => {
-    ensureRecord(r);
-    const playerId = r["player_id"];
-    const displayName = r["display_name"];
-    const scoreVal = r["score"];
+  return mapPlayer(row);
+}
 
-    if (typeof playerId !== "string" && typeof playerId !== "number") {
-      throw new Error("queryLeaderboard: invalid player_id in row");
+export async function updatePlayer(playerId: string, input: UpdatePlayerInput): Promise<PlayerRecord> {
+  if (!input.displayName && typeof input.active === "undefined") {
+    return getPlayerById(playerId);
+  }
+
+  const now = new Date();
+
+  try {
+    const [row] = await db
+      .update(players)
+      .set({
+        ...(input.displayName ? { displayName: input.displayName } : {}),
+        ...(typeof input.active === "boolean" ? { active: input.active } : {}),
+        updatedAt: now,
+      })
+      .where(eq(players.id, playerId))
+      .returning();
+
+    if (!row) {
+      throw new NotFoundError("Player not found.");
     }
-    if (typeof displayName !== "string") {
-      throw new Error("queryLeaderboard: invalid display_name in row");
+
+    return mapPlayer(row);
+  } catch (error) {
+    if (isUniqueViolation(error)) {
+      throw new ConflictError("A player with that display name already exists.");
+    }
+    throw error;
+  }
+}
+
+export async function createRound(input: CreateRoundInput): Promise<RoundRecord> {
+  const participantIds = uniqueIds(input.participantIds);
+  assertParticipantsContainLoser(participantIds, input.loserId);
+
+  return db.transaction(async (tx) => {
+    await ensureUser(tx, input.createdBy);
+
+    const playersForRound = await fetchPlayers(tx, participantIds);
+    if (playersForRound.length !== participantIds.length) {
+      throw new NotFoundError("One or more participants do not exist.");
     }
 
-    const score = typeof scoreVal === "number" ? scoreVal : Number(scoreVal);
-    if (Number.isNaN(score)) throw new Error("queryLeaderboard: invalid score in row");
+    const now = new Date();
 
-    return { player_id: String(playerId), display_name: displayName, score };
+    const [roundRow] = await tx
+      .insert(rounds)
+      .values({
+        createdBy: input.createdBy,
+        createdAt: now,
+      })
+      .returning();
+
+    if (!roundRow) {
+      throw new Error("Failed to create round.");
+    }
+
+    const roundId = roundRow.id;
+
+    const participantValues = participantIds.map((playerId) => ({
+      roundId,
+      playerId,
+    }));
+
+    await tx.insert(roundParticipants).values(participantValues);
+
+    await tx
+      .insert(roundLoser)
+      .values({
+        roundId,
+        loserId: input.loserId,
+      })
+      .onConflictDoUpdate({
+        target: roundLoser.roundId,
+        set: {
+          loserId: input.loserId,
+        },
+      });
+
+    const loaded = await loadRound(tx, roundId);
+
+    if (!loaded) {
+      throw new Error("Unable to load newly created round.");
+    }
+
+    return loaded;
   });
 }
 
-export async function listPlayers(): Promise<Array<InsertPlayerResult>> {
-  const rows = await db
-    .select({ id: players.id, display_name: players.displayName, active: players.active })
-    .from(players)
-    .where(eq(players.active, true))
-    .orderBy(sql`${players.displayName} ASC`);
+export async function getRoundById(roundId: string): Promise<RoundRecord> {
+  const round = await loadRound(db, roundId);
 
-  function ensureRecord(x: unknown): asserts x is Record<string, unknown> {
-    if (typeof x !== "object" || x === null) throw new Error("listPlayers: unexpected row type");
+  if (!round || round.deletedAt) {
+    throw new NotFoundError("Round not found.");
   }
 
-  return rows.map((r) => {
-    ensureRecord(r);
-    const idVal = r["id"];
-    const displayNameVal = r["display_name"];
-    const activeVal = r["active"];
+  return round;
+}
 
-    if (typeof idVal !== "string" && typeof idVal !== "number") {
-      throw new Error("listPlayers: invalid id in row");
-    }
-    if (typeof displayNameVal !== "string") {
-      throw new Error("listPlayers: invalid display_name in row");
-    }
-    if (typeof activeVal !== "boolean") {
-      throw new Error("listPlayers: invalid active flag in row");
+export async function updateRound(roundId: string, input: UpdateRoundInput): Promise<RoundRecord> {
+  return db.transaction(async (tx) => {
+    const existing = await loadRound(tx, roundId);
+
+    if (!existing || existing.deletedAt) {
+      throw new NotFoundError("Round not found.");
     }
 
-    return { id: String(idVal), display_name: displayNameVal, active: activeVal };
+    assertEditWindow(existing.createdAt, "Round");
+
+    const participantIds = uniqueIds(input.participantIds ?? existing.participants.map((participant) => participant.id));
+    const loserId = input.loserId ?? existing.loser.id;
+
+    assertParticipantsContainLoser(participantIds, loserId);
+
+    const playersForRound = await fetchPlayers(tx, participantIds);
+    if (playersForRound.length !== participantIds.length) {
+      throw new NotFoundError("One or more participants do not exist.");
+    }
+
+    await tx.delete(roundParticipants).where(eq(roundParticipants.roundId, roundId));
+
+    await tx.insert(roundParticipants).values(
+      participantIds.map((playerId) => ({
+        roundId,
+        playerId,
+      })),
+    );
+
+    await tx
+      .insert(roundLoser)
+      .values({
+        roundId,
+        loserId,
+      })
+      .onConflictDoUpdate({
+        target: roundLoser.roundId,
+        set: {
+          loserId,
+        },
+      });
+
+    const updated = await loadRound(tx, roundId);
+
+    if (!updated) {
+      throw new Error("Unable to load updated round.");
+    }
+
+    return updated;
   });
 }
 
-export async function getPlayerById(id: string): Promise<InsertPlayerResult | null> {
-  if (typeof id !== "string" || id.trim() === "") {
-    throw new Error("getPlayerById: id must be a non-empty string");
-  }
+export async function deleteRound(roundId: string): Promise<void> {
+  await db.transaction(async (tx) => {
+    const [roundRow] = await tx
+      .select()
+      .from(rounds)
+      .where(eq(rounds.id, roundId))
+      .limit(1);
 
-  const rows = await db
-    .select({ id: players.id, display_name: players.displayName, active: players.active })
-    .from(players)
-    .where(eq(players.id, id));
+    if (!roundRow) {
+      throw new NotFoundError("Round not found.");
+    }
 
-  if (!Array.isArray(rows) || rows.length === 0) {
-    return null;
-  }
+    if (roundRow.deletedAt) {
+      return;
+    }
 
-  const r = rows[0] as Record<string, unknown>;
-  const idVal = r["id"];
-  const displayNameVal = r["display_name"];
-  const activeVal = r["active"];
+    assertEditWindow(roundRow.createdAt, "Round");
 
-  if (typeof idVal !== "string" && typeof idVal !== "number") {
-    throw new Error("getPlayerById: invalid id in row");
-  }
-  if (typeof displayNameVal !== "string") {
-    throw new Error("getPlayerById: invalid display_name in row");
-  }
-  if (typeof activeVal !== "boolean") {
-    throw new Error("getPlayerById: invalid active flag in row");
-  }
-
-  return { id: String(idVal), display_name: displayNameVal, active: activeVal };
+    await tx
+      .update(rounds)
+      .set({
+        deletedAt: new Date(),
+      })
+      .where(eq(rounds.id, roundId));
+  });
 }
 
+export async function createFettMattis(input: CreateFettMattisInput): Promise<FettMattisRecord> {
+  return db.transaction(async (tx) => {
+    await ensureUser(tx, input.createdBy);
+
+    const playerRow = await tx.query.players.findFirst({
+      where: eq(players.id, input.playerId),
+    });
+
+    if (!playerRow) {
+      throw new NotFoundError("Player not found.");
+    }
+
+    if (input.roundId) {
+      const round = await loadRound(tx, input.roundId);
+      if (!round || round.deletedAt) {
+        throw new NotFoundError("Linked round was not found.");
+      }
+    }
+
+    const duplicate = await tx.query.fettmattis.findFirst({
+      where: and(
+        eq(fettmattis.playerId, input.playerId),
+        input.roundId ? eq(fettmattis.roundId, input.roundId) : isNull(fettmattis.roundId),
+        isNull(fettmattis.revokedAt),
+      ),
+    });
+
+    if (duplicate) {
+      throw new ConflictError("An active FettMattis already exists for this player and round.");
+    }
+
+    const now = new Date();
+
+    const [row] = await tx
+      .insert(fettmattis)
+      .values({
+        playerId: input.playerId,
+        roundId: input.roundId ?? null,
+        createdBy: input.createdBy,
+        createdAt: now,
+      })
+      .returning();
+
+    if (!row) {
+      throw new Error("Failed to create FettMattis.");
+    }
+
+    return {
+      id: row.id,
+      player: mapParticipant(playerRow),
+      roundId: row.roundId ?? null,
+      createdAt: row.createdAt,
+      createdBy: row.createdBy,
+      revokedAt: row.revokedAt ?? null,
+    };
+  });
+}
+
+export async function revokeFettMattis(fettmattisId: string): Promise<void> {
+  await db.transaction(async (tx) => {
+    const [row] = await tx
+      .select()
+      .from(fettmattis)
+      .where(eq(fettmattis.id, fettmattisId))
+      .limit(1);
+
+    if (!row) {
+      throw new NotFoundError("FettMattis not found.");
+    }
+
+    if (row.revokedAt) {
+      return;
+    }
+
+    assertEditWindow(row.createdAt, "FettMattis");
+
+    await tx
+      .update(fettmattis)
+      .set({ revokedAt: new Date() })
+      .where(eq(fettmattis.id, fettmattisId));
+  });
+}
+
+export interface RegularLeaderboardEntry {
+  rank: number;
+  lossPercentage: number;
+  participationCount: number;
+  lossCount: number;
+  player: RoundParticipantRecord;
+}
+
+export interface FettMattisLeaderboardEntry {
+  rank: number;
+  fettMattisCount: number;
+  player: RoundParticipantRecord;
+}
+
+interface RegularLeaderboardRow extends Record<string, unknown> {
+  player_id: string;
+  display_name: string;
+  active: boolean;
+  participation_count: number;
+  loss_count: number;
+}
+
+interface FettMattisLeaderboardRow extends Record<string, unknown> {
+  player_id: string;
+  display_name: string;
+  active: boolean;
+  fettmattis_count: number;
+}
+
+export async function getRegularLeaderboard(year: number): Promise<RegularLeaderboardEntry[]> {
+  const { rows } = await db.execute(regularLeaderboardQuery(year));
+  const typedRows = rows as RegularLeaderboardRow[];
+
+  const leaderboard = typedRows
+    .map((row): { player: RoundParticipantRecord; participationCount: number; lossCount: number; lossPercentage: number } => {
+      const participationCount = Number(row.participation_count);
+      const lossCount = Number(row.loss_count ?? 0);
+      const lossPercentage = participationCount === 0 ? 0 : (lossCount / participationCount) * 100;
+
+      return {
+        player: {
+          id: row.player_id,
+          displayName: row.display_name,
+          active: row.active,
+        },
+        participationCount,
+        lossCount,
+        lossPercentage,
+      };
+    })
+    .sort((a, b) => {
+      if (a.lossPercentage !== b.lossPercentage) {
+        return a.lossPercentage - b.lossPercentage;
+      }
+      if (a.participationCount !== b.participationCount) {
+        return b.participationCount - a.participationCount;
+      }
+      return a.player.displayName.localeCompare(b.player.displayName);
+    });
+
+  return leaderboard.map((entry, index) => ({
+    ...entry,
+    rank: index + 1,
+  }));
+}
+
+export async function getFettMattisLeaderboard(year: number): Promise<FettMattisLeaderboardEntry[]> {
+  const { rows } = await db.execute(fettMattisLeaderboardQuery(year));
+  const typedRows = rows as FettMattisLeaderboardRow[];
+
+  const leaderboard = typedRows
+    .map((row): { player: RoundParticipantRecord; fettMattisCount: number } => ({
+      player: {
+        id: row.player_id,
+        displayName: row.display_name,
+        active: row.active,
+      },
+      fettMattisCount: Number(row.fettmattis_count ?? 0),
+    }))
+    .sort((a, b) => {
+      if (a.fettMattisCount !== b.fettMattisCount) {
+        return b.fettMattisCount - a.fettMattisCount;
+      }
+      return a.player.displayName.localeCompare(b.player.displayName);
+    });
+
+  return leaderboard.map((entry, index) => ({
+    ...entry,
+    rank: index + 1,
+  }));
+}
+
+function regularLeaderboardQuery(year: number): SQL {
+  return sql`
+    WITH eligible_rounds AS (
+      SELECT id
+      FROM ${rounds}
+      WHERE ${rounds.deletedAt} IS NULL
+        AND EXTRACT(YEAR FROM ${rounds.createdAt}) = ${year}
+    ),
+    participation AS (
+      SELECT
+        rp.player_id,
+        COUNT(*) AS participation_count
+      FROM ${roundParticipants} rp
+      JOIN eligible_rounds er ON er.id = rp.round_id
+      GROUP BY rp.player_id
+    ),
+    losses AS (
+      SELECT
+        rl.loser_id AS player_id,
+        COUNT(*) AS loss_count
+      FROM ${roundLoser} rl
+      JOIN eligible_rounds er ON er.id = rl.round_id
+      GROUP BY rl.loser_id
+    )
+    SELECT
+      p.id AS player_id,
+      p.display_name,
+      p.active,
+      participation.participation_count,
+      COALESCE(losses.loss_count, 0) AS loss_count
+    FROM participation
+    JOIN ${players} p ON p.id = participation.player_id
+    LEFT JOIN losses ON losses.player_id = participation.player_id;
+  `;
+}
+
+function fettMattisLeaderboardQuery(year: number): SQL {
+  return sql`
+    SELECT
+      p.id AS player_id,
+      p.display_name,
+      p.active,
+      COUNT(f.id) AS fettmattis_count
+    FROM ${fettmattis} f
+    JOIN ${players} p ON p.id = f.player_id
+    WHERE f.revoked_at IS NULL
+      AND EXTRACT(YEAR FROM f.created_at) = ${year}
+    GROUP BY p.id, p.display_name, p.active;
+  `;
+}
+
+function isUniqueViolation(error: unknown): boolean {
+  return typeof error === "object" && error !== null && "code" in error && (error as { code?: string }).code === "23505";
+}

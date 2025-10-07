@@ -1,69 +1,76 @@
-import { getPlayerById, updatePlayer } from '@/lib/db/db-client';
-import { NextResponse } from 'next/server';
-import { z } from 'zod';
-import { PlayerUpdateSchema, uuidSchema } from '@/lib/api/schemas';
+import { NextResponse } from "next/server";
 
-export async function GET(req: Request, { params }: { params: { playerId: string } }) {
-  const validation = uuidSchema.safeParse(params.playerId);
+import { PlayerUpdateSchema, uuidSchema } from "@/lib/api/schemas";
+import { ConflictError, NotFoundError, getPlayerById, updatePlayer } from "@/lib/db-client";
+
+export async function GET(_req: Request, context: { params: Promise<{ playerId: string }> }) {
+  const { playerId } = await context.params;
+
+  const validation = uuidSchema.safeParse(playerId);
   if (!validation.success) {
     return NextResponse.json({ error: validation.error.issues }, { status: 400 });
   }
 
   try {
-    const player = await getPlayerById(params.playerId);
+    const player = await getPlayerById(playerId);
 
-    if (!player) {
-      return NextResponse.json({ type: 'about:blank', title: 'Not Found', status: 404, detail: 'Player not found' }, { status: 404 });
-    }
-
-    const response = {
-      ...player,
-      display_name: player.displayName,
-    };
-
-    return NextResponse.json(response);
+    return NextResponse.json(toPlayerResponse(player));
   } catch (error) {
-    console.error(error);
-    return NextResponse.json({ type: 'about:blank', title: 'Internal Server Error', status: 500, detail: 'Internal Server Error' }, { status: 500 });
+    if (error instanceof NotFoundError) {
+      return NextResponse.json(
+        { type: "about:blank", title: "Not Found", status: 404, detail: error.message },
+        { status: 404 },
+      );
+    }
+    return NextResponse.json({ type: "about:blank", title: "Internal Server Error", status: 500 }, { status: 500 });
   }
 }
 
-export async function PUT(req: Request, { params }: { params: { playerId: string } }) {
-    const validation = uuidSchema.safeParse(params.playerId);
-    if (!validation.success) {
-        return NextResponse.json({ error: validation.error.issues }, { status: 400 });
+export async function PUT(req: Request, context: { params: Promise<{ playerId: string }> }) {
+  const { playerId } = await context.params;
+
+  const validation = uuidSchema.safeParse(playerId);
+  if (!validation.success) {
+    return NextResponse.json({ error: validation.error.issues }, { status: 400 });
+  }
+
+  try {
+    const body = await req.json();
+    const bodyValidation = PlayerUpdateSchema.safeParse(body);
+
+    if (!bodyValidation.success) {
+      return NextResponse.json({ error: bodyValidation.error.issues }, { status: 400 });
     }
 
-    try {
-        const body = await req.json();
-        const validation = PlayerUpdateSchema.safeParse(body);
+    const { display_name, active } = bodyValidation.data;
 
-        if (!validation.success) {
-            return NextResponse.json({ error: validation.error.issues }, { status: 400 });
-        }
+    const updatedPlayer = await updatePlayer(playerId, {
+      displayName: display_name,
+      active,
+    });
 
-        const { display_name, active } = validation.data;
-
-        const updatedPlayer = await updatePlayer(params.playerId, {
-            displayName: display_name,
-            active: active,
-        });
-
-        if (!updatedPlayer) {
-            return NextResponse.json({ type: 'about:blank', title: 'Not Found', status: 404, detail: 'Player not found' }, { status: 404 });
-        }
-
-        const response = {
-            ...updatedPlayer,
-            display_name: updatedPlayer.displayName,
-        };
-
-        return NextResponse.json(response, { status: 200 });
-    } catch (error) {
-        if (error instanceof z.ZodError) {
-            return NextResponse.json({ error: error.issues }, { status: 400 });
-        }
-        // Add more specific error handling for database errors if needed
-        return NextResponse.json({ error: 'Internal Server Error' }, { status: 500 });
+    return NextResponse.json(toPlayerResponse(updatedPlayer));
+  } catch (error) {
+    if (error instanceof NotFoundError) {
+      return NextResponse.json(
+        { type: "about:blank", title: "Not Found", status: 404, detail: error.message },
+        { status: 404 },
+      );
     }
+    if (error instanceof ConflictError) {
+      return NextResponse.json(
+        { type: "about:blank", title: "Conflict", status: 409, detail: error.message },
+        { status: 409 },
+      );
+    }
+    return NextResponse.json({ type: "about:blank", title: "Internal Server Error", status: 500 }, { status: 500 });
+  }
+}
+
+function toPlayerResponse(player: { id: string; displayName: string; active: boolean }) {
+  return {
+    id: player.id,
+    display_name: player.displayName,
+    active: player.active,
+  };
 }

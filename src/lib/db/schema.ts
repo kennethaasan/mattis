@@ -101,3 +101,8 @@ export const fettmattisRelations = relations(fettmattis, ({ one }) => ({
     references: [rounds.id],
   }),
 }));
+
+export type User = typeof users.$inferSelect;
+export type Player = typeof players.$inferSelect;
+export type Round = typeof rounds.$inferSelect;
+export type FettMattis = typeof fettmattis.$inferSelect;

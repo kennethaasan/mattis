@@ -2,18 +2,21 @@ import { test, expect, vi, beforeEach } from "vitest";
 import { NextRequest } from "next/server";
 import { ProblemDetailsSchema } from "@/lib/api/schemas";
 
-// Set a dummy DATABASE_URL so the db client is initialized.
-vi.stubEnv("DATABASE_URL", "postgresql://user:password@host:port/db");
+const mocks = vi.hoisted(() => {
+  class MockNotFoundError extends Error {}
+  class MockForbiddenError extends Error {}
 
-// Now we can mock the db object.
-const { deleteFettMattis } = vi.hoisted(() => {
   return {
-    deleteFettMattis: vi.fn(),
+    revokeFettMattis: vi.fn(),
+    MockNotFoundError,
+    MockForbiddenError,
   };
 });
 
 vi.mock("@/lib/db-client", () => ({
-  deleteFettMattis,
+  revokeFettMattis: mocks.revokeFettMattis,
+  NotFoundError: mocks.MockNotFoundError,
+  ForbiddenError: mocks.MockForbiddenError,
 }));
 
 // Import the route under test
@@ -31,15 +34,14 @@ const createMockRequest = () => {
 };
 
 beforeEach(() => {
-  // Reset mocks before each test
-  deleteFettMattis.mockClear();
+  mocks.revokeFettMattis.mockReset();
 });
 
 test("T014: DELETE /api/fettmattis/{fettmattisId} should return 404 if the fettmattis does not exist", async () => {
-  deleteFettMattis.mockResolvedValueOnce(null);
+  mocks.revokeFettMattis.mockRejectedValueOnce(new mocks.MockNotFoundError("Fettmattis not found."));
 
   const req = createMockRequest();
-  const res = await DELETE(req, { params: { fettmattisId: "00000000-0000-7000-0000-000000000005" } });
+  const res = await DELETE(req, { params: Promise.resolve({ fettmattisId: "00000000-0000-7000-0000-000000000005" }) });
 
   expect(res.status).toBe(404);
   expect(String(res.headers.get("Content-Type") || "")).toContain("application/problem+json");
@@ -50,17 +52,13 @@ test("T014: DELETE /api/fettmattis/{fettmattisId} should return 404 if the fettm
 });
 
 test("T014: DELETE /api/fettmattis/{fettmattisId} should return 204 on success", async () => {
-  const deletedFettmattis = {
-    id: "00000000-0000-7000-0000-000000000005",
-  };
-
-  deleteFettMattis.mockResolvedValueOnce(deletedFettmattis);
+  mocks.revokeFettMattis.mockResolvedValueOnce(undefined);
 
   const req = createMockRequest();
-  const res = await DELETE(req, { params: { fettmattisId: "00000000-0000-7000-0000-000000000005" } });
+  const res = await DELETE(req, { params: Promise.resolve({ fettmattisId: "00000000-0000-7000-0000-000000000005" }) });
 
   expect(res.status).toBe(204);
 
   // Ensure the database function was called with the correct data
-  expect(deleteFettMattis).toHaveBeenCalled();
+  expect(mocks.revokeFettMattis).toHaveBeenCalledWith("00000000-0000-7000-0000-000000000005");
 });

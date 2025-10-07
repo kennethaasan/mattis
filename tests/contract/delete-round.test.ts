@@ -2,18 +2,21 @@ import { test, expect, vi, beforeEach } from "vitest";
 import { NextRequest } from "next/server";
 import { ProblemDetailsSchema } from "@/lib/api/schemas";
 
-// Set a dummy DATABASE_URL so the db client is initialized.
-vi.stubEnv("DATABASE_URL", "postgresql://user:password@host:port/db");
+const mocks = vi.hoisted(() => {
+  class MockNotFoundError extends Error {}
+  class MockForbiddenError extends Error {}
 
-// Now we can mock the db object.
-const { deleteRound } = vi.hoisted(() => {
   return {
     deleteRound: vi.fn(),
+    MockNotFoundError,
+    MockForbiddenError,
   };
 });
 
 vi.mock("@/lib/db-client", () => ({
-  deleteRound,
+  deleteRound: mocks.deleteRound,
+  NotFoundError: mocks.MockNotFoundError,
+  ForbiddenError: mocks.MockForbiddenError,
 }));
 
 // Import the route under test
@@ -31,15 +34,14 @@ const createMockRequest = () => {
 };
 
 beforeEach(() => {
-  // Reset mocks before each test
-  deleteRound.mockClear();
+  mocks.deleteRound.mockReset();
 });
 
 test("T012: DELETE /api/rounds/{roundId} should return 404 if the round does not exist", async () => {
-  deleteRound.mockResolvedValueOnce(null);
+  mocks.deleteRound.mockRejectedValueOnce(new mocks.MockNotFoundError("Round not found."));
 
   const req = createMockRequest();
-  const res = await DELETE(req, { params: { roundId: "00000000-0000-7000-0000-000000000004" } });
+  const res = await DELETE(req, { params: Promise.resolve({ roundId: "00000000-0000-7000-0000-000000000004" }) });
 
   expect(res.status).toBe(404);
   expect(String(res.headers.get("Content-Type") || "")).toContain("application/problem+json");
@@ -50,17 +52,13 @@ test("T012: DELETE /api/rounds/{roundId} should return 404 if the round does not
 });
 
 test("T012: DELETE /api/rounds/{roundId} should return 204 on success", async () => {
-  const deletedRound = {
-    id: "00000000-0000-7000-0000-000000000004",
-  };
-
-  deleteRound.mockResolvedValueOnce(deletedRound);
+  mocks.deleteRound.mockResolvedValueOnce(undefined);
 
   const req = createMockRequest();
-  const res = await DELETE(req, { params: { roundId: "00000000-0000-7000-0000-000000000004" } });
+  const res = await DELETE(req, { params: Promise.resolve({ roundId: "00000000-0000-7000-0000-000000000004" }) });
 
   expect(res.status).toBe(204);
 
   // Ensure the database function was called with the correct data
-  expect(deleteRound).toHaveBeenCalled();
+  expect(mocks.deleteRound).toHaveBeenCalledWith("00000000-0000-7000-0000-000000000004");
 });

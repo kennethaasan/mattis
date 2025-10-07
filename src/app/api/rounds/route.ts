@@ -3,7 +3,7 @@ import { NextResponse } from "next/server";
 
 import { badRequest, createProblemResponse } from "@/lib/api/problem-details";
 import { RoundCreateSchema } from "@/lib/api/schemas";
-import { insertRound } from "@/lib/db-client";
+import { ConflictError, NotFoundError, createRound } from "@/lib/db-client";
 
 // Placeholder for authentication/user context
 const getUserId = (req: NextRequest): string => {
@@ -38,14 +38,44 @@ export async function POST(req: NextRequest) {
 
     const { participant_ids, loser_id } = validatedData.data;
 
-    const newRound = await insertRound({
+    const newRound = await createRound({
       participantIds: participant_ids,
       loserId: loser_id,
       createdBy: userId,
     });
 
-    return NextResponse.json(newRound, { status: 201 });
-  } catch (_error) {
+    return NextResponse.json(toRoundResponse(newRound), { status: 201 });
+  } catch (error) {
+    if (error instanceof NotFoundError) {
+      return createProblemResponse({ status: 404, title: "Not Found", detail: error.message });
+    }
+
+    if (error instanceof ConflictError) {
+      return createProblemResponse({ status: 409, title: "Conflict", detail: error.message });
+    }
+
     return createProblemResponse({ status: 500, title: "Internal Server Error", detail: "Internal Server Error" });
   }
+}
+
+function toRoundResponse(round: {
+  id: string;
+  createdAt: Date;
+  participants: Array<{ id: string; displayName: string; active: boolean }>;
+  loser: { id: string; displayName: string; active: boolean };
+}) {
+  return {
+    id: round.id,
+    created_at: round.createdAt.toISOString(),
+    participants: round.participants.map(toPlayerResponse),
+    loser: toPlayerResponse(round.loser),
+  };
+}
+
+function toPlayerResponse(player: { id: string; displayName: string; active: boolean }) {
+  return {
+    id: player.id,
+    display_name: player.displayName,
+    active: player.active,
+  };
 }

@@ -1,97 +1,142 @@
 "use client";
 
-import { zodResolver } from "@hookform/resolvers/zod";
-import { useForm } from "react-hook-form";
-import * as z from "zod";
-import Select from 'react-select';
+import { useEffect, useMemo, useState } from "react";
 
 import { Button } from "@/components/ui/button";
-import {
-  Form,
-  FormControl,
-  FormField,
-  FormItem,
-  FormLabel,
-  FormMessage,
-} from "@/components/ui/form";
-import {
-  Select as ShadcnSelect,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select";
-import { RoundCreateSchema } from "@/lib/api/schemas";
-import { Player } from "@/lib/db/schema";
+import { Label } from "@/components/ui/label";
+import { Badge } from "@/components/ui/badge";
+import { cn } from "@/lib/utils";
+import { RoundCreateSchema, type RoundCreate } from "@/lib/api/schemas";
+
+type RoundFormPlayer = {
+  id: string;
+  displayName: string;
+  active: boolean;
+};
 
 interface RoundFormProps {
-  onSubmit: (data: z.infer<typeof RoundCreateSchema>) => void;
-  players: Player[];
-  initialData?: z.infer<typeof RoundCreateSchema>;
+  onSubmit: (data: RoundCreate) => void | Promise<void>;
+  players: RoundFormPlayer[];
+  initialData?: RoundCreate;
 }
 
 export function RoundForm({ onSubmit, players, initialData }: RoundFormProps) {
-  const form = useForm<z.infer<typeof RoundCreateSchema>>({
-    resolver: zodResolver(RoundCreateSchema),
-    defaultValues: initialData || {
-      participant_ids: [],
-      loser_id: "",
-    },
-  });
+  const [participantIds, setParticipantIds] = useState<string[]>(initialData?.participant_ids ?? []);
+  const [loserId, setLoserId] = useState(initialData?.loser_id ?? "");
+  const [error, setError] = useState<string | null>(null);
 
-  const playerOptions = players.map(player => ({ value: player.id, label: player.displayName }));
+  useEffect(() => {
+    if (initialData) {
+      setParticipantIds(initialData.participant_ids);
+      setLoserId(initialData.loser_id);
+    }
+  }, [initialData?.loser_id, initialData?.participant_ids]);
+
+  useEffect(() => {
+    if (loserId && !participantIds.includes(loserId)) {
+      setLoserId("");
+    }
+  }, [loserId, participantIds]);
+
+  const participantOptions = useMemo(
+    () => players.map((player) => ({ id: player.id, label: player.displayName })),
+    [players],
+  );
+
+  const loserOptions = participantOptions.filter((option) => participantIds.includes(option.id));
+
+  const toggleParticipant = (playerId: string) => {
+    setParticipantIds((current) =>
+      current.includes(playerId)
+        ? current.filter((id) => id !== playerId)
+        : [...current, playerId],
+    );
+  };
+
+  const handleSubmit = async (event: React.FormEvent<HTMLFormElement>) => {
+    event.preventDefault();
+
+    const payload: RoundCreate = {
+      participant_ids: participantIds,
+      loser_id: loserId,
+    };
+
+    const parsed = RoundCreateSchema.safeParse(payload);
+    if (!parsed.success) {
+      const firstIssue = parsed.error.issues.at(0);
+      setError(firstIssue?.message ?? "Unable to save round.");
+      return;
+    }
+
+    setError(null);
+    await onSubmit(parsed.data);
+  };
+
+  const isSubmitDisabled = participantIds.length < 2 || loserId.length === 0;
 
   return (
-    <Form {...form}>
-      <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-8">
-        <FormField
-          control={form.control}
-          name="participant_ids"
-          render={({ field }) => (
-            <FormItem>
-              <FormLabel>Participants</FormLabel>
-              <FormControl>
-                <Select
-                  isMulti
-                  options={playerOptions}
-                  onChange={options => field.onChange(options.map(option => option.value))}
-                  value={playerOptions.filter(option => field.value.includes(option.value))}
-                />
-              </FormControl>
-              <FormMessage />
-            </FormItem>
-          )}
-        />
-        <FormField
-          control={form.control}
-          name="loser_id"
-          render={({ field }) => (
-            <FormItem>
-              <FormLabel>Loser</FormLabel>
-              <ShadcnSelect onValueChange={field.onChange} defaultValue={field.value}>
-                <FormControl>
-                  <SelectTrigger>
-                    <SelectValue placeholder="Select the loser" />
-                  </SelectTrigger>
-                </FormControl>
-                <SelectContent>
-                  {players
-                    .filter((player) =>
-                      form.getValues("participant_ids").includes(player.id)
-                    )
-                    .map((player) => (
-                      <SelectItem key={player.id} value={player.id}>
-                        {player.displayName}
-                      </SelectItem>
-                    ))}
-                </SelectContent>
-              </ShadcnSelect>
-              <FormMessage />
-            </FormItem>
-          )}
-        />
-        <Button type="submit">Submit</Button>
-      </form>
-    </Form>
+    <form onSubmit={handleSubmit} className="flex flex-col gap-6">
+      <div className="space-y-3">
+        <Label className="text-sm uppercase tracking-wide text-muted-foreground">
+          Participants
+        </Label>
+        <div className="grid gap-2 sm:grid-cols-2">
+          {participantOptions.map((option) => {
+            const isChecked = participantIds.includes(option.id);
+            return (
+              <button
+                type="button"
+                key={option.id}
+                onClick={() => toggleParticipant(option.id)}
+                className={cn(
+                  "flex items-center justify-between rounded-2xl border px-4 py-3 text-left text-sm transition hover:border-primary/40",
+                  isChecked
+                    ? "border-primary/50 bg-primary/10 text-primary"
+                    : "border-border/70 text-muted-foreground",
+                )}
+              >
+                <span className="font-medium text-foreground">{option.label}</span>
+                <Badge variant={isChecked ? "success" : "outline"}>
+                  {isChecked ? "Selected" : "Tap to add"}
+                </Badge>
+              </button>
+            );
+          })}
+        </div>
+        <p className="text-xs text-muted-foreground">
+          Pick at least two players to unlock the loser selection.
+        </p>
+      </div>
+
+      <div className="space-y-2">
+        <Label htmlFor="round-loser">Loser</Label>
+        <div className="rounded-2xl border border-border/70 bg-background p-1">
+          <select
+            id="round-loser"
+            value={loserId}
+            onChange={(event) => setLoserId(event.target.value)}
+            className="w-full rounded-2xl bg-background px-4 py-3 text-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+            disabled={loserOptions.length === 0}
+          >
+            <option value="" disabled>
+              {loserOptions.length === 0
+                ? "Select participants first"
+                : "Select the loser"}
+            </option>
+            {loserOptions.map((option) => (
+              <option key={option.id} value={option.id}>
+                {option.label}
+              </option>
+            ))}
+          </select>
+        </div>
+      </div>
+
+      {error ? <p className="text-sm text-destructive">{error}</p> : null}
+
+      <Button type="submit" disabled={isSubmitDisabled}>
+        Save round
+      </Button>
+    </form>
   );
 }

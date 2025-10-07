@@ -1,53 +1,65 @@
 
 "use client";
 
-import { zodResolver } from "@hookform/resolvers/zod";
-import { useForm } from "react-hook-form";
-import * as z from "zod";
+import { useEffect, useMemo, useState } from "react";
 
 import { Button } from "@/components/ui/button";
-import {
-  Form,
-  FormControl,
-  FormField,
-  FormItem,
-  FormLabel,
-  FormMessage,
-} from "@/components/ui/form";
 import { Input } from "@/components/ui/input";
-import { PlayerCreateSchema } from "@/lib/api/schemas";
+import { Label } from "@/components/ui/label";
+import { PlayerCreateSchema, type PlayerCreate } from "@/lib/api/schemas";
 
 interface PlayerFormProps {
-  onSubmit: (data: z.infer<typeof PlayerCreateSchema>) => void;
-  initialData?: z.infer<typeof PlayerCreateSchema>;
+  onSubmit: (data: PlayerCreate) => void | Promise<void>;
+  initialData?: PlayerCreate;
 }
 
 export function PlayerForm({ onSubmit, initialData }: PlayerFormProps) {
-  const form = useForm<z.infer<typeof PlayerCreateSchema>>({
-    resolver: zodResolver(PlayerCreateSchema),
-    defaultValues: initialData || {
-      display_name: "",
-    },
-  });
+  const [value, setValue] = useState(initialData?.display_name ?? "");
+  const [error, setError] = useState<string | null>(null);
+  const trimmedValue = useMemo(() => value.trim(), [value]);
+
+  useEffect(() => {
+    if (typeof initialData?.display_name === "string") {
+      setValue(initialData.display_name);
+    }
+  }, [initialData?.display_name]);
+
+  const handleSubmit = async (event: React.FormEvent<HTMLFormElement>) => {
+    event.preventDefault();
+
+    const parsed = PlayerCreateSchema.safeParse({ display_name: trimmedValue });
+    if (!parsed.success) {
+      const firstIssue = parsed.error.issues.at(0);
+      setError(firstIssue?.message ?? "Invalid display name.");
+      return;
+    }
+
+    setError(null);
+    await onSubmit(parsed.data);
+    setValue("");
+  };
 
   return (
-    <Form {...form}>
-      <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-8">
-        <FormField
-          control={form.control}
-          name="display_name"
-          render={({ field }) => (
-            <FormItem>
-              <FormLabel>Display Name</FormLabel>
-              <FormControl>
-                <Input placeholder="Enter player name" {...field} />
-              </FormControl>
-              <FormMessage />
-            </FormItem>
-          )}
+    <form onSubmit={handleSubmit} className="flex flex-col gap-4">
+      <div className="space-y-2">
+        <Label htmlFor="player-display-name">Display name</Label>
+        <Input
+          id="player-display-name"
+          value={value}
+          onChange={(event) => setValue(event.target.value)}
+          placeholder="Add a new Mattis legend"
+          aria-invalid={error ? "true" : "false"}
+          aria-describedby={error ? "player-form-error" : undefined}
         />
-        <Button type="submit">Submit</Button>
-      </form>
-    </Form>
+      </div>
+      {error ? (
+        <p id="player-form-error" className="text-sm text-destructive">
+          {error}
+        </p>
+      ) : null}
+      <Button type="submit" disabled={trimmedValue.length === 0}>
+        Save player
+      </Button>
+    </form>
   );
 }
