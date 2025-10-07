@@ -6,16 +6,11 @@ import { RoundCreateSchema, ProblemDetailsSchema } from "@/lib/api/schemas";
 vi.stubEnv("DATABASE_URL", "postgresql://user:password@host:port/db");
 
 // Now we can mock the db object.
-vi.mock("@/lib/db", () => ({
-  db: {
-    insert: vi.fn().mockReturnThis(),
-    values: vi.fn().mockReturnThis(),
-    returning: vi.fn(),
-  },
+vi.mock("@/lib/db-client", () => ({
+  insertRound: vi.fn(),
 }));
 
-// Import the mocked module
-const db = (await import("@/lib/db")) as any;
+const { insertRound } = (await import("@/lib/db-client")) as any;
 
 // Import the route under test
 const { POST } = await import("@/app/api/rounds/route");
@@ -34,9 +29,7 @@ const createMockRequest = (body: any) => {
 
 beforeEach(() => {
   // Reset mocks before each test
-  db.db.insert.mockClear();
-  db.db.values.mockClear();
-  db.db.returning.mockClear();
+  insertRound.mockClear();
 });
 
 test("T010: POST /api/rounds should return 400 if the request body is invalid", async () => {
@@ -53,7 +46,7 @@ test("T010: POST /api/rounds should return 400 if the request body is invalid", 
   expect(body.title).toBe("Bad Request");
 
   // Ensure the database function was NOT called
-  expect(db.db.insert).not.toHaveBeenCalled();
+  expect(insertRound).not.toHaveBeenCalled();
 });
 
 test("T010: POST /api/rounds should return 201 and the new round on success", async () => {
@@ -65,7 +58,7 @@ test("T010: POST /api/rounds should return 201 and the new round on success", as
     id: "00000000-0000-7000-0000-000000000004",
   };
 
-  db.db.returning.mockResolvedValueOnce([newRound]);
+  insertRound.mockResolvedValueOnce(newRound);
 
   const req = createMockRequest(validBody);
   const res = await POST(req);
@@ -77,5 +70,5 @@ test("T010: POST /api/rounds should return 201 and the new round on success", as
   expect(body).toEqual(newRound);
 
   // Ensure the database function was called with the correct data
-  expect(db.db.insert).toHaveBeenCalled();
+  expect(insertRound).toHaveBeenCalled();
 });

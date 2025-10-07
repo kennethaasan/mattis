@@ -1,11 +1,9 @@
-import type { NextRequest } from "next/server";
-import { NextResponse } from "next/server";
-
-import { badRequest, notFound, createProblemResponse } from "@/lib/api/problem-details";
-import { RoundUpdateSchema } from "@/lib/api/schemas";
-import { db } from "@/lib/db";
-import { rounds } from "@/lib/db/schema";
-import { eq } from "drizzle-orm";
+import { getRoundById, updateRound, deleteRound } from '@/lib/db/db-client';
+import { NextResponse } from 'next/server';
+import { z } from 'zod';
+import { RoundUpdateSchema } from '@/lib/api/schemas';
+import { NextRequest } from 'next/server';
+import { badRequest, createProblemResponse } from '@/lib/api/problem-details';
 
 // Placeholder for authentication/user context
 const getUserId = (req: NextRequest): string => {
@@ -14,53 +12,72 @@ const getUserId = (req: NextRequest): string => {
   return req.headers.get("X-User-Id") || process.env.DEV_USER_ID!;
 };
 
-/**
- * PUT /api/rounds/{roundId}
- * Updates a round.
- */
-export async function PUT(req: NextRequest, { params }: { params: { roundId: string } }) {
-  const userId = getUserId(req);
-  if (!userId) {
-    return badRequest("Authentication required.");
-  }
-
+export async function GET(req: Request, { params }: { params: { roundId: string } }) {
   try {
-    let body: unknown;
-    try {
-      body = await req.json();
-    } catch {
-      return badRequest("Malformed JSON in request body.");
+    const round = await getRoundById(params.roundId);
+
+    if (!round) {
+      return NextResponse.json({ type: 'about:blank', title: 'Not Found', status: 404, detail: 'Round not found' }, { status: 404 });
     }
 
-    const validatedData = RoundUpdateSchema.safeParse(body);
-
-    if (!validatedData.success) {
-      const validationMessages = (validatedData.error?.issues ?? []).map((issue) => issue.message);
-      return badRequest(`Invalid input: ${validationMessages.join(", ")}`);
-    }
-
-    const updatedRound = await db.update(rounds).set(validatedData.data).where(eq(rounds.id, params.roundId)).returning();
-
-    if (updatedRound.length === 0) {
-        return notFound("Round not found.");
-    }
-
-    return NextResponse.json(updatedRound[0], { status: 200 });
-  } catch (_error) {
-    return createProblemResponse({ status: 500, title: "Internal Server Error", detail: "Internal Server Error" });
+    return NextResponse.json(round);
+  } catch (error) {
+    return NextResponse.json({ type: 'about:blank', title: 'Internal Server Error', status: 500, detail: 'Internal Server Error' }, { status: 500 });
   }
 }
 
-/**
- * DELETE /api/rounds/{roundId}
- * Deletes a round.
- */
-export async function DELETE(_req: NextRequest, { params }: { params: { roundId: string } }) {
-    const deletedRound = await db.delete(rounds).where(eq(rounds.id, params.roundId)).returning();
-
-    if (deletedRound.length === 0) {
-        return notFound("Round not found.");
+export async function PUT(req: NextRequest, { params }: { params: { roundId: string } }) {
+    const userId = getUserId(req);
+    if (!userId) {
+        return badRequest("Authentication required.");
     }
 
-    return new Response(null, { status: 204 });
+    try {
+        let body: unknown;
+        try {
+            body = await req.json();
+        } catch {
+            return badRequest("Malformed JSON in request body.");
+        }
+
+        const validatedData = RoundUpdateSchema.safeParse(body);
+
+        if (!validatedData.success) {
+            return NextResponse.json({ error: validatedData.error.issues }, { status: 400 });
+        }
+
+        const { participant_ids, loser_id } = validatedData.data;
+
+        const updatedRound = await updateRound(params.roundId, {
+            participantIds: participant_ids,
+            loserId: loser_id,
+        });
+
+        if (!updatedRound) {
+            return NextResponse.json({ type: 'about:blank', title: 'Not Found', status: 404, detail: 'Round not found' }, { status: 404 });
+        }
+
+        return NextResponse.json(updatedRound, { status: 200 });
+    } catch (_error) {
+        return createProblemResponse({ status: 500, title: "Internal Server Error", detail: "Internal Server Error" });
+    }
+}
+
+export async function DELETE(req: NextRequest, { params }: { params: { roundId: string } }) {
+    const userId = getUserId(req);
+    if (!userId) {
+        return badRequest("Authentication required.");
+    }
+
+    try {
+        const deletedRound = await deleteRound(params.roundId);
+
+        if (!deletedRound) {
+            return NextResponse.json({ type: 'about:blank', title: 'Not Found', status: 404, detail: 'Round not found' }, { status: 404 });
+        }
+
+        return new Response(null, { status: 204 });
+    } catch (_error) {
+        return createProblemResponse({ status: 500, title: "Internal Server Error", detail: "Internal Server Error" });
+    }
 }

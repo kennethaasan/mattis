@@ -6,16 +6,11 @@ import { FettMattisCreateSchema, ProblemDetailsSchema } from "@/lib/api/schemas"
 vi.stubEnv("DATABASE_URL", "postgresql://user:password@host:port/db");
 
 // Now we can mock the db object.
-vi.mock("@/lib/db", () => ({
-  db: {
-    insert: vi.fn().mockReturnThis(),
-    values: vi.fn().mockReturnThis(),
-    returning: vi.fn(),
-  },
+vi.mock("@/lib/db-client", () => ({
+  insertFettMattis: vi.fn(),
 }));
 
-// Import the mocked module
-const db = (await import("@/lib/db")) as any;
+const { insertFettMattis } = (await import("@/lib/db-client")) as any;
 
 // Import the route under test
 const { POST } = await import("@/app/api/fettmattis/route");
@@ -34,9 +29,7 @@ const createMockRequest = (body: any) => {
 
 beforeEach(() => {
   // Reset mocks before each test
-  db.db.insert.mockClear();
-  db.db.values.mockClear();
-  db.db.returning.mockClear();
+  insertFettMattis.mockClear();
 });
 
 test("T013: POST /api/fettmattis should return 400 if the request body is invalid", async () => {
@@ -53,7 +46,7 @@ test("T013: POST /api/fettmattis should return 400 if the request body is invali
   expect(body.title).toBe("Bad Request");
 
   // Ensure the database function was NOT called
-  expect(db.db.insert).not.toHaveBeenCalled();
+  expect(insertFettMattis).not.toHaveBeenCalled();
 });
 
 test("T013: POST /api/fettmattis should return 201 and the new fettmattis on success", async () => {
@@ -64,7 +57,7 @@ test("T013: POST /api/fettmattis should return 201 and the new fettmattis on suc
     id: "00000000-0000-7000-0000-000000000005",
   };
 
-  db.db.returning.mockResolvedValueOnce([newFettmattis]);
+  insertFettMattis.mockResolvedValueOnce(newFettmattis);
 
   const req = createMockRequest(validBody);
   const res = await POST(req);
@@ -76,5 +69,5 @@ test("T013: POST /api/fettmattis should return 201 and the new fettmattis on suc
   expect(body).toEqual(newFettmattis);
 
   // Ensure the database function was called with the correct data
-  expect(db.db.insert).toHaveBeenCalled();
+  expect(insertFettMattis).toHaveBeenCalled();
 });

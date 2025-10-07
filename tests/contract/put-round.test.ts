@@ -6,17 +6,11 @@ import { RoundUpdateSchema, ProblemDetailsSchema } from "@/lib/api/schemas";
 vi.stubEnv("DATABASE_URL", "postgresql://user:password@host:port/db");
 
 // Now we can mock the db object.
-vi.mock("@/lib/db", () => ({
-  db: {
-    update: vi.fn().mockReturnThis(),
-    set: vi.fn().mockReturnThis(),
-    where: vi.fn().mockReturnThis(),
-    returning: vi.fn(),
-  },
+vi.mock("@/lib/db-client", () => ({
+  updateRound: vi.fn(),
 }));
 
-// Import the mocked module
-const db = (await import("@/lib/db")) as any;
+const { updateRound } = await import("@/lib/db-client");
 
 // Import the route under test
 const { PUT } = await import("@/app/api/rounds/[roundId]/route");
@@ -35,10 +29,7 @@ const createMockRequest = (body: any) => {
 
 beforeEach(() => {
   // Reset mocks before each test
-  db.db.update.mockClear();
-  db.db.set.mockClear();
-  db.db.where.mockClear();
-  db.db.returning.mockClear();
+  updateRound.mockClear();
 });
 
 test("T011: PUT /api/rounds/{roundId} should return 400 if the request body is invalid", async () => {
@@ -55,7 +46,7 @@ test("T011: PUT /api/rounds/{roundId} should return 400 if the request body is i
   expect(body.title).toBe("Bad Request");
 
   // Ensure the database function was NOT called
-  expect(db.db.update).not.toHaveBeenCalled();
+  expect(updateRound).not.toHaveBeenCalled();
 });
 
 test("T011: PUT /api/rounds/{roundId} should return 404 if the round does not exist", async () => {
@@ -64,7 +55,7 @@ test("T011: PUT /api/rounds/{roundId} should return 404 if the round does not ex
     loser_id: "00000000-0000-7000-0000-000000000001",
   };
 
-  db.db.returning.mockResolvedValueOnce([]);
+  updateRound.mockResolvedValueOnce(null);
 
   const req = createMockRequest(validBody);
   const res = await PUT(req, { params: { roundId: "00000000-0000-7000-0000-000000000004" } });
@@ -86,7 +77,7 @@ test("T011: PUT /api/rounds/{roundId} should return 200 and the updated round on
     id: "00000000-0000-7000-0000-000000000004",
   };
 
-  db.db.returning.mockResolvedValueOnce([updatedRound]);
+  updateRound.mockResolvedValueOnce(updatedRound);
 
   const req = createMockRequest(validBody);
   const res = await PUT(req, { params: { roundId: "00000000-0000-7000-0000-000000000004" } });
@@ -98,5 +89,5 @@ test("T011: PUT /api/rounds/{roundId} should return 200 and the updated round on
   expect(body).toEqual(updatedRound);
 
   // Ensure the database function was called with the correct data
-  expect(db.db.update).toHaveBeenCalled();
+  expect(updateRound).toHaveBeenCalled();
 });

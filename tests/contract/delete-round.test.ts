@@ -6,16 +6,15 @@ import { ProblemDetailsSchema } from "@/lib/api/schemas";
 vi.stubEnv("DATABASE_URL", "postgresql://user:password@host:port/db");
 
 // Now we can mock the db object.
-vi.mock("@/lib/db", () => ({
-  db: {
-    delete: vi.fn().mockReturnThis(),
-    where: vi.fn().mockReturnThis(),
-    returning: vi.fn(),
-  },
-}));
+const { deleteRound } = vi.hoisted(() => {
+  return {
+    deleteRound: vi.fn(),
+  };
+});
 
-// Import the mocked module
-const db = (await import("@/lib/db")) as any;
+vi.mock("@/lib/db-client", () => ({
+  deleteRound,
+}));
 
 // Import the route under test
 const { DELETE } = await import("@/app/api/rounds/[roundId]/route");
@@ -33,13 +32,11 @@ const createMockRequest = () => {
 
 beforeEach(() => {
   // Reset mocks before each test
-  db.db.delete.mockClear();
-  db.db.where.mockClear();
-  db.db.returning.mockClear();
+  deleteRound.mockClear();
 });
 
 test("T012: DELETE /api/rounds/{roundId} should return 404 if the round does not exist", async () => {
-  db.db.returning.mockResolvedValueOnce([]);
+  deleteRound.mockResolvedValueOnce(null);
 
   const req = createMockRequest();
   const res = await DELETE(req, { params: { roundId: "00000000-0000-7000-0000-000000000004" } });
@@ -57,7 +54,7 @@ test("T012: DELETE /api/rounds/{roundId} should return 204 on success", async ()
     id: "00000000-0000-7000-0000-000000000004",
   };
 
-  db.db.returning.mockResolvedValueOnce([deletedRound]);
+  deleteRound.mockResolvedValueOnce(deletedRound);
 
   const req = createMockRequest();
   const res = await DELETE(req, { params: { roundId: "00000000-0000-7000-0000-000000000004" } });
@@ -65,5 +62,5 @@ test("T012: DELETE /api/rounds/{roundId} should return 204 on success", async ()
   expect(res.status).toBe(204);
 
   // Ensure the database function was called with the correct data
-  expect(db.db.delete).toHaveBeenCalled();
+  expect(deleteRound).toHaveBeenCalled();
 });

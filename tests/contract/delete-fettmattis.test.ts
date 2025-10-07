@@ -6,16 +6,15 @@ import { ProblemDetailsSchema } from "@/lib/api/schemas";
 vi.stubEnv("DATABASE_URL", "postgresql://user:password@host:port/db");
 
 // Now we can mock the db object.
-vi.mock("@/lib/db", () => ({
-  db: {
-    delete: vi.fn().mockReturnThis(),
-    where: vi.fn().mockReturnThis(),
-    returning: vi.fn(),
-  },
-}));
+const { deleteFettMattis } = vi.hoisted(() => {
+  return {
+    deleteFettMattis: vi.fn(),
+  };
+});
 
-// Import the mocked module
-const db = (await import("@/lib/db")) as any;
+vi.mock("@/lib/db-client", () => ({
+  deleteFettMattis,
+}));
 
 // Import the route under test
 const { DELETE } = await import("@/app/api/fettmattis/[fettmattisId]/route");
@@ -33,13 +32,11 @@ const createMockRequest = () => {
 
 beforeEach(() => {
   // Reset mocks before each test
-  db.db.delete.mockClear();
-  db.db.where.mockClear();
-  db.db.returning.mockClear();
+  deleteFettMattis.mockClear();
 });
 
 test("T014: DELETE /api/fettmattis/{fettmattisId} should return 404 if the fettmattis does not exist", async () => {
-  db.db.returning.mockResolvedValueOnce([]);
+  deleteFettMattis.mockResolvedValueOnce(null);
 
   const req = createMockRequest();
   const res = await DELETE(req, { params: { fettmattisId: "00000000-0000-7000-0000-000000000005" } });
@@ -57,7 +54,7 @@ test("T014: DELETE /api/fettmattis/{fettmattisId} should return 204 on success",
     id: "00000000-0000-7000-0000-000000000005",
   };
 
-  db.db.returning.mockResolvedValueOnce([deletedFettmattis]);
+  deleteFettMattis.mockResolvedValueOnce(deletedFettmattis);
 
   const req = createMockRequest();
   const res = await DELETE(req, { params: { fettmattisId: "00000000-0000-7000-0000-000000000005" } });
@@ -65,5 +62,5 @@ test("T014: DELETE /api/fettmattis/{fettmattisId} should return 204 on success",
   expect(res.status).toBe(204);
 
   // Ensure the database function was called with the correct data
-  expect(db.db.delete).toHaveBeenCalled();
+  expect(deleteFettMattis).toHaveBeenCalled();
 });

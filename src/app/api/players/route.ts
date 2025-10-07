@@ -6,7 +6,13 @@ import { PlayerCreateSchema } from '@/lib/api/schemas';
 export async function POST(req: Request) {
   try {
     const body = await req.json();
-    const { display_name } = PlayerCreateSchema.parse(body);
+    const validation = PlayerCreateSchema.safeParse(body);
+
+    if (!validation.success) {
+      return NextResponse.json({ error: validation.error.issues }, { status: 400 });
+    }
+
+    const { display_name } = validation.data;
 
     const newPlayer = await insertPlayer({ displayName: display_name });
 
@@ -17,9 +23,6 @@ export async function POST(req: Request) {
 
     return NextResponse.json(response, { status: 201 });
   } catch (error) {
-    if (error instanceof z.ZodError) {
-      return NextResponse.json({ error: error.issues }, { status: 400 });
-    }
     // Add more specific error handling for database errors if needed
     return NextResponse.json({ error: 'Internal Server Error' }, { status: 500 });
   }

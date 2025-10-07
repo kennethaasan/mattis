@@ -33,8 +33,7 @@ export async function POST(req: NextRequest) {
     const validatedData = RoundCreateSchema.safeParse(body);
 
     if (!validatedData.success) {
-      const validationMessages = (validatedData.error?.issues ?? []).map((issue) => issue.message);
-      return badRequest(`Invalid input: ${validationMessages.join(", ")}`);
+      return NextResponse.json({ error: validatedData.error.issues }, { status: 400 });
     }
 
     const { participant_ids, loser_id } = validatedData.data;
