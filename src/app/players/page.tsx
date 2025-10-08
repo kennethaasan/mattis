@@ -117,7 +117,7 @@ export default function PlayersPage() {
                 </div>
               </TableCell>
               <TableCell className="hidden sm:table-cell">
-                <Badge variant={player.active ? "success" : "outline"}>
+                <Badge variant={player.active ? "success" : "outline-solid"}>
                   {player.active ? "Active" : "Inactive"}
                 </Badge>
               </TableCell>
@@ -151,7 +151,7 @@ export default function PlayersPage() {
         </p>
       </div>
 
-      <div className="grid gap-6 lg:grid-cols-[380px,1fr]">
+      <div className="grid gap-6 lg:grid-cols-[380px_1fr]">
         <Card>
           <CardHeader>
             <CardTitle>Invite a player</CardTitle>

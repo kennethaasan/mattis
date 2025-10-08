@@ -53,7 +53,7 @@ export function SiteHeader() {
                   className={cn(
                     "rounded-full px-4 py-2 text-sm font-medium transition",
                     isActive
-                      ? "bg-primary/10 text-primary shadow-sm shadow-primary/10"
+                      ? "bg-primary/10 text-primary shadow-xs shadow-primary/10"
                       : "text-muted-foreground hover:bg-muted/60",
                   )}
                 >
@@ -105,7 +105,7 @@ export function SiteHeader() {
                 className={cn(
                   "rounded-2xl px-4 py-3 text-sm font-medium transition",
                   isActive
-                    ? "bg-primary/10 text-primary shadow-sm shadow-primary/20"
+                    ? "bg-primary/10 text-primary shadow-xs shadow-primary/20"
                     : "text-muted-foreground hover:bg-muted/60",
                 )}
               >

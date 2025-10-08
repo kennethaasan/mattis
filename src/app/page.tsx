@@ -74,7 +74,7 @@ export default function Home() {
     <div className="flex flex-col">
       <section className="relative overflow-hidden">
         <div className="container relative flex flex-col items-center gap-8 pb-20 pt-24 text-center md:pt-28">
-          <Badge className="rounded-full bg-primary/10 text-primary shadow-sm shadow-primary/20">
+          <Badge className="rounded-full bg-primary/10 text-primary shadow-xs shadow-primary/20">
             New Mattis experience
           </Badge>
           <h1 className="max-w-4xl text-4xl font-bold tracking-tight text-foreground sm:text-5xl md:text-6xl">
@@ -94,7 +94,7 @@ export default function Home() {
               <Link href="/players">Manage players</Link>
             </Button>
           </div>
-          <div className="mt-10 grid w-full gap-4 rounded-3xl border border-border/50 bg-background/70 p-6 shadow-xl shadow-primary/10 backdrop-blur md:grid-cols-3">
+          <div className="mt-10 grid w-full gap-4 rounded-3xl border border-border/50 bg-background/70 p-6 shadow-xl shadow-primary/10 backdrop-blur-sm md:grid-cols-3">
             {highlightStats.map((stat) => (
               <div key={stat.label} className="flex flex-col items-center gap-1">
                 <span className="text-3xl font-semibold tracking-tight md:text-4xl">
@@ -110,7 +110,7 @@ export default function Home() {
             ))}
           </div>
         </div>
-        <div className="absolute inset-x-0 top-1/2 -z-10 h-[480px] bg-gradient-to-b from-primary/15 via-transparent to-transparent blur-3xl" />
+        <div className="absolute inset-x-0 top-1/2 -z-10 h-[480px] bg-linear-to-b from-primary/15 via-transparent to-transparent blur-3xl" />
       </section>
 
       <section className="container grid gap-6 pb-16 md:grid-cols-3">
@@ -127,7 +127,7 @@ export default function Home() {
         ))}
       </section>
 
-      <section className="container grid gap-6 pb-16 lg:grid-cols-[1.2fr,0.8fr]">
+      <section className="container grid gap-6 pb-16 lg:grid-cols-[1.2fr_0.8fr]">
         <Card className="overflow-hidden">
           <CardHeader>
             <CardTitle className="flex items-center gap-2 text-2xl md:text-3xl">
@@ -151,7 +151,7 @@ export default function Home() {
               </CardHeader>
             </Card>
           ))}
-          <Card className="bg-gradient-to-br from-primary/10 via-background to-background">
+          <Card className="bg-linear-to-br from-primary/10 via-background to-background">
             <CardHeader>
               <CardTitle className="flex items-center gap-2 text-lg">
                 <Zap className="h-5 w-5 text-primary" />

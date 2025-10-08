@@ -13,7 +13,7 @@ export const Input = React.forwardRef<HTMLInputElement, InputProps>(
     return (
       <div
         className={cn(
-          "group relative flex items-center rounded-2xl border border-input bg-background text-base shadow-sm transition focus-within:border-primary/60 focus-within:shadow-md",
+          "group relative flex items-center rounded-2xl border border-input bg-background text-base shadow-xs transition focus-within:border-primary/60 focus-within:shadow-md",
           className,
         )}
       >
@@ -25,7 +25,7 @@ export const Input = React.forwardRef<HTMLInputElement, InputProps>(
         <input
           type={type}
           className={cn(
-            "flex-1 rounded-2xl bg-transparent px-4 py-3 text-sm transition placeholder:text-muted-foreground focus:outline-none",
+            "flex-1 rounded-2xl bg-transparent px-4 py-3 text-sm transition placeholder:text-muted-foreground focus:outline-hidden",
             leadingIcon ? "pl-3" : "pl-4",
           )}
           ref={ref}

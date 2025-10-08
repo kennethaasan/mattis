@@ -127,7 +127,7 @@ export default function RoundsPage() {
         </p>
       </div>
 
-      <div className="grid gap-6 lg:grid-cols-[1.1fr,0.9fr]">
+      <div className="grid gap-6 lg:grid-cols-[1.1fr_0.9fr]">
         <Card>
           <CardHeader>
             <CardTitle className="flex items-center gap-2">

@@ -66,7 +66,7 @@ export function FettMattisForm({ onSubmit, players, rounds, initialData }: FettM
             id="fettmattis-player"
             value={playerId}
             onChange={(event) => setPlayerId(event.target.value)}
-            className="w-full rounded-2xl bg-background px-4 py-3 text-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+            className="w-full rounded-2xl bg-background px-4 py-3 text-sm focus-visible:outline-hidden focus-visible:ring-2 focus-visible:ring-ring"
           >
             <option value="" disabled>
               Choose the honoured player
@@ -90,7 +90,7 @@ export function FettMattisForm({ onSubmit, players, rounds, initialData }: FettM
             id="fettmattis-round"
             value={roundId}
             onChange={(event) => setRoundId(event.target.value)}
-            className="w-full rounded-2xl bg-background px-4 py-3 text-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+            className="w-full rounded-2xl bg-background px-4 py-3 text-sm focus-visible:outline-hidden focus-visible:ring-2 focus-visible:ring-ring"
           >
             <option value="">No linked round</option>
             {rounds.map((round) => (

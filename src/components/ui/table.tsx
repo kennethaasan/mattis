@@ -8,7 +8,7 @@ const Table = React.forwardRef<
   HTMLTableElement,
   React.HTMLAttributes<HTMLTableElement>
 >(({ className, ...props }, ref) => (
-  <div className="relative w-full overflow-hidden rounded-3xl border border-border/60 bg-card shadow-sm">
+  <div className="relative w-full overflow-hidden rounded-3xl border border-border/60 bg-card shadow-xs">
     <table
       ref={ref}
       className={cn("w-full caption-bottom text-sm", className)}
@@ -52,7 +52,7 @@ const TableFooter = React.forwardRef<
   <tfoot
     ref={ref}
     className={cn(
-      "bg-muted/40 font-medium text-foreground [&>tr]:last:border-b-0",
+      "bg-muted/40 font-medium text-foreground last:[&>tr]:border-b-0",
       className,
     )}
     {...props}

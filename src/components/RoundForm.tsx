@@ -96,7 +96,7 @@ export function RoundForm({ onSubmit, players, initialData }: RoundFormProps) {
                 )}
               >
                 <span className="font-medium text-foreground">{option.label}</span>
-                <Badge variant={isChecked ? "success" : "outline"}>
+                <Badge variant={isChecked ? "success" : "outline-solid"}>
                   {isChecked ? "Selected" : "Tap to add"}
                 </Badge>
               </button>
@@ -115,7 +115,7 @@ export function RoundForm({ onSubmit, players, initialData }: RoundFormProps) {
             id="round-loser"
             value={loserId}
             onChange={(event) => setLoserId(event.target.value)}
-            className="w-full rounded-2xl bg-background px-4 py-3 text-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+            className="w-full rounded-2xl bg-background px-4 py-3 text-sm focus-visible:outline-hidden focus-visible:ring-2 focus-visible:ring-ring"
             disabled={loserOptions.length === 0}
           >
             <option value="" disabled>

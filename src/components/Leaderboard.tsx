@@ -95,7 +95,7 @@ export function Leaderboard() {
                       {entry.roundsPlayed} rounds played
                     </span>
                   </div>
-                  <Badge variant={entry.lossPercentage < 30 ? "success" : "outline"}>
+                  <Badge variant={entry.lossPercentage < 30 ? "success" : "outline-solid"}>
                     {entry.lossPercentage.toFixed(1)}%
                   </Badge>
                 </TableCell>
@@ -152,7 +152,7 @@ export function Leaderboard() {
     <div className="space-y-6">
       <div className="flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
         <div className="flex flex-col items-start gap-2 text-left">
-          <div className="inline-flex items-center gap-2 rounded-full border border-primary/40 bg-primary/10 px-3 py-1 text-xs font-semibold text-primary shadow-sm">
+          <div className="inline-flex items-center gap-2 rounded-full border border-primary/40 bg-primary/10 px-3 py-1 text-xs font-semibold text-primary shadow-xs">
             <Sparkles className="h-3.5 w-3.5" />
             Live rankings
           </div>
@@ -169,7 +169,7 @@ export function Leaderboard() {
           </label>
           <select
             id="leaderboard-year"
-            className="h-9 rounded-full border border-border/60 bg-background px-4 text-sm font-medium shadow-sm transition focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+            className="h-9 rounded-full border border-border/60 bg-background px-4 text-sm font-medium shadow-xs transition focus-visible:outline-hidden focus-visible:ring-2 focus-visible:ring-ring"
             value={year}
             onChange={(event) => setYear(Number.parseInt(event.target.value, 10))}
           >
