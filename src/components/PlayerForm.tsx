@@ -9,8 +9,8 @@ import { Label } from "@/components/ui/label";
 import { PlayerCreateSchema, type PlayerCreate } from "@/lib/api/schemas";
 
 interface PlayerFormProps {
-  onSubmit: (data: PlayerCreate) => void | Promise<void>;
-  initialData?: PlayerCreate;
+  readonly onSubmit: (data: PlayerCreate) => void | Promise<void>;
+  readonly initialData?: PlayerCreate;
 }
 
 export function PlayerForm({ onSubmit, initialData }: PlayerFormProps) {
@@ -40,7 +40,12 @@ export function PlayerForm({ onSubmit, initialData }: PlayerFormProps) {
   };
 
   return (
-    <form onSubmit={handleSubmit} className="flex flex-col gap-4">
+    <form
+      onSubmit={(event) => {
+        void handleSubmit(event);
+      }}
+      className="flex flex-col gap-4"
+    >
       <div className="space-y-2">
         <Label htmlFor="player-display-name">Display name</Label>
         <Input

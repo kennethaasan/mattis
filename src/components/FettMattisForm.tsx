@@ -6,21 +6,21 @@ import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
 import { FettMattisCreateSchema, type FettMattisCreate } from "@/lib/api/schemas";
 
-type SimplePlayer = {
-  id: string;
-  displayName: string;
-  active: boolean;
-};
+interface SimplePlayer {
+  readonly id: string;
+  readonly displayName: string;
+  readonly active: boolean;
+}
 
-type SimpleRound = {
-  id: string;
-};
+interface SimpleRound {
+  readonly id: string;
+}
 
 interface FettMattisFormProps {
-  onSubmit: (data: FettMattisCreate) => void | Promise<void>;
-  players: SimplePlayer[];
-  rounds: SimpleRound[];
-  initialData?: FettMattisCreate;
+  readonly onSubmit: (data: FettMattisCreate) => void | Promise<void>;
+  readonly players: readonly SimplePlayer[];
+  readonly rounds: readonly SimpleRound[];
+  readonly initialData?: FettMattisCreate;
 }
 
 export function FettMattisForm({ onSubmit, players, rounds, initialData }: FettMattisFormProps) {
@@ -58,7 +58,12 @@ export function FettMattisForm({ onSubmit, players, rounds, initialData }: FettM
   const isSubmitDisabled = playerId.length === 0;
 
   return (
-    <form onSubmit={handleSubmit} className="flex flex-col gap-6">
+    <form
+      onSubmit={(event) => {
+        void handleSubmit(event);
+      }}
+      className="flex flex-col gap-6"
+    >
       <div className="space-y-2">
         <Label htmlFor="fettmattis-player">Player</Label>
         <div className="rounded-2xl border border-border/70 bg-background p-1">

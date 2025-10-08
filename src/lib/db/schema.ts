@@ -24,12 +24,19 @@ export const rounds = pgTable('rounds', {
   deletedAt: timestamp('deleted_at', { withTimezone: true }),
 });
 
-export const roundParticipants = pgTable('round_participants', {
-  roundId: uuid('round_id').references(() => rounds.id).notNull(),
-  playerId: uuid('player_id').references(() => players.id).notNull(),
-}, (table) => ({
-  pk: primaryKey({ columns: [table.roundId, table.playerId]}),
-}));
+export const roundParticipants = pgTable(
+  'round_participants',
+  {
+    roundId: uuid('round_id').references(() => rounds.id).notNull(),
+    playerId: uuid('player_id').references(() => players.id).notNull(),
+  },
+  (table) => [
+    primaryKey({
+      columns: [table.roundId, table.playerId],
+      name: 'round_participants_pk',
+    }),
+  ],
+);
 
 export const roundLoser = pgTable('round_loser', {
   roundId: uuid('round_id').primaryKey().references(() => rounds.id).notNull(),

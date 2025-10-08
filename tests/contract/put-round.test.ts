@@ -1,5 +1,5 @@
 import { test, expect, vi, beforeEach } from "vitest";
-import { NextRequest } from "next/server";
+import type { NextRequest } from "next/server";
 import { ProblemDetailsSchema } from "@/lib/api/schemas";
 
 const mocks = vi.hoisted(() => {
@@ -30,9 +30,9 @@ const MOCK_USER_ID = "00000000-0000-7000-0000-000000000000";
 vi.stubEnv("DEV_USER_ID", MOCK_USER_ID);
 
 // Helper function to create a mock NextRequest
-const createMockRequest = (body: any) => {
+const createMockRequest = (body: unknown) => {
   return {
-    json: async () => body,
+    json: () => Promise.resolve(body),
     headers: new Headers({ "X-User-Id": MOCK_USER_ID }),
   } as unknown as NextRequest;
 };
@@ -48,7 +48,8 @@ test("T011: PUT /api/rounds/{roundId} should return 400 if the request body is i
   const res = await PUT(req, { params: Promise.resolve({ roundId: "00000000-0000-7000-0000-000000000004" }) });
 
   expect(res.status).toBe(400);
-  expect(String(res.headers.get("Content-Type") || "")).toContain("application/json");
+  const contentType = res.headers.get("Content-Type") ?? "";
+  expect(contentType).toContain("application/json");
 
   const body = await res.json();
   expect(Array.isArray(body.error)).toBe(true);
@@ -69,7 +70,8 @@ test("T011: PUT /api/rounds/{roundId} should return 404 if the round does not ex
   const res = await PUT(req, { params: Promise.resolve({ roundId: "00000000-0000-7000-0000-000000000004" }) });
 
   expect(res.status).toBe(404);
-  expect(String(res.headers.get("Content-Type") || "")).toContain("application/problem+json");
+  const contentType = res.headers.get("Content-Type") ?? "";
+  expect(contentType).toContain("application/problem+json");
 
   const body = await res.json();
   expect(() => ProblemDetailsSchema.parse(body)).not.toThrow();
@@ -99,7 +101,8 @@ test("T011: PUT /api/rounds/{roundId} should return 200 and the updated round on
   const res = await PUT(req, { params: Promise.resolve({ roundId: "00000000-0000-7000-0000-000000000004" }) });
 
   expect(res.status).toBe(200);
-  expect(String(res.headers.get("Content-Type") || "")).toContain("application/json");
+  const contentType = res.headers.get("Content-Type") ?? "";
+  expect(contentType).toContain("application/json");
 
   const body = await res.json();
   expect(body).toEqual({

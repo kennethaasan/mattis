@@ -16,22 +16,57 @@ import {
 } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import type { FettMattisCreate, RoundCreate } from "@/lib/api/schemas";
-import { PLAYERS_QUERY_KEY, fetchPlayers } from "@/lib/api/players-client";
+import {
+  PLAYERS_QUERY_KEY,
+  fetchPlayers,
+  type PlayersApiRecord,
+} from "@/lib/api/players-client";
 
 const DEFAULT_USER_ID =
   process.env.NEXT_PUBLIC_DEFAULT_USER_ID ?? "00000000-0000-7000-0000-000000000000";
+
+interface ProblemDetailPayload {
+  readonly detail?: unknown;
+  readonly error?: unknown;
+}
+
+const extractErrorDetail = (body: unknown): string | undefined => {
+  if (typeof body !== "object" || body === null) {
+    return undefined;
+  }
+
+  const candidate = body as ProblemDetailPayload;
+
+  if (typeof candidate.detail === "string") {
+    return candidate.detail;
+  }
+
+  if (Array.isArray(candidate.error)) {
+    const [firstError] = candidate.error;
+    if (
+      typeof firstError === "object" &&
+      firstError !== null &&
+      "message" in firstError &&
+      typeof (firstError as { message?: unknown }).message === "string"
+    ) {
+      return (firstError as { message: string }).message;
+    }
+  }
+
+  return undefined;
+};
 
 export default function RoundsPage() {
   const queryClient = useQueryClient();
   const [status, setStatus] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
 
-  const playersQuery = useQuery({
+  const playersQuery = useQuery<PlayersApiRecord[]>({
     queryKey: PLAYERS_QUERY_KEY,
     queryFn: fetchPlayers,
   });
 
-  const players = playersQuery.data ?? [];
+  const players: PlayersApiRecord[] = playersQuery.data ?? [];
   const isPlayersLoading = playersQuery.isLoading;
   const isPlayersFetching = playersQuery.isFetching;
 
@@ -45,7 +80,7 @@ export default function RoundsPage() {
     [players],
   );
 
-  const roundMutation = useMutation<void, Error, RoundCreate>({
+  const roundMutation = useMutation<undefined, Error, RoundCreate>({
     mutationFn: async (payload) => {
       const response = await fetch("/api/rounds", {
         method: "POST",
@@ -57,10 +92,8 @@ export default function RoundsPage() {
       });
 
       if (!response.ok) {
-        const body = await response.json();
-        const detail =
-          (body?.detail as string | undefined) ??
-          (Array.isArray(body?.error) ? body.error[0]?.message : undefined);
+        const body: unknown = await response.json();
+        const detail = extractErrorDetail(body);
         throw new Error(detail ?? "Unable to save round.");
       }
     },
@@ -75,7 +108,7 @@ export default function RoundsPage() {
     },
   });
 
-  const fettMattisMutation = useMutation<void, Error, FettMattisCreate>({
+  const fettMattisMutation = useMutation<undefined, Error, FettMattisCreate>({
     mutationFn: async (payload) => {
       const response = await fetch("/api/fettmattis", {
         method: "POST",
@@ -87,10 +120,8 @@ export default function RoundsPage() {
       });
 
       if (!response.ok) {
-        const body = await response.json();
-        const detail =
-          (body?.detail as string | undefined) ??
-          (Array.isArray(body?.error) ? body.error[0]?.message : undefined);
+        const body: unknown = await response.json();
+        const detail = extractErrorDetail(body);
         throw new Error(detail ?? "Unable to grant a FettMattis.");
       }
     },

@@ -15,7 +15,7 @@ const navLinks = [
   { href: "/leaderboard", label: "Leaderboards" },
   { href: "/players", label: "Players" },
   { href: "/rounds", label: "Rounds" },
-] as const satisfies ReadonlyArray<{ href: Route; label: string }>;
+] as const satisfies readonly { href: Route; label: string }[];
 
 export function SiteHeader() {
   const pathname = usePathname();

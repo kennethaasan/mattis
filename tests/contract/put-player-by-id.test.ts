@@ -1,5 +1,5 @@
 import { beforeEach, expect, test, vi } from "vitest";
-import { NextRequest } from "next/server";
+import type { NextRequest } from "next/server";
 
 import { PlayerSchema, ProblemDetailsSchema } from "@/lib/api/schemas";
 
@@ -25,11 +25,11 @@ const { PUT } = await import("@/app/api/players/[playerId]/route");
 const MOCK_USER_ID = "00000000-0000-7000-0000-000000000000";
 vi.stubEnv("DEV_USER_ID", MOCK_USER_ID);
 
-const createMockRequest = (playerId: string, body: any) => {
+const createMockRequest = (playerId: string, body: unknown) => {
   return {
     headers: new Headers({ "X-User-Id": MOCK_USER_ID }),
     nextUrl: new URL(`http://localhost/api/players/${playerId}`),
-    json: async () => body,
+    json: () => Promise.resolve(body),
   } as unknown as NextRequest;
 };
 

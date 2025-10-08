@@ -1,5 +1,5 @@
 import { test, expect, vi, beforeEach } from "vitest";
-import { NextRequest } from "next/server";
+import type { NextRequest } from "next/server";
 import { ProblemDetailsSchema } from "@/lib/api/schemas";
 
 const mocks = vi.hoisted(() => {
@@ -44,7 +44,8 @@ test("T012: DELETE /api/rounds/{roundId} should return 404 if the round does not
   const res = await DELETE(req, { params: Promise.resolve({ roundId: "00000000-0000-7000-0000-000000000004" }) });
 
   expect(res.status).toBe(404);
-  expect(String(res.headers.get("Content-Type") || "")).toContain("application/problem+json");
+  const contentType = res.headers.get("Content-Type") ?? "";
+  expect(contentType).toContain("application/problem+json");
 
   const body = await res.json();
   expect(() => ProblemDetailsSchema.parse(body)).not.toThrow();

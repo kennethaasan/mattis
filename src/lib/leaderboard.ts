@@ -1,7 +1,7 @@
 import type { FettmattisLeaderboard, RegularLeaderboard } from "@/lib/leaderboard-types";
 
 interface RegularLeaderboardResponse {
-  rank: number;
+  rank?: number | null;
   loss_percentage: number;
   participation_count: number;
   loss_count: number;
@@ -13,7 +13,7 @@ interface RegularLeaderboardResponse {
 }
 
 interface FettMattisLeaderboardResponse {
-  rank: number;
+  rank?: number | null;
   fettmattis_count: number;
   player: {
     id: string;
@@ -23,7 +23,8 @@ interface FettMattisLeaderboardResponse {
 }
 
 export async function getRegularLeaderboard(year: number): Promise<RegularLeaderboard> {
-  const response = await fetch(`/api/leaderboard/regular?year=${year}`, {
+  const query = new URLSearchParams({ year: year.toString() });
+  const response = await fetch(`/api/leaderboard/regular?${query.toString()}`, {
     credentials: "include",
     cache: "no-store",
   });
@@ -45,7 +46,8 @@ export async function getRegularLeaderboard(year: number): Promise<RegularLeader
 }
 
 export async function getFettmattisLeaderboard(year: number): Promise<FettmattisLeaderboard> {
-  const response = await fetch(`/api/leaderboard/fettmattis?year=${year}`, {
+  const query = new URLSearchParams({ year: year.toString() });
+  const response = await fetch(`/api/leaderboard/fettmattis?${query.toString()}`, {
     credentials: "include",
     cache: "no-store",
   });

@@ -1,11 +1,15 @@
 "use client";
 
 import Link from "next/link";
-import { Github, Heart } from "lucide-react";
+import { ExternalLink, Heart } from "lucide-react";
 
 import { cn } from "@/lib/utils";
 
-export function SiteFooter({ className }: { className?: string }) {
+interface SiteFooterProps {
+  readonly className?: string;
+}
+
+export function SiteFooter({ className }: SiteFooterProps) {
   return (
     <footer
       className={cn(
@@ -33,7 +37,7 @@ export function SiteFooter({ className }: { className?: string }) {
             rel="noreferrer"
             className="flex items-center gap-2 transition hover:text-primary"
           >
-            <Github className="h-4 w-4" />
+            <ExternalLink className="h-4 w-4" />
             Project Repo
           </Link>
         </div>

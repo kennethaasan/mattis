@@ -25,12 +25,12 @@ type Tab = "regular" | "fettmattis";
 export function Leaderboard() {
   const [year, setYear] = useState(new Date().getFullYear());
   const [activeTab, setActiveTab] = useState<Tab>("regular");
-  const regularQuery = useQuery<RegularLeaderboard, Error>({
+  const regularQuery = useQuery<RegularLeaderboard>({
     queryKey: ["leaderboard", "regular", year],
     queryFn: () => getRegularLeaderboard(year),
   });
 
-  const fettmattisQuery = useQuery<FettmattisLeaderboard, Error>({
+  const fettmattisQuery = useQuery<FettmattisLeaderboard>({
     queryKey: ["leaderboard", "fettmattis", year],
     queryFn: () => getFettmattisLeaderboard(year),
   });
@@ -85,7 +85,7 @@ export function Leaderboard() {
           <TableBody>
             {regular.map((entry) => (
               <TableRow key={entry.playerId}>
-                <TableCell className="font-semibold">#{entry.rank ?? 1}</TableCell>
+                <TableCell className="font-semibold">#{entry.rank}</TableCell>
                 <TableCell className="flex items-center gap-3">
                   <div className="flex flex-col">
                     <span className="font-medium text-foreground">
@@ -95,7 +95,7 @@ export function Leaderboard() {
                       {entry.roundsPlayed} rounds played
                     </span>
                   </div>
-                  <Badge variant={entry.lossPercentage < 30 ? "success" : "outline-solid"}>
+                  <Badge variant={entry.lossPercentage < 30 ? "success" : "outline"}>
                     {entry.lossPercentage.toFixed(1)}%
                   </Badge>
                 </TableCell>
@@ -129,7 +129,7 @@ export function Leaderboard() {
         <TableBody>
           {fettmattis.map((entry) => (
             <TableRow key={entry.playerId}>
-              <TableCell className="font-semibold">#{entry.rank ?? 1}</TableCell>
+              <TableCell className="font-semibold">#{entry.rank}</TableCell>
               <TableCell className="flex items-center gap-3">
                 <span className="font-medium text-foreground">
                   {entry.playerName}
@@ -213,7 +213,11 @@ function LoadingNotice() {
   );
 }
 
-function EmptyState({ message }: { message: string }) {
+interface EmptyStateProps {
+  readonly message: string;
+}
+
+function EmptyState({ message }: EmptyStateProps) {
   return (
     <div className="flex flex-col items-center justify-center gap-3 rounded-3xl border border-dashed border-border/70 bg-muted/40 px-6 py-12 text-center">
       <p className="text-sm text-muted-foreground">{message}</p>

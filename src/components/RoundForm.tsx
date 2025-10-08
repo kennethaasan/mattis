@@ -8,16 +8,16 @@ import { Badge } from "@/components/ui/badge";
 import { cn } from "@/lib/utils";
 import { RoundCreateSchema, type RoundCreate } from "@/lib/api/schemas";
 
-type RoundFormPlayer = {
-  id: string;
-  displayName: string;
-  active: boolean;
-};
+interface RoundFormPlayer {
+  readonly id: string;
+  readonly displayName: string;
+  readonly active: boolean;
+}
 
 interface RoundFormProps {
-  onSubmit: (data: RoundCreate) => void | Promise<void>;
-  players: RoundFormPlayer[];
-  initialData?: RoundCreate;
+  readonly onSubmit: (data: RoundCreate) => void | Promise<void>;
+  readonly players: readonly RoundFormPlayer[];
+  readonly initialData?: RoundCreate;
 }
 
 export function RoundForm({ onSubmit, players, initialData }: RoundFormProps) {
@@ -75,7 +75,12 @@ export function RoundForm({ onSubmit, players, initialData }: RoundFormProps) {
   const isSubmitDisabled = participantIds.length < 2 || loserId.length === 0;
 
   return (
-    <form onSubmit={handleSubmit} className="flex flex-col gap-6">
+    <form
+      onSubmit={(event) => {
+        void handleSubmit(event);
+      }}
+      className="flex flex-col gap-6"
+    >
       <div className="space-y-3">
         <Label className="text-sm uppercase tracking-wide text-muted-foreground">
           Participants
@@ -96,7 +101,7 @@ export function RoundForm({ onSubmit, players, initialData }: RoundFormProps) {
                 )}
               >
                 <span className="font-medium text-foreground">{option.label}</span>
-                <Badge variant={isChecked ? "success" : "outline-solid"}>
+                <Badge variant={isChecked ? "success" : "outline"}>
                   {isChecked ? "Selected" : "Tap to add"}
                 </Badge>
               </button>

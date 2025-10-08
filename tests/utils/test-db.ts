@@ -29,7 +29,10 @@ export async function createTestDatabase(): Promise<TestDatabaseContext> {
   const PgPool = adapter.Pool as unknown as typeof Pool;
   const pool = new PgPool();
 
-  type QueryResultShape = { rows?: unknown[]; fields?: Array<{ name: string }> };
+  interface QueryResultShape {
+    rows?: unknown[];
+    fields?: { name: string }[];
+  }
   const baseQuery = pool.query.bind(pool) as (...args: unknown[]) => Promise<QueryResultShape>;
   pool.query = (async (...args: Parameters<typeof baseQuery>) => {
     const [first, ...rest] = args;
@@ -45,7 +48,7 @@ export async function createTestDatabase(): Promise<TestDatabaseContext> {
 
     if (Array.isArray(result.rows)) {
       const fields = result.fields ?? [];
-      result.rows = result.rows.map((entry, index) => {
+      result.rows = result.rows.map((entry, _index) => {
         if (Array.isArray(entry)) {
           return entry.reduce<Record<string, unknown>>((acc, value, valueIndex) => {
             const fieldName = toCamelCase(fields[valueIndex]?.name ?? String(valueIndex));

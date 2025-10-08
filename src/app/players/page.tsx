@@ -35,12 +35,12 @@ export default function PlayersPage() {
   const [message, setMessage] = useState<string | null>(null);
   const [formError, setFormError] = useState<string | null>(null);
 
-  const playersQuery = useQuery({
+  const playersQuery = useQuery<PlayersApiRecord[]>({
     queryKey: PLAYERS_QUERY_KEY,
     queryFn: fetchPlayers,
   });
 
-  const players = playersQuery.data ?? [];
+  const players: PlayersApiRecord[] = playersQuery.data ?? [];
 
   const createPlayerMutation = useMutation<PlayersApiRecord, Error, PlayerCreate>({
     mutationFn: async (payload) => {
@@ -117,7 +117,7 @@ export default function PlayersPage() {
                 </div>
               </TableCell>
               <TableCell className="hidden sm:table-cell">
-                <Badge variant={player.active ? "success" : "outline-solid"}>
+                <Badge variant={player.active ? "success" : "outline"}>
                   {player.active ? "Active" : "Inactive"}
                 </Badge>
               </TableCell>

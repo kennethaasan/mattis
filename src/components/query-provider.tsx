@@ -5,7 +5,7 @@ import type { ReactNode } from "react";
 import { useState } from "react";
 
 interface QueryProviderProps {
-  children: ReactNode;
+  readonly children: ReactNode;
 }
 
 export function QueryProvider({ children }: QueryProviderProps) {

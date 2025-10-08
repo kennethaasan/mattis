@@ -25,11 +25,15 @@ const { POST } = await import("@/app/api/rounds/route");
 const MOCK_USER_ID = "00000000-0000-7000-0000-000000000050";
 vi.stubEnv("DEV_USER_ID", MOCK_USER_ID);
 
-const createRequest = (body: unknown, headers?: HeadersInit) =>
-  ({
-    headers: new Headers({ "X-User-Id": MOCK_USER_ID, ...headers }),
-    json: async () => body,
-  }) as unknown as NextRequest;
+const createRequest = (body: unknown, headers?: HeadersInit) => {
+  const requestHeaders = new Headers(headers);
+  requestHeaders.set("X-User-Id", MOCK_USER_ID);
+
+  return {
+    headers: requestHeaders,
+    json: () => Promise.resolve(body),
+  } as unknown as NextRequest;
+};
 
 beforeEach(() => {
   mocks.createRound.mockReset();
