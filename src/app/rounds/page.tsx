@@ -23,12 +23,20 @@ import {
 } from "@/lib/api/players-client";
 
 const DEFAULT_USER_ID =
-  process.env.NEXT_PUBLIC_DEFAULT_USER_ID ?? "00000000-0000-7000-0000-000000000000";
+  process.env.NEXT_PUBLIC_DEFAULT_USER_ID ?? "00000000-0000-7000-8000-000000000000";
 
 interface ProblemDetailPayload {
   readonly detail?: unknown;
   readonly error?: unknown;
 }
+
+const isMessageRecord = (value: unknown): value is { message: string } => {
+  if (typeof value !== "object" || value === null) {
+    return false;
+  }
+
+  return typeof (value as { message?: unknown }).message === "string";
+};
 
 const extractErrorDetail = (body: unknown): string | undefined => {
   if (typeof body !== "object" || body === null) {
@@ -42,14 +50,9 @@ const extractErrorDetail = (body: unknown): string | undefined => {
   }
 
   if (Array.isArray(candidate.error)) {
-    const [firstError] = candidate.error;
-    if (
-      typeof firstError === "object" &&
-      firstError !== null &&
-      "message" in firstError &&
-      typeof (firstError as { message?: unknown }).message === "string"
-    ) {
-      return (firstError as { message: string }).message;
+    const firstErrorWithMessage = candidate.error.find(isMessageRecord);
+    if (firstErrorWithMessage) {
+      return firstErrorWithMessage.message;
     }
   }
 
