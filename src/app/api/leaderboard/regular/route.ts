@@ -1,5 +1,6 @@
 import { NextResponse } from "next/server";
 
+import { createProblemResponse } from "@/lib/api/problem-details";
 import { LeaderboardQuerySchema } from "@/lib/api/schemas";
 import { getRegularLeaderboard } from "@/lib/db-client";
 
@@ -19,7 +20,11 @@ export async function GET(req: Request) {
     const leaderboard = await getRegularLeaderboard(year);
     return NextResponse.json(leaderboard.map(toRegularLeaderboardResponse));
   } catch (error) {
-    return NextResponse.json({ type: "about:blank", title: "Internal Server Error", status: 500 }, { status: 500 });
+    return createProblemResponse({
+      status: 500,
+      title: "Internal Server Error",
+      detail: error instanceof Error ? error.message : undefined,
+    });
   }
 }
 

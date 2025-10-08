@@ -35,7 +35,7 @@ export async function PUT(req: Request, context: { params: Promise<{ playerId: s
   }
 
   try {
-    const body = await req.json();
+    const body = (await req.json()) as unknown;
     const bodyValidation = PlayerUpdateSchema.safeParse(body);
 
     if (!bodyValidation.success) {

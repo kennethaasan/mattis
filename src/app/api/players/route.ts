@@ -1,11 +1,12 @@
 import { NextResponse } from "next/server";
 
+import { createProblemResponse } from "@/lib/api/problem-details";
 import { PlayerCreateSchema } from "@/lib/api/schemas";
 import { createPlayer, listPlayers, ConflictError } from "@/lib/db-client";
 
 export async function POST(req: Request) {
   try {
-    const body = await req.json();
+    const body = (await req.json()) as unknown;
     const validation = PlayerCreateSchema.safeParse(body);
 
     if (!validation.success) {
@@ -25,7 +26,11 @@ export async function POST(req: Request) {
       );
     }
 
-    return NextResponse.json({ type: "about:blank", title: "Internal Server Error", status: 500 }, { status: 500 });
+    return createProblemResponse({
+      status: 500,
+      title: "Internal Server Error",
+      detail: error instanceof Error ? error.message : undefined,
+    });
   }
 }
 
@@ -34,7 +39,11 @@ export async function GET(_req: Request) {
     const allPlayers = await listPlayers();
     return NextResponse.json(allPlayers.map(toPlayerResponse));
   } catch (error) {
-    return NextResponse.json({ type: "about:blank", title: "Internal Server Error", status: 500 }, { status: 500 });
+    return createProblemResponse({
+      status: 500,
+      title: "Internal Server Error",
+      detail: error instanceof Error ? error.message : undefined,
+    });
   }
 }
 

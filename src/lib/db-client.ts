@@ -10,9 +10,6 @@ type TransactionClient = Parameters<Parameters<typeof db.transaction>[0]>[0];
 type DbExecutor = typeof db | TransactionClient;
 
 type PlayerRow = typeof players.$inferSelect;
-type RoundRow = typeof rounds.$inferSelect;
-type FettMattisRow = typeof fettmattis.$inferSelect;
-
 export interface PlayerRecord {
   id: string;
   displayName: string;
@@ -48,6 +45,7 @@ export interface FettMattisRecord {
 
 export interface CreatePlayerInput {
   displayName: string;
+  id?: string;
   userId?: string | null;
 }
 
@@ -78,21 +76,23 @@ export class ConflictError extends Error {}
 export class ForbiddenError extends Error {}
 
 function mapPlayer(row: PlayerRow): PlayerRecord {
+  const record = row as Record<string, unknown>;
   return {
-    id: row.id,
-    displayName: row.displayName,
-    active: row.active,
-    userId: row.userId ?? null,
-    createdAt: row.createdAt,
-    updatedAt: row.updatedAt,
+    id: (readRowValue(record, "id") as string | undefined) ?? row.id,
+    displayName: (readRowValue(record, "displayName") as string | undefined) ?? row.displayName,
+    active: (readRowValue(record, "active") as boolean | undefined) ?? row.active,
+    userId: (readRowValue(record, "userId") as string | null | undefined) ?? row.userId ?? null,
+    createdAt: (readRowValue(record, "createdAt") as Date | undefined) ?? row.createdAt,
+    updatedAt: (readRowValue(record, "updatedAt") as Date | undefined) ?? row.updatedAt,
   };
 }
 
 function mapParticipant(row: Pick<PlayerRow, "id" | "displayName" | "active">): RoundParticipantRecord {
+  const record = row as Record<string, unknown>;
   return {
-    id: row.id,
-    displayName: row.displayName,
-    active: row.active,
+    id: (readRowValue(record, "id") as string | undefined) ?? row.id,
+    displayName: (readRowValue(record, "displayName") as string | undefined) ?? row.displayName,
+    active: (readRowValue(record, "active") as boolean | undefined) ?? row.active,
   };
 }
 
@@ -176,6 +176,23 @@ function uniqueIds(ids: string[]): string[] {
   return Array.from(new Set(ids));
 }
 
+function readRowValue(row: Record<string, unknown>, key: string): unknown {
+  if (key in row && row[key] !== undefined) {
+    return row[key];
+  }
+
+  const snakeKey = toSnakeCase(key);
+  if (snakeKey in row && row[snakeKey] !== undefined) {
+    return row[snakeKey];
+  }
+
+  return undefined;
+}
+
+function toSnakeCase(value: string): string {
+  return value.replace(/([A-Z])/g, (match) => `_${match.toLowerCase()}`);
+}
+
 function assertParticipantsContainLoser(participantIds: string[], loserId: string): void {
   if (!participantIds.includes(loserId)) {
     throw new ConflictError("Loser must be included in participant list.");
@@ -202,6 +219,7 @@ export async function createPlayer(input: CreatePlayerInput): Promise<PlayerReco
     const [row] = await db
       .insert(players)
       .values({
+        ...(input.id ? { id: input.id } : {}),
         displayName: input.displayName,
         userId: input.userId ?? null,
         createdAt: now,
@@ -535,8 +553,8 @@ export async function getRegularLeaderboard(year: number): Promise<RegularLeader
 
   const leaderboard = typedRows
     .map((row): { player: RoundParticipantRecord; participationCount: number; lossCount: number; lossPercentage: number } => {
-      const participationCount = Number(row.participation_count);
-      const lossCount = Number(row.loss_count ?? 0);
+      const participationCount = row.participation_count;
+      const lossCount = row.loss_count;
       const lossPercentage = participationCount === 0 ? 0 : (lossCount / participationCount) * 100;
 
       return {
@@ -577,7 +595,7 @@ export async function getFettMattisLeaderboard(year: number): Promise<FettMattis
         displayName: row.display_name,
         active: row.active,
       },
-      fettMattisCount: Number(row.fettmattis_count ?? 0),
+      fettMattisCount: row.fettmattis_count,
     }))
     .sort((a, b) => {
       if (a.fettMattisCount !== b.fettMattisCount) {

@@ -1,7 +1,8 @@
 "use client";
 
-import { useEffect, useMemo, useState } from "react";
+import { useMemo, useState } from "react";
 import { AlertTriangle, Loader2, Sparkles } from "lucide-react";
+import { useQuery } from "@tanstack/react-query";
 
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import {
@@ -21,52 +22,25 @@ import type {
 
 type Tab = "regular" | "fettmattis";
 
-type LeaderboardState = {
-  regular: RegularLeaderboard;
-  fettmattis: FettmattisLeaderboard;
-};
-
 export function Leaderboard() {
   const [year, setYear] = useState(new Date().getFullYear());
   const [activeTab, setActiveTab] = useState<Tab>("regular");
-  const [{ regular, fettmattis }, setData] = useState<LeaderboardState>({
-    regular: [],
-    fettmattis: [],
+  const regularQuery = useQuery<RegularLeaderboard, Error>({
+    queryKey: ["leaderboard", "regular", year],
+    queryFn: () => getRegularLeaderboard(year),
   });
-  const [isLoading, setIsLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
 
-  useEffect(() => {
-    let cancelled = false;
+  const fettmattisQuery = useQuery<FettmattisLeaderboard, Error>({
+    queryKey: ["leaderboard", "fettmattis", year],
+    queryFn: () => getFettmattisLeaderboard(year),
+  });
 
-    async function fetchLeaderboard() {
-      setIsLoading(true);
-      setError(null);
-      try {
-        const [regularResponse, fettmattisResponse] = await Promise.all([
-          getRegularLeaderboard(year),
-          getFettmattisLeaderboard(year),
-        ]);
-
-        if (!cancelled) {
-          setData({ regular: regularResponse, fettmattis: fettmattisResponse });
-        }
-      } catch (error) {
-        if (!cancelled) {
-          setError("We couldn't load the leaderboards. Please try again.");
-        }
-      } finally {
-        if (!cancelled) {
-          setIsLoading(false);
-        }
-      }
-    }
-
-    fetchLeaderboard();
-    return () => {
-      cancelled = true;
-    };
-  }, [year]);
+  const regular = regularQuery.data ?? [];
+  const fettmattis = fettmattisQuery.data ?? [];
+  const isLoading = regularQuery.isLoading || fettmattisQuery.isLoading;
+  const isFetching = regularQuery.isFetching || fettmattisQuery.isFetching;
+  const errorMessage =
+    regularQuery.error?.message ?? fettmattisQuery.error?.message ?? null;
 
   const yearOptions = useMemo(() => {
     const now = new Date().getFullYear();
@@ -74,16 +48,16 @@ export function Leaderboard() {
   }, []);
 
   const renderTable = (tab: Tab) => {
-    if (error) {
+    if (errorMessage) {
       return (
         <div className="flex items-center gap-3 rounded-2xl border border-destructive/40 bg-destructive/10 px-4 py-3 text-sm text-destructive">
           <AlertTriangle className="h-4 w-4" />
-          {error}
+          {errorMessage}
         </div>
       );
     }
 
-    if (isLoading) {
+    if (isLoading || isFetching) {
       return (
         <div className="space-y-2">
           {Array.from({ length: 4 }).map((_, index) => (

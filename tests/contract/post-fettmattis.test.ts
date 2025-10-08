@@ -1,0 +1,112 @@
+import { beforeEach, expect, test, vi } from "vitest";
+import type { NextRequest } from "next/server";
+
+import { ProblemDetailsSchema } from "@/lib/api/schemas";
+
+const mocks = vi.hoisted(() => {
+  class MockNotFoundError extends Error {}
+  class MockConflictError extends Error {}
+
+  return {
+    createFettMattis: vi.fn(),
+    MockNotFoundError,
+    MockConflictError,
+  };
+});
+
+vi.mock("@/lib/db-client", () => ({
+  createFettMattis: mocks.createFettMattis,
+  NotFoundError: mocks.MockNotFoundError,
+  ConflictError: mocks.MockConflictError,
+}));
+
+const { POST } = await import("@/app/api/fettmattis/route");
+
+const MOCK_USER_ID = "00000000-0000-7000-0000-000000000070";
+vi.stubEnv("DEV_USER_ID", MOCK_USER_ID);
+
+const createRequest = (body: unknown, headers?: HeadersInit) =>
+  ({
+    headers: new Headers({ "X-User-Id": MOCK_USER_ID, ...headers }),
+    json: async () => body,
+  }) as unknown as NextRequest;
+
+beforeEach(() => {
+  mocks.createFettMattis.mockReset();
+});
+
+test("T013: POST /api/fettmattis returns 201 with the created record", async () => {
+  const record = {
+    id: "00000000-0000-7000-0000-000000000080",
+    player: { id: "00000000-0000-7000-0000-000000000081", displayName: "Zia", active: true },
+    roundId: "00000000-0000-7000-0000-000000000090",
+    createdAt: new Date("2025-01-01T00:00:00.000Z"),
+  };
+
+  mocks.createFettMattis.mockResolvedValueOnce(record);
+
+  const request = createRequest({
+    player_id: record.player.id,
+    round_id: record.roundId,
+  });
+
+  const response = await POST(request);
+
+  expect(response.status).toBe(201);
+  const payload = await response.json();
+  expect(payload).toMatchObject({
+    id: record.id,
+    player: {
+      id: record.player.id,
+      display_name: record.player.displayName,
+      active: true,
+    },
+    round_id: record.roundId,
+    created_at: record.createdAt.toISOString(),
+  });
+  expect(mocks.createFettMattis).toHaveBeenCalledWith({
+    playerId: record.player.id,
+    roundId: record.roundId,
+    createdBy: MOCK_USER_ID,
+  });
+});
+
+test("T013: POST /api/fettmattis returns 400 when validation fails", async () => {
+  const request = createRequest({
+    player_id: "",
+  });
+
+  const response = await POST(request);
+
+  expect(response.status).toBe(400);
+  const payload = await response.json();
+  expect(Array.isArray(payload.error)).toBe(true);
+});
+
+test("T013: POST /api/fettmattis returns 404 when the player or round is missing", async () => {
+  mocks.createFettMattis.mockRejectedValueOnce(new mocks.MockNotFoundError("Missing player"));
+
+  const request = createRequest({
+    player_id: "00000000-0000-7000-0000-000000000081",
+  });
+
+  const response = await POST(request);
+
+  expect(response.status).toBe(404);
+  const payload = await response.json();
+  expect(() => ProblemDetailsSchema.parse(payload)).not.toThrow();
+});
+
+test("T013: POST /api/fettmattis returns 409 when a duplicate is detected", async () => {
+  mocks.createFettMattis.mockRejectedValueOnce(new mocks.MockConflictError("Duplicate"));
+
+  const request = createRequest({
+    player_id: "00000000-0000-7000-0000-000000000081",
+  });
+
+  const response = await POST(request);
+
+  expect(response.status).toBe(409);
+  const payload = await response.json();
+  expect(() => ProblemDetailsSchema.parse(payload)).not.toThrow();
+});

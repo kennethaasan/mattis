@@ -1,7 +1,8 @@
 "use client";
 
-import { useCallback, useEffect, useMemo, useState } from "react";
+import { useMemo, useState } from "react";
 import { CalendarCheck, Trophy } from "lucide-react";
+import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 
 import { RoundForm } from "@/components/RoundForm";
 import { FettMattisForm } from "@/components/FettMattisForm";
@@ -15,41 +16,24 @@ import {
 } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import type { FettMattisCreate, RoundCreate } from "@/lib/api/schemas";
+import { PLAYERS_QUERY_KEY, fetchPlayers } from "@/lib/api/players-client";
 
 const DEFAULT_USER_ID =
   process.env.NEXT_PUBLIC_DEFAULT_USER_ID ?? "00000000-0000-7000-0000-000000000000";
 
-interface ApiPlayer {
-  id: string;
-  display_name: string;
-  active: boolean;
-}
-
 export default function RoundsPage() {
-  const [players, setPlayers] = useState<ApiPlayer[]>([]);
+  const queryClient = useQueryClient();
   const [status, setStatus] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
-  const [isLoading, setIsLoading] = useState(true);
 
-  const fetchPlayers = useCallback(async () => {
-    try {
-      setIsLoading(true);
-      const response = await fetch("/api/players", { cache: "no-store" });
-      if (!response.ok) {
-        throw new Error("Failed to fetch players");
-      }
-      const data = (await response.json()) as ApiPlayer[];
-      setPlayers(data);
-    } catch (error) {
-      setError("Unable to load players for the round form.");
-    } finally {
-      setIsLoading(false);
-    }
-  }, []);
+  const playersQuery = useQuery({
+    queryKey: PLAYERS_QUERY_KEY,
+    queryFn: fetchPlayers,
+  });
 
-  useEffect(() => {
-    fetchPlayers();
-  }, [fetchPlayers]);
+  const players = playersQuery.data ?? [];
+  const isPlayersLoading = playersQuery.isLoading;
+  const isPlayersFetching = playersQuery.isFetching;
 
   const hydratablePlayers = useMemo(
     () =>
@@ -61,60 +45,72 @@ export default function RoundsPage() {
     [players],
   );
 
-  const handleRoundSubmit = async (data: RoundCreate) => {
-    try {
-      setStatus(null);
-      setError(null);
+  const roundMutation = useMutation<void, Error, RoundCreate>({
+    mutationFn: async (payload) => {
       const response = await fetch("/api/rounds", {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
           "X-User-Id": DEFAULT_USER_ID,
         },
-        body: JSON.stringify(data),
+        body: JSON.stringify(payload),
       });
 
       if (!response.ok) {
-        const payload = await response.json();
-        const detail = payload?.detail ?? payload?.error?.[0]?.message;
+        const body = await response.json();
+        const detail =
+          (body?.detail as string | undefined) ??
+          (Array.isArray(body?.error) ? body.error[0]?.message : undefined);
         throw new Error(detail ?? "Unable to save round.");
       }
-
+    },
+    onSuccess: () => {
       setStatus("Round recorded. Leaderboards just updated!");
-    } catch (error) {
-      setError(
-        error instanceof Error ? error.message : "Unable to save the round. Please retry.",
-      );
-    }
-  };
-
-  const handleFettMattisSubmit = async (data: FettMattisCreate) => {
-    try {
-      setStatus(null);
       setError(null);
+      void queryClient.invalidateQueries({ queryKey: ["leaderboard"] });
+    },
+    onError: (mutationError) => {
+      setStatus(null);
+      setError(mutationError.message);
+    },
+  });
+
+  const fettMattisMutation = useMutation<void, Error, FettMattisCreate>({
+    mutationFn: async (payload) => {
       const response = await fetch("/api/fettmattis", {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
           "X-User-Id": DEFAULT_USER_ID,
         },
-        body: JSON.stringify(data),
+        body: JSON.stringify(payload),
       });
 
       if (!response.ok) {
-        const payload = await response.json();
-        const detail = payload?.detail ?? payload?.error?.[0]?.message;
+        const body = await response.json();
+        const detail =
+          (body?.detail as string | undefined) ??
+          (Array.isArray(body?.error) ? body.error[0]?.message : undefined);
         throw new Error(detail ?? "Unable to grant a FettMattis.");
       }
-
+    },
+    onSuccess: () => {
       setStatus("FettMattis granted. Time to celebrate!");
-    } catch (error) {
-      setError(
-        error instanceof Error
-          ? error.message
-          : "Unable to grant the FettMattis. Please try again.",
-      );
-    }
+      setError(null);
+      void queryClient.invalidateQueries({ queryKey: ["leaderboard"] });
+    },
+    onError: (mutationError) => {
+      setStatus(null);
+      setError(mutationError.message);
+    },
+  });
+
+  const handleRoundSubmit = async (data: RoundCreate) => {
+    await roundMutation.mutateAsync(data);
+  };
+
+  const handleFettMattisSubmit = async (data: FettMattisCreate) => {
+    await fettMattisMutation.mutateAsync(data);
   };
 
   return (
@@ -143,7 +139,7 @@ export default function RoundsPage() {
             </CardDescription>
           </CardHeader>
           <CardContent className="space-y-4">
-            {isLoading ? (
+            {isPlayersLoading ? (
               <div className="space-y-2">
                 {Array.from({ length: 4 }).map((_, index) => (
                   <div
@@ -169,7 +165,7 @@ export default function RoundsPage() {
             </CardDescription>
           </CardHeader>
           <CardContent>
-            {isLoading ? (
+            {isPlayersLoading ? (
               <div className="space-y-2">
                 {Array.from({ length: 3 }).map((_, index) => (
                   <div
@@ -191,12 +187,22 @@ export default function RoundsPage() {
 
       {status ? <p className="text-sm text-primary">{status}</p> : null}
       {error ? <p className="text-sm text-destructive">{error}</p> : null}
+      {playersQuery.error ? (
+        <p className="text-sm text-destructive">
+          {playersQuery.error.message}
+        </p>
+      ) : null}
 
       <div className="flex flex-wrap items-center gap-3 rounded-3xl border border-border/70 bg-muted/30 px-4 py-5 text-xs text-muted-foreground">
         <span>
           Changes are editable for 24 hours – after that the record is locked to protect the competition.
         </span>
-        <Button variant="ghost" size="sm" onClick={() => fetchPlayers()} disabled={isLoading}>
+        <Button
+          variant="ghost"
+          size="sm"
+          onClick={() => void playersQuery.refetch()}
+          disabled={isPlayersFetching}
+        >
           Refresh roster
         </Button>
       </div>

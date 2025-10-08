@@ -16,12 +16,6 @@ export default tseslint.config(
     languageOptions: {
       parserOptions: {
         projectService: {
-          allowDefaultProject: [
-            "playwright.config.ts",
-            "vitest.config.ts",
-            "postcss.config.mjs",
-            "drizzle.config.ts",
-          ],
           defaultProject: "./tsconfig.json",
         },
         tsconfigRootDir: import.meta.dirname,
@@ -57,6 +51,12 @@ export default tseslint.config(
     "eslint.config.mjs",
     "next-env.d.ts",
     ".next/",
+    "coverage/**/*",
+    "reports/**/*",
+    "infra/dist/**/*",
+    ".prettierrc.cjs",
+    "scripts/manual-validation.mjs",
+    "postcss.config.mjs",
     "laravel/",
   ]),
   {

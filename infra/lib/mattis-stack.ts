@@ -10,7 +10,7 @@ import {
   Tags,
 } from 'aws-cdk-lib';
 import type { StackProps } from 'aws-cdk-lib';
-import { Construct } from 'constructs';
+import type { Construct } from 'constructs';
 import { HttpApi, HttpMethod } from 'aws-cdk-lib/aws-apigatewayv2';
 import { HttpLambdaIntegration } from 'aws-cdk-lib/aws-apigatewayv2-integrations';
 import {
@@ -23,7 +23,7 @@ import {
 import {
   Architecture,
   Code,
-  Function,
+  Function as LambdaFunction,
   FunctionUrlAuthType,
   InvokeMode,
   Runtime,
@@ -186,7 +186,7 @@ export class MattisStack extends Stack {
       });
     }
 
-    const serverFunction = new Function(this, 'NextServerFunction', {
+    const serverFunction = new LambdaFunction(this, 'NextServerFunction', {
       runtime: Runtime.NODEJS_20_X,
       handler: 'index.handler',
       code: Code.fromAsset(serverFunctionDir),
@@ -249,7 +249,7 @@ export class MattisStack extends Stack {
     serverFunction.addEnvironment('FUNCTION_URL', serverFunctionUrl.url);
 
     if (existsSync(imageFunctionDir)) {
-      const imageLambda = new Function(this, 'NextImageFunction', {
+      const imageLambda = new LambdaFunction(this, 'NextImageFunction', {
         runtime: Runtime.NODEJS_20_X,
         handler: 'index.handler',
         code: Code.fromAsset(imageFunctionDir),

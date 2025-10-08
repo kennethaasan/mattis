@@ -1,6 +1,7 @@
 import type { NextRequest } from "next/server";
 import { NextResponse } from "next/server";
 
+import { env } from "@/env";
 import { badRequest, createProblemResponse } from "@/lib/api/problem-details";
 import { RoundCreateSchema } from "@/lib/api/schemas";
 import { ConflictError, NotFoundError, createRound } from "@/lib/db-client";
@@ -9,7 +10,7 @@ import { ConflictError, NotFoundError, createRound } from "@/lib/db-client";
 const getUserId = (req: NextRequest): string => {
   // In a real app, this would come from a session or token.
   // For development, we use a placeholder from the environment.
-  return req.headers.get("X-User-Id") || process.env.DEV_USER_ID!;
+  return req.headers.get("X-User-Id") ?? env.DEV_USER_ID ?? "";
 };
 
 /**
@@ -61,7 +62,7 @@ export async function POST(req: NextRequest) {
 function toRoundResponse(round: {
   id: string;
   createdAt: Date;
-  participants: Array<{ id: string; displayName: string; active: boolean }>;
+  participants: { id: string; displayName: string; active: boolean }[];
   loser: { id: string; displayName: string; active: boolean };
 }) {
   return {

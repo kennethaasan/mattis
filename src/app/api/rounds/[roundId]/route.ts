@@ -1,5 +1,7 @@
-import { NextRequest, NextResponse } from "next/server";
+import type { NextRequest } from "next/server";
+import { NextResponse } from "next/server";
 
+import { env } from "@/env";
 import { badRequest, createProblemResponse } from "@/lib/api/problem-details";
 import { RoundUpdateSchema, uuidSchema } from "@/lib/api/schemas";
 import {
@@ -15,7 +17,7 @@ import {
 const getUserId = (req: NextRequest): string => {
   // In a real app, this would come from a session or token.
   // For development, we use a placeholder from the environment.
-  return req.headers.get("X-User-Id") || process.env.DEV_USER_ID!;
+  return req.headers.get("X-User-Id") ?? env.DEV_USER_ID ?? "";
 };
 
 export async function GET(_req: Request, context: { params: Promise<{ roundId: string }> }) {
@@ -114,7 +116,7 @@ export async function DELETE(req: NextRequest, context: { params: Promise<{ roun
 function toRoundResponse(round: {
   id: string;
   createdAt: Date;
-  participants: Array<{ id: string; displayName: string; active: boolean }>;
+  participants: { id: string; displayName: string; active: boolean }[];
   loser: { id: string; displayName: string; active: boolean };
 }) {
   return {
