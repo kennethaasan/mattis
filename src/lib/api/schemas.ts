@@ -60,11 +60,11 @@ export const LeaderboardQuerySchema = z.object({
 // --- Utility Schemas ---
 
 export const ProblemDetailsSchema = z.object({
-  type: z.string().url().default("about:blank"),
+  type: z.url().default("about:blank"),
   title: z.string(),
   status: z.number().int().min(400).max(599),
   detail: z.string().optional(),
-  instance: z.string().url().optional(),
+  instance: z.url().optional(),
 });
 
 // Export types

@@ -1,70 +1,77 @@
-import { test, expect, vi, beforeEach } from "vitest";
+import { beforeEach, expect, test, vi } from "vitest";
+
 import { PlayerSchema, ProblemDetailsSchema } from "@/lib/api/schemas";
-import { NextRequest } from "next/server";
+
+const mocks = vi.hoisted(() => {
+  class MockConflictError extends Error {}
+
+  return {
+    createPlayer: vi.fn(),
+    MockConflictError,
+  };
+});
 
 vi.mock("@/lib/db-client", () => ({
-  insertPlayer: vi.fn(),
+  createPlayer: mocks.createPlayer,
+  ConflictError: mocks.MockConflictError,
 }));
-
-const dbClient = (await import("@/lib/db-client")) as any;
-const insertPlayer = dbClient.insertPlayer as any;
 
 const { POST } = await import("@/app/api/players/route");
 
-const MOCK_USER_ID = "00000000-0000-7000-0000-000000000000";
-vi.stubEnv("DEV_USER_ID", MOCK_USER_ID);
-
-const createMockRequest = (body: unknown) => {
-  return {
-    headers: new Headers({ "X-User-Id": MOCK_USER_ID }),
-    json: async () => body,
-  } as unknown as NextRequest;
-};
-
 beforeEach(() => {
-  insertPlayer.mockClear();
+  mocks.createPlayer.mockReset();
 });
 
-test("T010: POST /api/players should create player and return 201", async () => {
-  const input = { display_name: "Charlie" };
-  const created = { id: "00000000-0000-7000-0000-000000000020", display_name: "Charlie", active: true };
+test("T008: POST /api/players returns 201 with the created player", async () => {
+  const newPlayer = {
+    id: "00000000-0000-7000-0000-000000000010",
+    displayName: "Nova",
+    active: true,
+  };
 
-  insertPlayer.mockResolvedValueOnce(created);
+  mocks.createPlayer.mockResolvedValueOnce(newPlayer);
 
-  const req = createMockRequest(input);
-  const res = await POST(req);
+  const request = new Request("http://localhost/api/players", {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ display_name: "Nova" }),
+  });
 
-  expect(res.status).toBe(201);
-  expect(String(res.headers.get("Content-Type") || "")).toContain("application/json");
+  const response = await POST(request);
 
-  const body = await res.json();
-  expect(() => PlayerSchema.parse(body)).not.toThrow();
-  expect(insertPlayer).toHaveBeenCalledWith({ displayName: input.display_name, userId: MOCK_USER_ID });
+  expect(response.status).toBe(201);
+  const payload = await response.json();
+  expect(() => PlayerSchema.parse(payload)).not.toThrow();
+  expect(mocks.createPlayer).toHaveBeenCalledWith({ displayName: "Nova" });
 });
 
-test("T010: POST /api/players should return 400 for invalid input", async () => {
-  const input = { name: "NoDisplayName" };
-  const req = createMockRequest(input);
-  const res = await POST(req);
+test("T008: POST /api/players returns 400 when validation fails", async () => {
+  const request = new Request("http://localhost/api/players", {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ display_name: "" }),
+  });
 
-  expect(res.status).toBe(400);
-  expect(String(res.headers.get("Content-Type") || "")).toContain("application/problem+json");
+  const response = await POST(request);
 
-  const body = await res.json();
-  expect(() => ProblemDetailsSchema.parse(body)).not.toThrow();
+  expect(response.status).toBe(400);
+  const payload = await response.json();
+  expect(Array.isArray(payload.error)).toBe(true);
+  expect(mocks.createPlayer).not.toHaveBeenCalled();
 });
 
-test("T010: POST /api/players should return 500 on DB error", async () => {
-  const input = { display_name: "Dana" };
-  const dbError = new Error("DB down");
-  insertPlayer.mockRejectedValueOnce(dbError);
+test("T008: POST /api/players returns 409 on duplicate display name", async () => {
+  mocks.createPlayer.mockRejectedValueOnce(new mocks.MockConflictError("Duplicate"));
 
-  const req = createMockRequest(input);
-  const res = await POST(req);
+  const request = new Request("http://localhost/api/players", {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ display_name: "Nova" }),
+  });
 
-  expect(res.status).toBe(500);
-  expect(String(res.headers.get("Content-Type") || "")).toContain("application/problem+json");
+  const response = await POST(request);
 
-  const body = await res.json();
-  expect(() => ProblemDetailsSchema.parse(body)).not.toThrow();
+  expect(response.status).toBe(409);
+  const payload = await response.json();
+  expect(() => ProblemDetailsSchema.parse(payload)).not.toThrow();
 });

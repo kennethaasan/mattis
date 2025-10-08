@@ -1,37 +1,80 @@
-import { type NextRequest, NextResponse } from 'next/server';
-import { z } from 'zod';
+import type { NextRequest } from "next/server";
+import { NextResponse } from "next/server";
 
-import { insertFettMattis } from '@/lib/db-client';
+import { env } from "@/env";
+import { badRequest, createProblemResponse } from "@/lib/api/problem-details";
+import { FettMattisCreateSchema } from "@/lib/api/schemas";
+import { ConflictError, NotFoundError, createFettMattis } from "@/lib/db-client";
 
-const bodySchema = z.object({
-  playerId: z.string().uuid(),
-  roundId: z.string().uuid().optional(),
-  createdBy: z.string().uuid(),
-});
+// Placeholder for authentication/user context
+const getUserId = (req: NextRequest): string => {
+  // In a real app, this would come from a session or token.
+  // For development, we use a placeholder from the environment.
+  return req.headers.get("X-User-Id") ?? env.DEV_USER_ID ?? "";
+};
 
+/**
+ * POST /api/fettmattis
+ * Creates a new fettmattis.
+ */
 export async function POST(req: NextRequest) {
-  try {
-    const body = await req.json();
-    const parsed = bodySchema.parse(body);
+  const userId = getUserId(req);
+  if (!userId) {
+    return badRequest("Authentication required.");
+  }
 
-    const result = await insertFettMattis({
-      playerId: parsed.playerId,
-      roundId: parsed.roundId,
-      createdBy: parsed.createdBy,
+  try {
+    let body: unknown;
+    try {
+      body = await req.json();
+    } catch {
+      return badRequest("Malformed JSON in request body.");
+    }
+
+    const validatedData = FettMattisCreateSchema.safeParse(body);
+
+    if (!validatedData.success) {
+      return NextResponse.json({ error: validatedData.error.issues }, { status: 400 });
+    }
+
+    const { player_id: playerId, round_id: roundId } = validatedData.data;
+
+    const newFettmattis = await createFettMattis({
+      playerId,
+      roundId,
+      createdBy: userId,
     });
 
-    if (!result) {
-      return NextResponse.json({ error: 'failed to create fettmattis' }, { status: 500 });
+    return NextResponse.json(toFettMattisResponse(newFettmattis), { status: 201 });
+  } catch (error) {
+    if (error instanceof NotFoundError) {
+      return createProblemResponse({ status: 404, title: "Not Found", detail: error.message });
     }
-
-    return NextResponse.json({ id: result.id }, { status: 201 });
-  } catch (err: unknown) {
-    if (err instanceof z.ZodError) {
-      return NextResponse.json({ error: err.issues }, { status: 400 });
+    if (error instanceof ConflictError) {
+      return createProblemResponse({ status: 409, title: "Conflict", detail: error.message });
     }
-    if (err instanceof Error) {
-      return NextResponse.json({ error: err.message ?? 'internal error' }, { status: 500 });
-    }
-    return NextResponse.json({ error: String(err) ?? 'internal error' }, { status: 500 });
+    return createProblemResponse({ status: 500, title: "Internal Server Error", detail: "Internal Server Error" });
   }
+}
+
+function toFettMattisResponse(record: {
+  id: string;
+  player: { id: string; displayName: string; active: boolean };
+  roundId: string | null;
+  createdAt: Date;
+}) {
+  return {
+    id: record.id,
+    player: toPlayerResponse(record.player),
+    round_id: record.roundId,
+    created_at: record.createdAt.toISOString(),
+  };
+}
+
+function toPlayerResponse(player: { id: string; displayName: string; active: boolean }) {
+  return {
+    id: player.id,
+    display_name: player.displayName,
+    active: player.active,
+  };
 }

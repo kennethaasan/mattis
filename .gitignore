@@ -63,3 +63,11 @@ playwright/
 /playwright-report/
 /blob-report/
 /playwright/.cache/
+
+# OpenAI Codex CLI
+.codex/auth.json
+.codex/config.toml
+.codex/version.json
+.codex/log/
+.codex/sessions/
+.codex/history.jsonl

@@ -1,78 +1,56 @@
-import type { NextRequest } from "next/server";
 import { NextResponse } from "next/server";
 
-import { badRequest, conflict, createProblemResponse } from "@/lib/api/problem-details";
+import { createProblemResponse } from "@/lib/api/problem-details";
 import { PlayerCreateSchema } from "@/lib/api/schemas";
-import { insertPlayer, listPlayers } from "@/lib/db-client";
+import { createPlayer, listPlayers, ConflictError } from "@/lib/db-client";
 
-// Placeholder for authentication/user context
-const getUserId = (req: NextRequest): string => {
-  // In a real app, this would come from a session or token.
-  // For development, we use a placeholder from the environment.
-  return req.headers.get("X-User-Id") || process.env.DEV_USER_ID!;
-};
-
-/**
- * POST /api/players
- * Creates a new player.
- */
-export async function POST(req: NextRequest) {
-  const userId = getUserId(req);
-  if (!userId) {
-    return badRequest("Authentication required.");
-  }
-
+export async function POST(req: Request) {
   try {
-    let body: unknown;
-    try {
-      body = await req.json();
-    } catch {
-      return badRequest("Malformed JSON in request body.");
+    const body = (await req.json()) as unknown;
+    const validation = PlayerCreateSchema.safeParse(body);
+
+    if (!validation.success) {
+      return NextResponse.json({ error: validation.error.issues }, { status: 400 });
     }
 
-    const validatedData = PlayerCreateSchema.safeParse(body);
+    const { display_name } = validation.data;
 
-    if (!validatedData.success) {
-      const validationMessages = (validatedData.error?.issues ?? []).map((issue) => issue.message);
-      return badRequest(`Invalid input: ${validationMessages.join(", ")}`);
+    const newPlayer = await createPlayer({ displayName: display_name });
+
+    return NextResponse.json(toPlayerResponse(newPlayer), { status: 201 });
+  } catch (error) {
+    if (error instanceof ConflictError) {
+      return NextResponse.json(
+        { type: "about:blank", title: "Conflict", status: 409, detail: error.message },
+        { status: 409 },
+      );
     }
 
-    const { display_name } = validatedData.data;
-
-    const newPlayer = await insertPlayer({
-      displayName: display_name,
-      userId: userId,
+    return createProblemResponse({
+      status: 500,
+      title: "Internal Server Error",
+      detail: error instanceof Error ? error.message : undefined,
     });
-
-    return NextResponse.json(newPlayer, { status: 201 });
-  } catch (_error) {
-
-    // PostgreSQL unique_violation error code
-    if (typeof _error === "object" && _error !== null && "code" in _error) {
-      const code = (_error as { code?: unknown }).code;
-      if (code === "23505") {
-        return conflict("A player with this display name already exists.");
-      }
-    }
-
-    return createProblemResponse({ status: 500, title: "Internal Server Error", detail: "Internal Server Error" });
   }
 }
 
-/**
- * GET /api/players
- * Lists all active players.
- */
-export async function GET(_req: NextRequest) {
+export async function GET(_req: Request) {
   try {
-    const players = await listPlayers();
-    return NextResponse.json(players, { status: 200 });
-<<<<<<< Updated upstream
-  } catch {
-    return createProblemResponse({ status: 500, title: "Internal Server Error", detail: "Internal Server Error" });
-=======
+    const allPlayers = await listPlayers();
+    return NextResponse.json(allPlayers.map(toPlayerResponse));
   } catch (error) {
-    return NextResponse.json({ error: "Internal Server Error" }, { status: 500 });
->>>>>>> Stashed changes
+    return createProblemResponse({
+      status: 500,
+      title: "Internal Server Error",
+      detail: error instanceof Error ? error.message : undefined,
+    });
   }
+}
+
+function toPlayerResponse(player: { id: string; displayName: string; active: boolean }) {
+  return {
+    id: player.id,
+    display_name: player.displayName,
+    active: player.active,
+  };
 }

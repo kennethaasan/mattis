@@ -1,51 +1,68 @@
-import { test, expect, vi, beforeEach } from "vitest";
+import { beforeEach, expect, test, vi } from "vitest";
+import type { NextRequest } from "next/server";
+
 import { PlayerSchema, ProblemDetailsSchema } from "@/lib/api/schemas";
-import { NextRequest } from "next/server";
+
+const mocks = vi.hoisted(() => {
+  class MockNotFoundError extends Error {}
+
+  return {
+    getPlayerById: vi.fn(),
+    updatePlayer: vi.fn(),
+    MockNotFoundError,
+  };
+});
 
 vi.mock("@/lib/db-client", () => ({
-  getPlayerById: vi.fn(),
+  getPlayerById: mocks.getPlayerById,
+  updatePlayer: mocks.updatePlayer,
+  NotFoundError: mocks.MockNotFoundError,
 }));
 
-const dbClient = (await import("@/lib/db-client")) as any;
-const getPlayerById = dbClient.getPlayerById as any;
-
-const { GET } = await import("@/app/api/players/[id]/route");
+const { GET } = await import("@/app/api/players/[playerId]/route");
 
 const MOCK_USER_ID = "00000000-0000-7000-0000-000000000000";
 vi.stubEnv("DEV_USER_ID", MOCK_USER_ID);
 
-const createMockRequest = (id: string) => {
+const createMockRequest = (playerId: string) => {
   return {
     headers: new Headers({ "X-User-Id": MOCK_USER_ID }),
-    nextUrl: new URL(`http://localhost/api/players/${id}`),
+    nextUrl: new URL(`http://localhost/api/players/${playerId}`),
   } as unknown as NextRequest;
 };
 
 beforeEach(() => {
-  getPlayerById.mockClear();
+  mocks.getPlayerById.mockReset();
 });
 
 test("T011: GET /api/players/{id} should return 200 and player", async () => {
-  const id = "00000000-0000-7000-0000-000000000030";
-  const player = { id, display_name: "Eve", active: true };
+  const playerId = "00000000-0000-7000-0000-000000000030";
+  const player = {
+    id: playerId,
+    displayName: "Eve",
+    active: true,
+    userId: null,
+    createdAt: new Date(),
+    updatedAt: new Date(),
+  };
 
-  getPlayerById.mockResolvedValueOnce(player);
+  mocks.getPlayerById.mockResolvedValueOnce(player);
 
-  const req = createMockRequest(id);
-  const res = await GET(req, { params: { id } } as any);
+  const req = createMockRequest(playerId);
+  const res = await GET(req, { params: Promise.resolve({ playerId }) });
 
   expect(res.status).toBe(200);
   const body = await res.json();
   expect(() => PlayerSchema.parse(body)).not.toThrow();
-  expect(getPlayerById).toHaveBeenCalledWith(id);
+  expect(mocks.getPlayerById).toHaveBeenCalledWith(playerId);
 });
 
 test("T011: GET /api/players/{id} should return 404 when not found", async () => {
-  const id = "00000000-0000-7000-0000-000000000031";
-  getPlayerById.mockResolvedValueOnce(null);
+  const playerId = "00000000-0000-7000-0000-000000000031";
+  mocks.getPlayerById.mockRejectedValueOnce(new mocks.MockNotFoundError("Player not found."));
 
-  const req = createMockRequest(id);
-  const res = await GET(req, { params: { id } } as any);
+  const req = createMockRequest(playerId);
+  const res = await GET(req, { params: Promise.resolve({ playerId }) });
 
   expect(res.status).toBe(404);
   const body = await res.json();
@@ -53,12 +70,12 @@ test("T011: GET /api/players/{id} should return 404 when not found", async () =>
 });
 
 test("T011: GET /api/players/{id} should return 500 on DB error", async () => {
-  const id = "00000000-0000-7000-0000-000000000032";
+  const playerId = "00000000-0000-7000-0000-000000000032";
   const dbError = new Error("DB down");
-  getPlayerById.mockRejectedValueOnce(dbError);
+  mocks.getPlayerById.mockRejectedValueOnce(dbError);
 
-  const req = createMockRequest(id);
-  const res = await GET(req, { params: { id } } as any);
+  const req = createMockRequest(playerId);
+  const res = await GET(req, { params: Promise.resolve({ playerId }) });
 
   expect(res.status).toBe(500);
   const body = await res.json();
