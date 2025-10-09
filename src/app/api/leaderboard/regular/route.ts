@@ -14,7 +14,9 @@ export async function GET(req: Request) {
     return NextResponse.json({ error: validation.error.issues }, { status: 400 });
   }
 
-  const year = validation.data.year ?? new Date().getFullYear();
+  const requestedYear = validation.data.year;
+  const fallbackYear = new Date().getFullYear();
+  const year = requestedYear === "all" ? null : requestedYear ?? fallbackYear;
 
   try {
     const leaderboard = await getRegularLeaderboard(year);

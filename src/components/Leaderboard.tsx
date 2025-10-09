@@ -16,19 +16,20 @@ import { Badge } from "@/components/ui/badge";
 import { getFettmattisLeaderboard, getRegularLeaderboard } from "@/lib/leaderboard";
 import type {
   FettmattisLeaderboard,
+  LeaderboardScope,
   RegularLeaderboard,
 } from "@/lib/leaderboard-types";
 
 export function Leaderboard() {
-  const [year, setYear] = useState(new Date().getFullYear());
+  const [scope, setScope] = useState<LeaderboardScope>(new Date().getFullYear());
   const regularQuery = useQuery<RegularLeaderboard>({
-    queryKey: ["leaderboard", "regular", year],
-    queryFn: () => getRegularLeaderboard(year),
+    queryKey: ["leaderboard", "regular", scope],
+    queryFn: () => getRegularLeaderboard(scope),
   });
 
   const fettmattisQuery = useQuery<FettmattisLeaderboard>({
-    queryKey: ["leaderboard", "fettmattis", year],
-    queryFn: () => getFettmattisLeaderboard(year),
+    queryKey: ["leaderboard", "fettmattis", scope],
+    queryFn: () => getFettmattisLeaderboard(scope),
   });
 
   const regular = regularQuery.data ?? [];
@@ -37,17 +38,31 @@ export function Leaderboard() {
   const fettmattisLoading = fettmattisQuery.isLoading || fettmattisQuery.isFetching;
   const errorMessage =
     regularQuery.error?.message ?? fettmattisQuery.error?.message ?? null;
+  const isAllTime = scope === "all";
 
   const yearOptions = useMemo(() => {
     const now = new Date().getFullYear();
-    return Array.from({ length: 6 }, (_, index) => now - index);
+    const years = Array.from({ length: 6 }, (_, index) => now - index);
+    return [
+      { value: "all" as const, label: "Alle år" },
+      ...years.map((yearOption) => ({
+        value: yearOption,
+        label: yearOption.toString(),
+      })),
+    ];
   }, []);
 
   let regularContent;
   if (regularLoading) {
     regularContent = <TableSkeleton />;
   } else if (regular.length === 0) {
-    regularContent = <EmptyState message="Ingen runder registrert denne sesongen ennå." />;
+    regularContent = (
+      <EmptyState
+        message={
+          isAllTime ? "Ingen runder registrert ennå." : "Ingen runder registrert denne sesongen ennå."
+        }
+      />
+    );
   } else {
     regularContent = (
       <Table>
@@ -97,7 +112,13 @@ export function Leaderboard() {
   if (fettmattisLoading) {
     fettmattisContent = <TableSkeleton />;
   } else if (fettmattis.length === 0) {
-    fettmattisContent = <EmptyState message="Ingen Fettmattis utdelt i år ennå." />;
+    fettmattisContent = (
+      <EmptyState
+        message={
+          isAllTime ? "Ingen Fettmattis utdelt ennå." : "Ingen Fettmattis utdelt i år ennå."
+        }
+      />
+    );
   } else {
     fettmattisContent = (
       <Table>
@@ -133,7 +154,7 @@ export function Leaderboard() {
       <div className="flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
         <div className="flex flex-col items-start gap-2 text-left">
           <h2 className="text-2xl font-semibold tracking-tight md:text-3xl">
-            Sesongoversikt for {year}
+            Sesongoversikt for {isAllTime ? "alle år" : scope}
           </h2>
           <p className="max-w-2xl text-sm text-muted-foreground">
             Tap-prosentene oppdateres med én gang en runde lagres. Fettmattis-utdelinger følger 24-timersfristen for tilbakekalling.
@@ -147,12 +168,15 @@ export function Leaderboard() {
             <select
               id="leaderboard-year"
               className="h-10 appearance-none rounded-full border border-border/60 bg-background px-5 pr-12 text-sm font-medium shadow-xs transition focus-visible:outline-hidden focus-visible:ring-2 focus-visible:ring-ring"
-              value={year}
-              onChange={(event) => setYear(Number.parseInt(event.target.value, 10))}
+              value={String(scope)}
+              onChange={(event) => {
+                const value = event.target.value;
+                setScope(value === "all" ? "all" : Number.parseInt(value, 10));
+              }}
             >
               {yearOptions.map((option) => (
-                <option key={option} value={option}>
-                  {option}
+                <option key={String(option.value)} value={option.value}>
+                  {option.label}
                 </option>
               ))}
             </select>

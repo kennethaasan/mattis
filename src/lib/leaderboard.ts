@@ -1,4 +1,8 @@
-import type { FettmattisLeaderboard, RegularLeaderboard } from "@/lib/leaderboard-types";
+import type {
+  FettmattisLeaderboard,
+  LeaderboardScope,
+  RegularLeaderboard,
+} from "@/lib/leaderboard-types";
 
 interface RegularLeaderboardResponse {
   rank?: number | null;
@@ -22,8 +26,18 @@ interface FettMattisLeaderboardResponse {
   };
 }
 
-export async function getRegularLeaderboard(year: number): Promise<RegularLeaderboard> {
-  const query = new URLSearchParams({ year: year.toString() });
+function createQuery(scope: LeaderboardScope) {
+  const params = new URLSearchParams();
+  if (scope === "all") {
+    params.set("year", "all");
+  } else {
+    params.set("year", scope.toString());
+  }
+  return params;
+}
+
+export async function getRegularLeaderboard(scope: LeaderboardScope): Promise<RegularLeaderboard> {
+  const query = createQuery(scope);
   const response = await fetch(`/api/leaderboard/regular?${query.toString()}`, {
     credentials: "include",
     cache: "no-store",
@@ -45,8 +59,10 @@ export async function getRegularLeaderboard(year: number): Promise<RegularLeader
   }));
 }
 
-export async function getFettmattisLeaderboard(year: number): Promise<FettmattisLeaderboard> {
-  const query = new URLSearchParams({ year: year.toString() });
+export async function getFettmattisLeaderboard(
+  scope: LeaderboardScope,
+): Promise<FettmattisLeaderboard> {
+  const query = createQuery(scope);
   const response = await fetch(`/api/leaderboard/fettmattis?${query.toString()}`, {
     credentials: "include",
     cache: "no-store",

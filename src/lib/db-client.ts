@@ -547,7 +547,7 @@ interface FettMattisLeaderboardRow extends Record<string, unknown> {
   fettmattis_count: number;
 }
 
-export async function getRegularLeaderboard(year: number): Promise<RegularLeaderboardEntry[]> {
+export async function getRegularLeaderboard(year: number | null): Promise<RegularLeaderboardEntry[]> {
   const { rows } = await db.execute(regularLeaderboardQuery(year));
   const typedRows = rows as RegularLeaderboardRow[];
 
@@ -570,7 +570,7 @@ export async function getRegularLeaderboard(year: number): Promise<RegularLeader
     })
     .sort((a, b) => {
       if (a.lossPercentage !== b.lossPercentage) {
-        return a.lossPercentage - b.lossPercentage;
+        return b.lossPercentage - a.lossPercentage;
       }
       if (a.participationCount !== b.participationCount) {
         return b.participationCount - a.participationCount;
@@ -584,7 +584,9 @@ export async function getRegularLeaderboard(year: number): Promise<RegularLeader
   }));
 }
 
-export async function getFettMattisLeaderboard(year: number): Promise<FettMattisLeaderboardEntry[]> {
+export async function getFettMattisLeaderboard(
+  year: number | null,
+): Promise<FettMattisLeaderboardEntry[]> {
   const { rows } = await db.execute(fettMattisLeaderboardQuery(year));
   const typedRows = rows as FettMattisLeaderboardRow[];
 
@@ -610,13 +612,16 @@ export async function getFettMattisLeaderboard(year: number): Promise<FettMattis
   }));
 }
 
-function regularLeaderboardQuery(year: number): SQL {
+function regularLeaderboardQuery(year: number | null): SQL {
+  const yearFilter =
+    typeof year === "number" ? sql`AND EXTRACT(YEAR FROM ${rounds.createdAt}) = ${year}` : sql``;
+
   return sql`
     WITH eligible_rounds AS (
       SELECT id
       FROM ${rounds}
       WHERE ${rounds.deletedAt} IS NULL
-        AND EXTRACT(YEAR FROM ${rounds.createdAt}) = ${year}
+        ${yearFilter}
     ),
     participation AS (
       SELECT
@@ -646,7 +651,10 @@ function regularLeaderboardQuery(year: number): SQL {
   `;
 }
 
-function fettMattisLeaderboardQuery(year: number): SQL {
+function fettMattisLeaderboardQuery(year: number | null): SQL {
+  const yearFilter =
+    typeof year === "number" ? sql`AND EXTRACT(YEAR FROM f.created_at) = ${year}` : sql``;
+
   return sql`
     SELECT
       p.id AS player_id,
@@ -656,7 +664,7 @@ function fettMattisLeaderboardQuery(year: number): SQL {
     FROM ${fettmattis} f
     JOIN ${players} p ON p.id = f.player_id
     WHERE f.revoked_at IS NULL
-      AND EXTRACT(YEAR FROM f.created_at) = ${year}
+      ${yearFilter}
     GROUP BY p.id, p.display_name, p.active;
   `;
 }

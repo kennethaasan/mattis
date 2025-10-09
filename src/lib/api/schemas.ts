@@ -53,8 +53,12 @@ export const FettMattisCreateSchema = z.object({
 
 // --- Leaderboard Schemas ---
 
+const CURRENT_YEAR = new Date().getFullYear();
+
 export const LeaderboardQuerySchema = z.object({
-  year: z.coerce.number().int().min(2000).max(new Date().getFullYear()).optional(),
+  year: z
+    .union([z.literal("all"), z.coerce.number().int().min(2000).max(CURRENT_YEAR)])
+    .optional(),
 });
 
 // --- Utility Schemas ---

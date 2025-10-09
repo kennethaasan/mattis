@@ -13,3 +13,5 @@ export type FettmattisLeaderboard = {
   fettmattisCount: number;
   rank: number;
 }[];
+
+export type LeaderboardScope = number | "all";

@@ -268,7 +268,12 @@ paths:
         - name: year
           in: query
           schema:
-            type: integer
+            oneOf:
+              - type: integer
+              - type: string
+                enum:
+                  - all
+          description: Filter results by season; use "all" to view the all-time leaderboard.
       responses:
         '200':
           description: The regular season leaderboard.
@@ -289,7 +294,12 @@ paths:
         - name: year
           in: query
           schema:
-            type: integer
+            oneOf:
+              - type: integer
+              - type: string
+                enum:
+                  - all
+          description: Filter results by season; use "all" to view the all-time leaderboard.
       responses:
         '200':
           description: The Fettmattis leaderboard.
