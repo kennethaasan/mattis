@@ -42,7 +42,11 @@ export default function PlayersPage() {
 
   const players: PlayersApiRecord[] = playersQuery.data ?? [];
 
-  const createPlayerMutation = useMutation<PlayersApiRecord, Error, PlayerCreate>({
+  const createPlayerMutation = useMutation<
+    PlayersApiRecord,
+    Error,
+    PlayerCreate
+  >({
     mutationFn: async (payload) => {
       const response = await fetch("/api/players", {
         method: "POST",
@@ -88,7 +92,7 @@ export default function PlayersPage() {
         {Array.from({ length: 5 }).map((_, index) => (
           <div
             key={index}
-            className="h-12 w-full animate-pulse rounded-2xl bg-muted/50"
+            className="bg-muted/50 h-12 w-full animate-pulse rounded-2xl"
           />
         ))}
       </div>
@@ -100,7 +104,9 @@ export default function PlayersPage() {
           <TableRow>
             <TableHead>Spiller</TableHead>
             <TableHead className="hidden sm:table-cell">Status</TableHead>
-            <TableHead className="hidden sm:table-cell text-right">ID</TableHead>
+            <TableHead className="hidden text-right sm:table-cell">
+              ID
+            </TableHead>
           </TableRow>
         </TableHeader>
         <TableBody>
@@ -108,10 +114,10 @@ export default function PlayersPage() {
             <TableRow key={player.id}>
               <TableCell>
                 <div className="flex flex-col">
-                  <span className="font-medium text-foreground">
+                  <span className="text-foreground font-medium">
                     {player.display_name}
                   </span>
-                  <span className="text-xs text-muted-foreground sm:hidden">
+                  <span className="text-muted-foreground text-xs sm:hidden">
                     {player.active ? "Aktiv" : "Inaktiv"}
                   </span>
                 </div>
@@ -121,7 +127,7 @@ export default function PlayersPage() {
                   {player.active ? "Aktiv" : "Inaktiv"}
                 </Badge>
               </TableCell>
-              <TableCell className="hidden sm:table-cell text-xs text-muted-foreground text-right">
+              <TableCell className="text-muted-foreground hidden text-right text-xs sm:table-cell">
                 {player.id.slice(0, 8)}…
               </TableCell>
             </TableRow>
@@ -131,23 +137,27 @@ export default function PlayersPage() {
     );
   } else {
     rosterContent = (
-      <div className="flex flex-col items-center justify-center gap-3 rounded-3xl border border-dashed border-border/60 bg-muted/40 px-6 py-12 text-center text-sm text-muted-foreground">
+      <div className="border-border/60 bg-muted/40 text-muted-foreground flex flex-col items-center justify-center gap-3 rounded-3xl border border-dashed px-6 py-12 text-center text-sm">
         Ingen spillere ennå – legg til din første deltaker for å komme i gang.
       </div>
     );
   }
 
   return (
-    <div className="container space-y-10 pb-16 pt-12">
+    <div className="container space-y-10 pt-12 pb-16">
       <div className="flex flex-col gap-2 text-left">
-        <Badge variant="outline" className="w-fit border-primary/40 text-primary">
+        <Badge
+          variant="outline"
+          className="border-primary/40 text-primary w-fit"
+        >
           Verktøy for troppen
         </Badge>
         <h1 className="text-3xl font-semibold tracking-tight sm:text-4xl">
           Administrer Mattis-gjengen
         </h1>
-        <p className="max-w-2xl text-sm text-muted-foreground">
-          Opprett nye spillere, behold inaktive legender i arkivet og hold navnelisten ryddig til hver runde.
+        <p className="text-muted-foreground max-w-2xl text-sm">
+          Opprett nye spillere, behold inaktive legender i arkivet og hold
+          navnelisten ryddig til hver runde.
         </p>
       </div>
 
@@ -161,12 +171,12 @@ export default function PlayersPage() {
           </CardHeader>
           <CardContent className="space-y-4">
             <PlayerForm onSubmit={handlePlayerSubmit} />
-            {message ? (
-              <p className="text-sm text-primary">{message}</p>
+            {message ? <p className="text-primary text-sm">{message}</p> : null}
+            {formError ? (
+              <p className="text-destructive text-sm">{formError}</p>
             ) : null}
-            {formError ? <p className="text-sm text-destructive">{formError}</p> : null}
             {playersQuery.error ? (
-              <p className="text-sm text-destructive">
+              <p className="text-destructive text-sm">
                 {playersQuery.error.message}
               </p>
             ) : null}

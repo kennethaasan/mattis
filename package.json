@@ -6,6 +6,8 @@
     "start": "next start",
     "typegen": "next typegen",
     "lint": "npm run typegen && eslint . --max-warnings 0",
+    "prettier:write": "prettier --write .",
+    "prettier:check": "prettier --check .",
     "tsc": "tsc --noEmit",
     "test": "start-server-and-test dev http://localhost:3000 test:integration",
     "test:integration": "vitest run --coverage tests/integration",
@@ -19,7 +21,8 @@
     "docker:compose:up": "docker-compose up -d && sleep 10 && npm run seed",
     "docker:compose:down": "docker-compose down -v",
     "docker:compose:reset": "npm run docker:compose:down && npm run docker:compose:up",
-    "seed": "npm run db:migrate && tsx ./src/scripts/seed.ts"
+    "seed": "npm run db:migrate && tsx ./src/scripts/seed.ts",
+    "seed:prod": "npm run docker:compose:down && docker-compose up -d && npm run db:migrate && tsx ./src/scripts/migrate-from-mysql.ts"
   },
   "dependencies": {
     "@neondatabase/serverless": "^1.0.2",
@@ -50,7 +53,6 @@
     "@testing-library/jest-dom": "^6.9.1",
     "@testing-library/react": "^16.3.0",
     "@types/node": "^24.7.0",
-    "@types/prettier": "^3.0.0",
     "@types/react": "^19.2.2",
     "@types/react-dom": "^19.2.1",
     "@types/testing-library__jest-dom": "^6.0.0",
@@ -68,6 +70,7 @@
     "pg-mem": "^3.0.5",
     "postcss": "^8.5.6",
     "prettier": "^3.6.2",
+    "prettier-plugin-tailwindcss": "^0.6.14",
     "start-server-and-test": "^2.1.2",
     "tailwind-merge": "^3.3.1",
     "tailwindcss": "^4.1.14",

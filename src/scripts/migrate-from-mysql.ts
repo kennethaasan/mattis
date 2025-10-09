@@ -185,7 +185,8 @@ async function migrateData(
   await db.transaction(async (tx) => {
     await ensureMigrationUser(tx, options);
     await migrateLegacyUsers(tx, sourceData.users);
-    await migrateLegacyPlayers(tx, sourceData.players, playerIdMap);
+    const playerWarnings = await migrateLegacyPlayers(tx, sourceData.players, playerIdMap);
+    warnings.push(...playerWarnings);
 
     const roundInsertData = buildRoundInsertData(
       sourceData.rounds,
@@ -243,17 +244,29 @@ async function migrateLegacyPlayers(
   tx: TargetDatabase,
   players: SourcePlayerRow[],
   playerIdMap: Map<number, string>,
-): Promise<void> {
+): Promise<string[]> {
+  const warnings: string[] = [];
+
   if (players.length === 0) {
-    return;
+    return warnings;
   }
+
+  const usedDisplayNames = new Set<string>();
 
   const playerValues: PlayerInsertRow[] = players.map((row) => {
     const id = randomUUID();
     playerIdMap.set(row.id, id);
+
+    const { displayName, warnings: displayNameWarnings } = resolvePlayerDisplayName(
+      row.name,
+      row.id,
+      usedDisplayNames,
+    );
+    warnings.push(...displayNameWarnings);
+
     return {
       id,
-      displayName: row.name,
+      displayName,
       userId: null,
       active: true,
       createdAt: toDate(row.created_at),
@@ -262,6 +275,44 @@ async function migrateLegacyPlayers(
   });
 
   await tx.insert(schema.players).values(playerValues);
+
+  return warnings;
+}
+
+function resolvePlayerDisplayName(
+  rawName: string | null | undefined,
+  legacyPlayerId: number,
+  usedDisplayNames: Set<string>,
+): { displayName: string; warnings: string[] } {
+  const localWarnings: string[] = [];
+  const trimmedName = rawName?.trim() ?? "";
+
+  let baseName = trimmedName;
+
+  if (baseName.length === 0) {
+    baseName = `Legacy player ${formatLegacyId(legacyPlayerId)}`;
+    localWarnings.push(
+      `Player ${formatLegacyId(legacyPlayerId)} had empty display name and was renamed to "${baseName}".`,
+    );
+  }
+
+  let uniqueName = baseName;
+  let suffix = 1;
+
+  while (usedDisplayNames.has(uniqueName)) {
+    suffix += 1;
+    uniqueName = `${baseName} (${suffix})`;
+  }
+
+  usedDisplayNames.add(uniqueName);
+
+  if (suffix > 1) {
+    localWarnings.push(
+      `Player ${formatLegacyId(legacyPlayerId)} had duplicate display name "${baseName}" and was renamed to "${uniqueName}".`,
+    );
+  }
+
+  return { displayName: uniqueName, warnings: localWarnings };
 }
 
 interface RoundInsertData {

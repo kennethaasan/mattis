@@ -1,0 +1,13 @@
+package.json
+reports/
+dist/
+drizzle/
+.specify/
+laravel/
+.codex/
+.gemini/
+.vscode/
+.idea/
+.next/
+.opencode/
+instructions/
