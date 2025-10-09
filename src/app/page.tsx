@@ -11,24 +11,7 @@ import {
 } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Leaderboard } from "@/components/Leaderboard";
-
-const highlightStats = [
-  {
-    label: "Registrerte runder",
-    value: "1.5k+",
-    description: "Registrert hvert år med presise detaljer.",
-  },
-  {
-    label: "Fettmattis-øyeblikk",
-    value: "320",
-    description: "Feirede utmerkelser du kan finne igjen.",
-  },
-  {
-    label: "Aktive spillere",
-    value: "48",
-    description: "I Mattis-miljøet – og tallet vokser.",
-  },
-];
+import { getOverviewStats } from "@/lib/db-client";
 
 const featureCards = [
   {
@@ -63,15 +46,53 @@ const workflowCards = [
       "Responsivt design og mørk modus gjør tavlen pen på alle enheter.",
   },
   {
-    title: "Tro mot arven",
+    title: "Tro mot tradisjonen",
     description:
-      "Inspirert av klassiske mattis.vanvikil.no, gjenoppbygget med moderne verktøy.",
+      "Viderefører Mattis-åndens ritualer, bygget med moderne verktøy og arbeidsflyt.",
   },
 ];
 
-export default function Home() {
+export default async function Home() {
+  const { totalRounds, fettMattisMoments, activePlayers } = await getOverviewStats();
+  const formatter = new Intl.NumberFormat("nb-NO");
+
+  const highlightStats = [
+    {
+      label: "Registrerte runder",
+      value: formatter.format(totalRounds),
+      description: "Registrert hvert år med presise detaljer.",
+    },
+    {
+      label: "Fettmattis-øyeblikk",
+      value: formatter.format(fettMattisMoments),
+      description: "Feirede utmerkelser du kan finne igjen.",
+    },
+    {
+      label: "Aktive spillere",
+      value: formatter.format(activePlayers),
+      description: "I Mattis-miljøet – og tallet vokser.",
+    },
+  ];
+
   return (
     <div className="flex flex-col">
+      <section className="border-b border-border/60 bg-muted/40 py-12">
+        <div className="container flex flex-col gap-6">
+          <Badge variant="outline" className="w-fit border-primary/40 text-primary">
+            Live tabeller
+          </Badge>
+          <div className="flex flex-col gap-3 text-left">
+            <h2 className="text-3xl font-semibold tracking-tight sm:text-4xl">
+              Hold oversikt over sesongen
+            </h2>
+            <p className="max-w-3xl text-sm text-muted-foreground">
+              Vanlig stilling og Fettmattis-utdelinger vises side om side og oppdateres straks en runde registreres.
+            </p>
+          </div>
+          <Leaderboard />
+        </div>
+      </section>
+
       <section className="relative overflow-hidden">
         <div className="container relative flex flex-col items-center gap-8 pb-20 pt-24 text-center md:pt-28">
           <Badge className="rounded-full bg-primary/10 text-primary shadow-xs shadow-primary/20">
@@ -81,7 +102,7 @@ export default function Home() {
             Et vakkert hjem for hver Mattis-runde, hvert tap og hver Fettmattis-feiring.
           </h1>
           <p className="max-w-2xl text-base text-muted-foreground sm:text-lg">
-            Registrer spillkveldene på sekunder, få oppdaterte tabeller og gjenopplev Fettmattis-høydepunktene i et moderne grensesnitt inspirert av den klassiske appen.
+            Registrer spillkveldene på sekunder, få oppdaterte tabeller og gjenopplev Fettmattis-høydepunktene i et moderne grensesnitt laget for Mattis-gjengen.
           </p>
           <div className="flex flex-col gap-3 sm:flex-row">
             <Button size="lg" asChild>
@@ -116,7 +137,7 @@ export default function Home() {
       <section className="container grid gap-6 pb-16 md:grid-cols-3">
         {featureCards.map(({ Icon, title, description }) => (
           <Card key={title} className="h-full">
-            <CardHeader>
+            <CardHeader className="pb-6">
               <div className="flex h-12 w-12 items-center justify-center rounded-2xl bg-primary/10 text-primary">
                 <Icon className="h-6 w-6" />
               </div>
@@ -127,52 +148,36 @@ export default function Home() {
         ))}
       </section>
 
-      <section className="container grid gap-6 pb-16 lg:grid-cols-[1.2fr_0.8fr]">
-        <Card className="overflow-hidden">
-          <CardHeader>
-            <CardTitle className="flex items-center gap-2 text-2xl md:text-3xl">
-              <Trophy className="h-6 w-6 text-primary" />
-              Tabelloversikt
-            </CardTitle>
-            <CardDescription>
-              Bytt mellom vanlig stilling og Fettmattis-utdelinger – begge oppdateres idet en runde lagres.
-            </CardDescription>
-          </CardHeader>
-          <CardContent>
-            <Leaderboard />
-          </CardContent>
-        </Card>
+      <section className="container grid gap-6 pb-16 lg:grid-cols-[1.1fr_0.9fr]">
         <div className="grid gap-4">
           {workflowCards.map((card) => (
             <Card key={card.title} className="border-dashed border-border/70">
-              <CardHeader>
+              <CardHeader className="pb-6">
                 <CardTitle className="text-lg">{card.title}</CardTitle>
                 <CardDescription>{card.description}</CardDescription>
               </CardHeader>
             </Card>
           ))}
-          <Card className="bg-linear-to-br from-primary/10 via-background to-background">
-            <CardHeader>
-              <CardTitle className="flex items-center gap-2 text-lg">
-                <Zap className="h-5 w-5 text-primary" />
-                Klar for å registrere neste runde?
-              </CardTitle>
-              <CardDescription>
-                Gå direkte til rundeoversikten, eller besøk den klassiske siden for å hente gamle data.
-              </CardDescription>
-            </CardHeader>
-            <CardContent className="flex flex-col gap-3 sm:flex-row">
-              <Button asChild className="flex-1">
-                <Link href="/rounds">Registrer en runde</Link>
-              </Button>
-              <Button variant="outline" asChild className="flex-1">
-                <Link href="https://mattis.vanvikil.no/" target="_blank" rel="noreferrer">
-                  Klassisk tavle
-                </Link>
-              </Button>
-            </CardContent>
-          </Card>
         </div>
+        <Card className="bg-linear-to-br from-primary/10 via-background to-background">
+          <CardHeader className="pb-4">
+            <CardTitle className="flex items-center gap-2 text-lg">
+              <Zap className="h-5 w-5 text-primary" />
+              Klar for å registrere neste runde?
+            </CardTitle>
+            <CardDescription>
+              Gå direkte til rundeoversikten, eller finjuster spillerlisten før neste kamp.
+            </CardDescription>
+          </CardHeader>
+          <CardContent className="flex flex-col gap-3 p-6 pb-6 pt-4 sm:flex-row">
+            <Button asChild className="flex-1">
+              <Link href="/rounds">Registrer en runde</Link>
+            </Button>
+            <Button variant="outline" asChild className="flex-1">
+              <Link href="/players">Administrer spillere</Link>
+            </Button>
+          </CardContent>
+        </Card>
       </section>
 
       <section className="relative overflow-hidden border-t border-border/60 bg-muted/40 py-16">

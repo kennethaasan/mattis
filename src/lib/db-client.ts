@@ -661,6 +661,35 @@ function fettMattisLeaderboardQuery(year: number): SQL {
   `;
 }
 
+export interface OverviewStats {
+  totalRounds: number;
+  fettMattisMoments: number;
+  activePlayers: number;
+}
+
+export async function getOverviewStats(): Promise<OverviewStats> {
+  const [roundsEntry] = await db
+    .select({ count: sql<number>`cast(count(*) as int)` })
+    .from(rounds)
+    .where(isNull(rounds.deletedAt));
+
+  const [fettMattisEntry] = await db
+    .select({ count: sql<number>`cast(count(*) as int)` })
+    .from(fettmattis)
+    .where(isNull(fettmattis.revokedAt));
+
+  const [playersEntry] = await db
+    .select({ count: sql<number>`cast(count(*) as int)` })
+    .from(players)
+    .where(eq(players.active, true));
+
+  return {
+    totalRounds: roundsEntry?.count ?? 0,
+    fettMattisMoments: fettMattisEntry?.count ?? 0,
+    activePlayers: playersEntry?.count ?? 0,
+  };
+}
+
 function isUniqueViolation(error: unknown): boolean {
   return typeof error === "object" && error !== null && "code" in error && (error as { code?: string }).code === "23505";
 }
