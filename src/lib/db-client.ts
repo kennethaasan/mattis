@@ -463,7 +463,7 @@ export async function createFettMattis(input: CreateFettMattisInput): Promise<Fe
     });
 
     if (duplicate) {
-      throw new ConflictError("An active FettMattis already exists for this player and round.");
+      throw new ConflictError("An active Fettmattis already exists for this player and round.");
     }
 
     const now = new Date();
@@ -479,7 +479,7 @@ export async function createFettMattis(input: CreateFettMattisInput): Promise<Fe
       .returning();
 
     if (!row) {
-      throw new Error("Failed to create FettMattis.");
+      throw new Error("Failed to create Fettmattis.");
     }
 
     return {
@@ -502,7 +502,7 @@ export async function revokeFettMattis(fettmattisId: string): Promise<void> {
       .limit(1);
 
     if (!row) {
-      throw new NotFoundError("FettMattis not found.");
+      throw new NotFoundError("Fettmattis not found.");
     }
 
     if (row.revokedAt) {

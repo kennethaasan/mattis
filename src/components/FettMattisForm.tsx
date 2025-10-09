@@ -46,7 +46,7 @@ export function FettMattisForm({ onSubmit, players, rounds, initialData }: FettM
     const parsed = FettMattisCreateSchema.safeParse(payload);
     if (!parsed.success) {
       const firstIssue = parsed.error.issues.at(0);
-      setError(firstIssue?.message ?? "Unable to submit FettMattis.");
+      setError(firstIssue?.message ?? "Kunne ikke sende inn Fettmattis.");
       return;
     }
 
@@ -65,7 +65,7 @@ export function FettMattisForm({ onSubmit, players, rounds, initialData }: FettM
       className="flex flex-col gap-6"
     >
       <div className="space-y-2">
-        <Label htmlFor="fettmattis-player">Player</Label>
+        <Label htmlFor="fettmattis-player">Spiller</Label>
         <div className="rounded-2xl border border-border/70 bg-background p-1">
           <select
             id="fettmattis-player"
@@ -74,7 +74,7 @@ export function FettMattisForm({ onSubmit, players, rounds, initialData }: FettM
             className="w-full rounded-2xl bg-background px-4 py-3 text-sm focus-visible:outline-hidden focus-visible:ring-2 focus-visible:ring-ring"
           >
             <option value="" disabled>
-              Choose the honoured player
+              Velg spilleren som hedres
             </option>
             {players.map((player) => (
               <option key={player.id} value={player.id}>
@@ -87,8 +87,8 @@ export function FettMattisForm({ onSubmit, players, rounds, initialData }: FettM
 
       <div className="space-y-2">
         <div className="flex items-center justify-between">
-          <Label htmlFor="fettmattis-round">Optional round link</Label>
-          <span className="text-xs text-muted-foreground">Keeps the story straight</span>
+          <Label htmlFor="fettmattis-round">Valgfri kobling til runde</Label>
+          <span className="text-xs text-muted-foreground">Holder historikken ryddig</span>
         </div>
         <div className="rounded-2xl border border-border/60 bg-background p-1">
           <select
@@ -97,7 +97,7 @@ export function FettMattisForm({ onSubmit, players, rounds, initialData }: FettM
             onChange={(event) => setRoundId(event.target.value)}
             className="w-full rounded-2xl bg-background px-4 py-3 text-sm focus-visible:outline-hidden focus-visible:ring-2 focus-visible:ring-ring"
           >
-            <option value="">No linked round</option>
+            <option value="">Ingen tilknyttet runde</option>
             {rounds.map((round) => (
               <option key={round.id} value={round.id}>
                 {round.id}
@@ -110,7 +110,7 @@ export function FettMattisForm({ onSubmit, players, rounds, initialData }: FettM
       {error ? <p className="text-sm text-destructive">{error}</p> : null}
 
       <Button type="submit" disabled={isSubmitDisabled}>
-        Grant FettMattis
+        Tildel Fettmattis
       </Button>
     </form>
   );

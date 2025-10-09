@@ -3,7 +3,7 @@ import "dotenv/config";
 import { createEnv } from "@t3-oss/env-nextjs";
 import { z } from "zod";
 
-const DEFAULT_DEV_USER_ID = "00000000-0000-7000-8000-000000000000";
+export const DEFAULT_DEV_USER_ID = "00000000-0000-7000-8000-000000000000";
 
 export const env = createEnv({
   server: {

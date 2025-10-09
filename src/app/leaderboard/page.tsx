@@ -7,18 +7,18 @@ export default function LeaderboardPage() {
     <div className="container space-y-10 pb-16 pt-12">
       <div className="flex flex-col gap-2 text-left">
         <Badge variant="outline" className="w-fit border-primary/40 text-primary">
-          Live standings
+          Se tapsprosent
         </Badge>
         <h1 className="text-3xl font-semibold tracking-tight sm:text-4xl">
-          Every Mattis leaderboard in one glance
+          Tabeller
         </h1>
         <p className="max-w-2xl text-sm text-muted-foreground">
-          Switch between regular standings and FettMattis honours. Stats refresh automatically whenever a new round is recorded.
+          Tallene oppdateres automatisk når en ny runde registreres.
         </p>
       </div>
       <Card>
         <CardHeader>
-          <CardTitle>Season metrics</CardTitle>
+          <CardTitle>Sesongtall</CardTitle>
         </CardHeader>
         <CardContent>
           <Leaderboard />

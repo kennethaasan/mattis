@@ -17,7 +17,7 @@ import {
 const getUserId = (req: NextRequest): string => {
   // In a real app, this would come from a session or token.
   // For development, we use a placeholder from the environment.
-  return req.headers.get("X-User-Id") ?? env.DEV_USER_ID ?? "";
+  return req.headers.get("X-User-Id") ?? env.DEV_USER_ID;
 };
 
 export async function GET(_req: Request, context: { params: Promise<{ roundId: string }> }) {

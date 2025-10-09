@@ -11,10 +11,10 @@ import { cn } from "@/lib/utils";
 import { ModeToggle } from "@/components/mode-toggle";
 
 const navLinks = [
-  { href: "/", label: "Overview" },
-  { href: "/leaderboard", label: "Leaderboards" },
-  { href: "/players", label: "Players" },
-  { href: "/rounds", label: "Rounds" },
+  { href: "/", label: "Oversikt" },
+  { href: "/leaderboard", label: "Tabeller" },
+  { href: "/players", label: "Spillere" },
+  { href: "/rounds", label: "Runder" },
 ] as const satisfies readonly { href: Route; label: string }[];
 
 export function SiteHeader() {
@@ -32,12 +32,12 @@ export function SiteHeader() {
           <Link
             href="/"
             className="flex items-center gap-2 text-lg font-semibold"
-            aria-label="Mattis Stats home"
+            aria-label="Mattis forside"
           >
             <span className="grid h-9 w-9 place-items-center rounded-full bg-primary text-primary-foreground shadow-lg shadow-primary/40">
               M
             </span>
-            <span className="hidden sm:inline-flex">Mattis Stats</span>
+            <span className="hidden sm:inline-flex">Mattis</span>
           </Link>
           <nav className="hidden items-center gap-1 md:flex">
             {navLinks.map((link) => {
@@ -67,7 +67,7 @@ export function SiteHeader() {
           <ModeToggle />
           <Button variant="outline" size="sm" asChild className="hidden sm:inline-flex">
             <Link href="https://mattis.vanvikil.no/" target="_blank" rel="noreferrer">
-              Legacy App
+              Klassisk app
               <ArrowRight className="ml-2 h-4 w-4" />
             </Link>
           </Button>
@@ -78,7 +78,7 @@ export function SiteHeader() {
             onClick={() => setIsMenuOpen((prev) => !prev)}
             aria-expanded={isMenuOpen}
             aria-controls="mobile-nav"
-            aria-label="Toggle navigation"
+            aria-label="Vis eller skjul meny"
           >
             <Menu className="h-5 w-5" />
           </Button>
@@ -115,7 +115,7 @@ export function SiteHeader() {
           })}
           <Button variant="outline" className="w-full" asChild>
             <Link href="https://mattis.vanvikil.no/" target="_blank" rel="noreferrer">
-              Legacy App
+              Klassisk app
               <ArrowRight className="ml-2 h-4 w-4" />
             </Link>
           </Button>

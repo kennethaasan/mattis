@@ -9,9 +9,9 @@ import { cn } from "@/lib/utils";
 import { QueryProvider } from "@/components/query-provider";
 
 export const metadata: Metadata = {
-  title: "Mattis Stats",
+  title: "Mattis",
   description:
-    "Modern player and fettmattis tracking for the Mattis card community with real-time leaderboards and beautiful insights.",
+    "Oversikt over spillere, runder og fettmattiser i mattis-miljøet.",
 };
 
 export default function RootLayout({
@@ -20,7 +20,7 @@ export default function RootLayout({
   children: React.ReactNode;
 }>) {
   return (
-    <html lang="en" suppressHydrationWarning>
+    <html lang="nb" suppressHydrationWarning>
       <body
         className={cn("min-h-screen bg-background font-sans text-foreground antialiased")}
       >

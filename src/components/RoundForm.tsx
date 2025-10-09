@@ -64,7 +64,7 @@ export function RoundForm({ onSubmit, players, initialData }: RoundFormProps) {
     const parsed = RoundCreateSchema.safeParse(payload);
     if (!parsed.success) {
       const firstIssue = parsed.error.issues.at(0);
-      setError(firstIssue?.message ?? "Unable to save round.");
+      setError(firstIssue?.message ?? "Kunne ikke lagre runden.");
       return;
     }
 
@@ -83,7 +83,7 @@ export function RoundForm({ onSubmit, players, initialData }: RoundFormProps) {
     >
       <div className="space-y-3">
         <Label className="text-sm uppercase tracking-wide text-muted-foreground">
-          Participants
+          Deltakere
         </Label>
         <div className="grid gap-2 sm:grid-cols-2">
           {participantOptions.map((option) => {
@@ -102,19 +102,19 @@ export function RoundForm({ onSubmit, players, initialData }: RoundFormProps) {
               >
                 <span className="font-medium text-foreground">{option.label}</span>
                 <Badge variant={isChecked ? "success" : "outline"}>
-                  {isChecked ? "Selected" : "Tap to add"}
+                  {isChecked ? "Valgt" : "Trykk for å legge til"}
                 </Badge>
               </button>
             );
           })}
         </div>
         <p className="text-xs text-muted-foreground">
-          Pick at least two players to unlock the loser selection.
+          Velg minst to spillere for å aktivere valg av taper.
         </p>
       </div>
 
       <div className="space-y-2">
-        <Label htmlFor="round-loser">Loser</Label>
+        <Label htmlFor="round-loser">Taper</Label>
         <div className="rounded-2xl border border-border/70 bg-background p-1">
           <select
             id="round-loser"
@@ -125,8 +125,8 @@ export function RoundForm({ onSubmit, players, initialData }: RoundFormProps) {
           >
             <option value="" disabled>
               {loserOptions.length === 0
-                ? "Select participants first"
-                : "Select the loser"}
+                ? "Velg deltakere først"
+                : "Velg taperen"}
             </option>
             {loserOptions.map((option) => (
               <option key={option.id} value={option.id}>
@@ -140,7 +140,7 @@ export function RoundForm({ onSubmit, players, initialData }: RoundFormProps) {
       {error ? <p className="text-sm text-destructive">{error}</p> : null}
 
       <Button type="submit" disabled={isSubmitDisabled}>
-        Save round
+        Lagre runde
       </Button>
     </form>
   );

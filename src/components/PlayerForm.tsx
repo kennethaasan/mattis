@@ -30,7 +30,7 @@ export function PlayerForm({ onSubmit, initialData }: PlayerFormProps) {
     const parsed = PlayerCreateSchema.safeParse({ display_name: trimmedValue });
     if (!parsed.success) {
       const firstIssue = parsed.error.issues.at(0);
-      setError(firstIssue?.message ?? "Invalid display name.");
+      setError(firstIssue?.message ?? "Ugyldig visningsnavn.");
       return;
     }
 
@@ -47,12 +47,12 @@ export function PlayerForm({ onSubmit, initialData }: PlayerFormProps) {
       className="flex flex-col gap-4"
     >
       <div className="space-y-2">
-        <Label htmlFor="player-display-name">Display name</Label>
+        <Label htmlFor="player-display-name">Visningsnavn</Label>
         <Input
           id="player-display-name"
           value={value}
           onChange={(event) => setValue(event.target.value)}
-          placeholder="Add a new Mattis legend"
+          placeholder="Legg til en ny Mattis-legende"
           aria-invalid={error ? "true" : "false"}
           aria-describedby={error ? "player-form-error" : undefined}
         />
@@ -63,7 +63,7 @@ export function PlayerForm({ onSubmit, initialData }: PlayerFormProps) {
         </p>
       ) : null}
       <Button type="submit" disabled={trimmedValue.length === 0}>
-        Save player
+        Lagre spiller
       </Button>
     </form>
   );

@@ -53,7 +53,7 @@ export async function getFettmattisLeaderboard(year: number): Promise<Fettmattis
   });
 
   if (!response.ok) {
-    throw new Error("Failed to load FettMattis leaderboard.");
+    throw new Error("Failed to load Fettmattis leaderboard.");
   }
 
   const data = (await response.json()) as FettMattisLeaderboardResponse[];

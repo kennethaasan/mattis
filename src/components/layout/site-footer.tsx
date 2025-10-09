@@ -19,7 +19,7 @@ export function SiteFooter({ className }: SiteFooterProps) {
     >
       <div className="container flex flex-col items-center justify-between gap-4 py-8 text-sm text-muted-foreground md:flex-row">
         <p className="flex items-center gap-1 text-sm">
-          Built with passion for the Mattis community
+          Bygget med lidenskap for Mattis-miljøet
           <Heart className="h-4 w-4 fill-current text-rose-500" />
         </p>
         <div className="flex items-center gap-4">
@@ -29,7 +29,7 @@ export function SiteFooter({ className }: SiteFooterProps) {
             rel="noreferrer"
             className="transition hover:text-primary"
           >
-            Legacy reference
+            Historisk referanse
           </Link>
           <Link
             href="https://github.com/"
@@ -38,7 +38,7 @@ export function SiteFooter({ className }: SiteFooterProps) {
             className="flex items-center gap-2 transition hover:text-primary"
           >
             <ExternalLink className="h-4 w-4" />
-            Project Repo
+            Prosjektrepo
           </Link>
         </div>
       </div>

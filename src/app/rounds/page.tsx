@@ -30,6 +30,14 @@ interface ProblemDetailPayload {
   readonly error?: unknown;
 }
 
+const isMessageRecord = (value: unknown): value is { message: string } => {
+  if (typeof value !== "object" || value === null) {
+    return false;
+  }
+
+  return typeof (value as { message?: unknown }).message === "string";
+};
+
 const extractErrorDetail = (body: unknown): string | undefined => {
   if (typeof body !== "object" || body === null) {
     return undefined;
@@ -42,14 +50,11 @@ const extractErrorDetail = (body: unknown): string | undefined => {
   }
 
   if (Array.isArray(candidate.error)) {
-    const [firstError] = candidate.error;
-    if (
-      typeof firstError === "object" &&
-      firstError !== null &&
-      "message" in firstError &&
-      typeof (firstError as { message?: unknown }).message === "string"
-    ) {
-      return (firstError as { message: string }).message;
+    const errors = candidate.error as unknown[];
+    for (const entry of errors) {
+      if (isMessageRecord(entry)) {
+        return entry.message;
+      }
     }
   }
 
@@ -94,11 +99,11 @@ export default function RoundsPage() {
       if (!response.ok) {
         const body: unknown = await response.json();
         const detail = extractErrorDetail(body);
-        throw new Error(detail ?? "Unable to save round.");
+        throw new Error(detail ?? "Kunne ikke lagre runden.");
       }
     },
     onSuccess: () => {
-      setStatus("Round recorded. Leaderboards just updated!");
+      setStatus("Runde lagret. Tabellene er oppdatert!");
       setError(null);
       void queryClient.invalidateQueries({ queryKey: ["leaderboard"] });
     },
@@ -122,11 +127,11 @@ export default function RoundsPage() {
       if (!response.ok) {
         const body: unknown = await response.json();
         const detail = extractErrorDetail(body);
-        throw new Error(detail ?? "Unable to grant a FettMattis.");
+        throw new Error(detail ?? "Kunne ikke tildele en Fettmattis.");
       }
     },
     onSuccess: () => {
-      setStatus("FettMattis granted. Time to celebrate!");
+      setStatus("Fettmattis tildelt. Klar for feiring!");
       setError(null);
       void queryClient.invalidateQueries({ queryKey: ["leaderboard"] });
     },
@@ -148,13 +153,13 @@ export default function RoundsPage() {
     <div className="container space-y-10 pb-16 pt-12">
       <div className="flex flex-col gap-2 text-left">
         <Badge variant="outline" className="w-fit border-primary/40 text-primary">
-          Round control centre
+          Kontrollsenter for runder
         </Badge>
         <h1 className="text-3xl font-semibold tracking-tight sm:text-4xl">
-          Log rounds & FettMattis moments
+          Loggfør runder og Fettmattis-øyeblikk
         </h1>
         <p className="max-w-2xl text-sm text-muted-foreground">
-          Record the players, lock in the loser and celebrate FettMattis recognitions – all from a single hub.
+          Registrer spillerne, lås taperen og feir Fettmattis-utdelinger – alt fra ett sted.
         </p>
       </div>
 
@@ -163,10 +168,10 @@ export default function RoundsPage() {
           <CardHeader>
             <CardTitle className="flex items-center gap-2">
               <CalendarCheck className="h-5 w-5 text-primary" />
-              Record a round
+              Registrer en runde
             </CardTitle>
             <CardDescription>
-              Pick at least two players and mark the unlucky loser. Stats update instantly after saving.
+              Velg minst to spillere og marker den uheldige taperen. Tallene oppdateres idet du lagrer.
             </CardDescription>
           </CardHeader>
           <CardContent className="space-y-4">
@@ -189,10 +194,10 @@ export default function RoundsPage() {
           <CardHeader>
             <CardTitle className="flex items-center gap-2">
               <Trophy className="h-5 w-5 text-primary" />
-              Grant a FettMattis
+              Tildel en Fettmattis
             </CardTitle>
             <CardDescription>
-              Optional round links keep history aligned with your audit trail.
+              En valgfri rundekobling holder historikken ryddig.
             </CardDescription>
           </CardHeader>
           <CardContent>
@@ -226,7 +231,7 @@ export default function RoundsPage() {
 
       <div className="flex flex-wrap items-center gap-3 rounded-3xl border border-border/70 bg-muted/30 px-4 py-5 text-xs text-muted-foreground">
         <span>
-          Changes are editable for 24 hours – after that the record is locked to protect the competition.
+          Endringer kan redigeres i 24 timer – deretter låses posten for å verne om konkurransen.
         </span>
         <Button
           variant="ghost"
@@ -234,7 +239,7 @@ export default function RoundsPage() {
           onClick={() => void playersQuery.refetch()}
           disabled={isPlayersFetching}
         >
-          Refresh roster
+          Oppdater spillerliste
         </Button>
       </div>
     </div>

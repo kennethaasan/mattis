@@ -14,58 +14,58 @@ import { Leaderboard } from "@/components/Leaderboard";
 
 const highlightStats = [
   {
-    label: "Rounds captured",
+    label: "Registrerte runder",
     value: "1.5k+",
-    description: "Recorded annually with precision and context.",
+    description: "Registrert hvert år med presise detaljer.",
   },
   {
-    label: "Fettmattis moments",
+    label: "Fettmattis-øyeblikk",
     value: "320",
-    description: "Celebrated recognitions tracked and revisitable.",
+    description: "Feirede utmerkelser du kan finne igjen.",
   },
   {
-    label: "Active players",
+    label: "Aktive spillere",
     value: "48",
-    description: "Across the Mattis community and growing.",
+    description: "I Mattis-miljøet – og tallet vokser.",
   },
 ];
 
 const featureCards = [
   {
     Icon: Trophy,
-    title: "Dual leaderboards",
+    title: "To tabeller",
     description:
-      "Track competitive loss ratios alongside the iconic Fettmattis awards in one cohesive experience.",
+      "Følg tapprosent og Fettmattis-utdelinger i én samlet opplevelse.",
   },
   {
     Icon: Users2,
-    title: "Effortless player management",
+    title: "Enkel spillerstyring",
     description:
-      "Invite, rename or deactivate players with confidence knowing that history stays intact.",
+      "Inviter, gi nytt navn eller sett spillere som inaktive uten å miste historikken.",
   },
   {
     Icon: CalendarRange,
-    title: "Season-aware insights",
+    title: "Sesongvis innsikt",
     description:
-      "Every stat resets cleanly every UTC year with archives preserved for nostalgia and audits.",
+      "Alle tall nullstilles hvert UTC-år, samtidig som arkivet bevares.",
   },
 ];
 
 const workflowCards = [
   {
-    title: "Fast recording",
+    title: "Rask registrering",
     description:
-      "Drop in the round participants, tap the loser and you're done – no spreadsheets required.",
+      "Legg inn deltakerne, pek ut taperen, og jobben er gjort – helt uten regneark.",
   },
   {
-    title: "Accessible everywhere",
+    title: "Tilgjengelig overalt",
     description:
-      "Responsive layouts and dark mode support mean the scoreboard looks great on any device.",
+      "Responsivt design og mørk modus gjør tavlen pen på alle enheter.",
   },
   {
-    title: "Legacy friendly",
+    title: "Tro mot arven",
     description:
-      "Inspired by the classic mattis.vanvikil.no experience, rebuilt with modern tooling.",
+      "Inspirert av klassiske mattis.vanvikil.no, gjenoppbygget med moderne verktøy.",
   },
 ];
 
@@ -75,23 +75,23 @@ export default function Home() {
       <section className="relative overflow-hidden">
         <div className="container relative flex flex-col items-center gap-8 pb-20 pt-24 text-center md:pt-28">
           <Badge className="rounded-full bg-primary/10 text-primary shadow-xs shadow-primary/20">
-            New Mattis experience
+            Ny Mattis-opplevelse
           </Badge>
           <h1 className="max-w-4xl text-4xl font-bold tracking-tight text-foreground sm:text-5xl md:text-6xl">
-            A beautiful home for every Mattis round, loss and Fettmattis celebration.
+            Et vakkert hjem for hver Mattis-runde, hvert tap og hver Fettmattis-feiring.
           </h1>
           <p className="max-w-2xl text-base text-muted-foreground sm:text-lg">
-            Capture game nights in seconds, surface rich leaderboards and relive Fettmattis highlights with a modern interface inspired by the beloved legacy app.
+            Registrer spillkveldene på sekunder, få oppdaterte tabeller og gjenopplev Fettmattis-høydepunktene i et moderne grensesnitt inspirert av den klassiske appen.
           </p>
           <div className="flex flex-col gap-3 sm:flex-row">
             <Button size="lg" asChild>
               <Link href="/leaderboard">
-                View live leaderboards
+                Se live-tabellene
                 <ArrowRight className="ml-2 h-4 w-4" />
               </Link>
             </Button>
             <Button size="lg" variant="outline" asChild>
-              <Link href="/players">Manage players</Link>
+              <Link href="/players">Administrer spillere</Link>
             </Button>
           </div>
           <div className="mt-10 grid w-full gap-4 rounded-3xl border border-border/50 bg-background/70 p-6 shadow-xl shadow-primary/10 backdrop-blur-sm md:grid-cols-3">
@@ -132,10 +132,10 @@ export default function Home() {
           <CardHeader>
             <CardTitle className="flex items-center gap-2 text-2xl md:text-3xl">
               <Trophy className="h-6 w-6 text-primary" />
-              Leaderboards at a glance
+              Tabelloversikt
             </CardTitle>
             <CardDescription>
-              Toggle between regular standings and Fettmattis accolades – both update the moment a round is submitted.
+              Bytt mellom vanlig stilling og Fettmattis-utdelinger – begge oppdateres idet en runde lagres.
             </CardDescription>
           </CardHeader>
           <CardContent>
@@ -155,19 +155,19 @@ export default function Home() {
             <CardHeader>
               <CardTitle className="flex items-center gap-2 text-lg">
                 <Zap className="h-5 w-5 text-primary" />
-                Ready to capture your next session?
+                Klar for å registrere neste runde?
               </CardTitle>
               <CardDescription>
-                Head straight to the rounds dashboard or revisit the legacy site if you need to export archived data.
+                Gå direkte til rundeoversikten, eller besøk den klassiske siden for å hente gamle data.
               </CardDescription>
             </CardHeader>
             <CardContent className="flex flex-col gap-3 sm:flex-row">
               <Button asChild className="flex-1">
-                <Link href="/rounds">Record a round</Link>
+                <Link href="/rounds">Registrer en runde</Link>
               </Button>
               <Button variant="outline" asChild className="flex-1">
                 <Link href="https://mattis.vanvikil.no/" target="_blank" rel="noreferrer">
-                  Legacy scoreboard
+                  Klassisk tavle
                 </Link>
               </Button>
             </CardContent>
@@ -178,21 +178,21 @@ export default function Home() {
       <section className="relative overflow-hidden border-t border-border/60 bg-muted/40 py-16">
         <div className="container flex flex-col items-center gap-6 text-center">
           <Badge variant="outline" className="border-primary/40 text-primary">
-            Built for late-night bragging rights
+            Skapt for nattlig skryt
           </Badge>
           <h2 className="max-w-2xl text-3xl font-semibold tracking-tight sm:text-4xl">
-            Dark-mode ready, mobile-friendly and tuned for quick victories.
+            Klar for mørk modus, mobilvennlig og laget for raske seiere.
           </h2>
           <p className="max-w-xl text-base text-muted-foreground">
-            Whether you are logging the last game of the evening or celebrating another Fettmattis, this interface keeps the flow moving fast.
+            Enten du logger siste runde for kvelden eller feirer en ny Fettmattis, holder dette grensesnittet tempoet oppe.
           </p>
           <div className="flex flex-col gap-3 sm:flex-row">
             <Button variant="secondary" asChild>
-              <Link href="/players">Invite the crew</Link>
+              <Link href="/players">Inviter gjengen</Link>
             </Button>
             <Button variant="ghost" asChild>
               <Link href="/leaderboard">
-                Explore the standings
+                Utforsk tabellene
                 <ArrowRight className="ml-2 h-4 w-4" />
               </Link>
             </Button>

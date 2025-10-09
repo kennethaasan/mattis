@@ -1,15 +1,17 @@
 import "dotenv/config";
 import { Client } from "pg";
 
-type PlayerSeed = {
+import { DEFAULT_DEV_USER_ID } from "@/env";
+
+interface PlayerSeed {
   key: string;
   id: string;
   displayName: string;
   userId?: string;
   active?: boolean;
-};
+}
 
-type RoundSeed = {
+interface RoundSeed {
   key: string;
   id: string;
   label: string;
@@ -17,24 +19,24 @@ type RoundSeed = {
   participants: string[];
   loser: string;
   createdBy: string;
-};
+}
 
-type FettMattisSeed = {
+interface FettMattisSeed {
   id: string;
   player: string;
   round: string | null;
   createdAt: Date;
   createdBy: string;
-};
+}
 
-type PlayerRecord = {
+interface PlayerRecord {
   id: string;
   displayName: string;
-};
+}
 
-type RoundRecord = {
+interface RoundRecord {
   id: string;
-};
+}
 
 const writeLine = (stream: NodeJS.WritableStream, message: string): void => {
   stream.write(`${message}\n`);
@@ -49,7 +51,7 @@ const formatError = (error: unknown): string => {
 };
 
 const currentYear = new Date().getUTCFullYear();
-const devUserId = process.env.DEV_USER_ID ?? "00000000-0000-4000-8000-000000000000";
+const devUserId = process.env.DEV_USER_ID ?? DEFAULT_DEV_USER_ID;
 
 const playerSeeds: PlayerSeed[] = [
   {
@@ -164,7 +166,6 @@ async function seed(): Promise<void> {
     await insertFettMattis(client, players, rounds);
 
     await client.query("COMMIT");
-    transactionStarted = false;
     writeLine(process.stdout, "Database seed completed successfully.");
   } catch (error: unknown) {
     if (transactionStarted) {
@@ -293,17 +294,17 @@ async function insertFettMattis(
   players: Map<string, PlayerRecord>,
   rounds: Map<string, RoundRecord>,
 ): Promise<void> {
-  writeLine(process.stdout, "Awarding FettMattis records...");
+  writeLine(process.stdout, "Awarding Fettmattis records...");
 
   for (const entry of fettMattisSeeds) {
     const player = players.get(entry.player);
     if (!player) {
-      throw new Error(`FettMattis player ${entry.player} not found.`);
+      throw new Error(`Fettmattis player ${entry.player} not found.`);
     }
 
     const roundRecord = entry.round ? rounds.get(entry.round) : null;
     if (entry.round && !roundRecord) {
-      throw new Error(`FettMattis round ${entry.round} not found.`);
+      throw new Error(`Fettmattis round ${entry.round} not found.`);
     }
 
     await client.query(
