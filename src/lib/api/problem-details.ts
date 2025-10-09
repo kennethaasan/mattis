@@ -25,9 +25,10 @@ export function createProblemResponse({
   detail,
   type = "about:blank",
   ...rest
-}: Omit<ProblemDetails, 'type'> & { type?: string }): NextResponse {
+}: Omit<ProblemDetails, "type"> & { type?: string }): NextResponse {
   const safeType = typeof type === "string" ? type : "about:blank";
-  const safeStatus = typeof status === "number" && Number.isInteger(status) ? status : 500;
+  const safeStatus =
+    typeof status === "number" && Number.isInteger(status) ? status : 500;
 
   const problem: Record<string, unknown> = {
     type: safeType,
@@ -116,4 +117,3 @@ export function gone(detail: string): NextResponse {
     detail,
   });
 }
-

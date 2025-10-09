@@ -36,7 +36,9 @@ function createQuery(scope: LeaderboardScope) {
   return params;
 }
 
-export async function getRegularLeaderboard(scope: LeaderboardScope): Promise<RegularLeaderboard> {
+export async function getRegularLeaderboard(
+  scope: LeaderboardScope,
+): Promise<RegularLeaderboard> {
   const query = createQuery(scope);
   const response = await fetch(`/api/leaderboard/regular?${query.toString()}`, {
     credentials: "include",
@@ -63,10 +65,13 @@ export async function getFettmattisLeaderboard(
   scope: LeaderboardScope,
 ): Promise<FettmattisLeaderboard> {
   const query = createQuery(scope);
-  const response = await fetch(`/api/leaderboard/fettmattis?${query.toString()}`, {
-    credentials: "include",
-    cache: "no-store",
-  });
+  const response = await fetch(
+    `/api/leaderboard/fettmattis?${query.toString()}`,
+    {
+      credentials: "include",
+      cache: "no-store",
+    },
+  );
 
   if (!response.ok) {
     throw new Error("Failed to load Fettmattis leaderboard.");

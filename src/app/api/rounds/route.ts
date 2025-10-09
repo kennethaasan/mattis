@@ -34,7 +34,10 @@ export async function POST(req: NextRequest) {
     const validatedData = RoundCreateSchema.safeParse(body);
 
     if (!validatedData.success) {
-      return NextResponse.json({ error: validatedData.error.issues }, { status: 400 });
+      return NextResponse.json(
+        { error: validatedData.error.issues },
+        { status: 400 },
+      );
     }
 
     const { participant_ids, loser_id } = validatedData.data;
@@ -48,14 +51,26 @@ export async function POST(req: NextRequest) {
     return NextResponse.json(toRoundResponse(newRound), { status: 201 });
   } catch (error) {
     if (error instanceof NotFoundError) {
-      return createProblemResponse({ status: 404, title: "Not Found", detail: error.message });
+      return createProblemResponse({
+        status: 404,
+        title: "Not Found",
+        detail: error.message,
+      });
     }
 
     if (error instanceof ConflictError) {
-      return createProblemResponse({ status: 409, title: "Conflict", detail: error.message });
+      return createProblemResponse({
+        status: 409,
+        title: "Conflict",
+        detail: error.message,
+      });
     }
 
-    return createProblemResponse({ status: 500, title: "Internal Server Error", detail: "Internal Server Error" });
+    return createProblemResponse({
+      status: 500,
+      title: "Internal Server Error",
+      detail: "Internal Server Error",
+    });
   }
 }
 
@@ -73,7 +88,11 @@ function toRoundResponse(round: {
   };
 }
 
-function toPlayerResponse(player: { id: string; displayName: string; active: boolean }) {
+function toPlayerResponse(player: {
+  id: string;
+  displayName: string;
+  active: boolean;
+}) {
   return {
     id: player.id,
     display_name: player.displayName,

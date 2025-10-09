@@ -15,22 +15,27 @@ This guide provides instructions for setting up and running the Mattis Stats app
 ### 1. Setup Local Environment
 
 1.  **Clone the Repository**:
+
     ```bash
     git clone <repository-url>
     cd <repository-directory>
     ```
 
 2.  **Install Dependencies**:
+
     ```bash
     npm install
     ```
 
 3.  **Configure Environment Variables**:
     Copy the example environment file and fill in the details for your local database.
+
     ```bash
     cp .env.example .env.local
     ```
+
     **`.env.local`**:
+
     ```
     DATABASE_URL="postgresql://user:password@localhost:5432/mattis_db"
     # Add other environment variables as needed
@@ -63,6 +68,7 @@ The application will be available at `http://localhost:3000`.
 ### 4. Running Tests
 
 - **Unit & Integration Tests**:
+
   ```bash
   npm test
   ```
@@ -77,6 +83,7 @@ The application will be available at `http://localhost:3000`.
 To deploy the serverless infrastructure to your AWS account:
 
 1.  **Bootstrap CDK** (if it's your first time using CDK in this region/account):
+
     ```bash
     npx cdk bootstrap
     ```

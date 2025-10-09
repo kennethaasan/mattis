@@ -56,12 +56,17 @@ test("T020: PUT /api/players/{id} should return 200 and updated player", async (
   expect(res.status).toBe(200);
   const body = await res.json();
   expect(() => PlayerSchema.parse(body)).not.toThrow();
-  expect(mocks.updatePlayer).toHaveBeenCalledWith(playerId, { displayName: "Eva", active: undefined });
+  expect(mocks.updatePlayer).toHaveBeenCalledWith(playerId, {
+    displayName: "Eva",
+    active: undefined,
+  });
 });
 
 test("T020: PUT /api/players/{id} should return 404 when not found", async () => {
   const playerId = "00000000-0000-7000-0000-000000000031";
-  mocks.updatePlayer.mockRejectedValueOnce(new mocks.MockNotFoundError("Player not found."));
+  mocks.updatePlayer.mockRejectedValueOnce(
+    new mocks.MockNotFoundError("Player not found."),
+  );
 
   const req = createMockRequest(playerId, { display_name: "Eva" });
   const res = await PUT(req, { params: Promise.resolve({ playerId }) });

@@ -22,9 +22,16 @@ export default function RootLayout({
   return (
     <html lang="nb" suppressHydrationWarning>
       <body
-        className={cn("min-h-screen bg-background font-sans text-foreground antialiased")}
+        className={cn(
+          "bg-background text-foreground min-h-screen font-sans antialiased",
+        )}
       >
-        <ThemeProvider attribute="class" defaultTheme="system" enableSystem disableTransitionOnChange>
+        <ThemeProvider
+          attribute="class"
+          defaultTheme="system"
+          enableSystem
+          disableTransitionOnChange
+        >
           <QueryProvider>
             <AuthProvider>
               <div className="relative flex min-h-screen flex-col">

@@ -21,7 +21,9 @@ interface RoundFormProps {
 }
 
 export function RoundForm({ onSubmit, players, initialData }: RoundFormProps) {
-  const [participantIds, setParticipantIds] = useState<string[]>(initialData?.participant_ids ?? []);
+  const [participantIds, setParticipantIds] = useState<string[]>(
+    initialData?.participant_ids ?? [],
+  );
   const [loserId, setLoserId] = useState(initialData?.loser_id ?? "");
   const [error, setError] = useState<string | null>(null);
 
@@ -39,11 +41,14 @@ export function RoundForm({ onSubmit, players, initialData }: RoundFormProps) {
   }, [loserId, participantIds]);
 
   const participantOptions = useMemo(
-    () => players.map((player) => ({ id: player.id, label: player.displayName })),
+    () =>
+      players.map((player) => ({ id: player.id, label: player.displayName })),
     [players],
   );
 
-  const loserOptions = participantOptions.filter((option) => participantIds.includes(option.id));
+  const loserOptions = participantOptions.filter((option) =>
+    participantIds.includes(option.id),
+  );
 
   const toggleParticipant = (playerId: string) => {
     setParticipantIds((current) =>
@@ -82,7 +87,7 @@ export function RoundForm({ onSubmit, players, initialData }: RoundFormProps) {
       className="flex flex-col gap-6"
     >
       <div className="space-y-3">
-        <Label className="text-sm uppercase tracking-wide text-muted-foreground">
+        <Label className="text-muted-foreground text-sm tracking-wide uppercase">
           Deltakere
         </Label>
         <div className="grid gap-2 sm:grid-cols-2">
@@ -94,13 +99,15 @@ export function RoundForm({ onSubmit, players, initialData }: RoundFormProps) {
                 key={option.id}
                 onClick={() => toggleParticipant(option.id)}
                 className={cn(
-                  "flex items-center justify-between rounded-2xl border px-4 py-3 text-left text-sm transition hover:border-primary/40",
+                  "hover:border-primary/40 flex items-center justify-between rounded-2xl border px-4 py-3 text-left text-sm transition",
                   isChecked
                     ? "border-primary/50 bg-primary/10 text-primary"
                     : "border-border/70 text-muted-foreground",
                 )}
               >
-                <span className="font-medium text-foreground">{option.label}</span>
+                <span className="text-foreground font-medium">
+                  {option.label}
+                </span>
                 <Badge variant={isChecked ? "success" : "outline"}>
                   {isChecked ? "Valgt" : "Trykk for å legge til"}
                 </Badge>
@@ -108,19 +115,19 @@ export function RoundForm({ onSubmit, players, initialData }: RoundFormProps) {
             );
           })}
         </div>
-        <p className="text-xs text-muted-foreground">
+        <p className="text-muted-foreground text-xs">
           Velg minst to spillere for å aktivere valg av taper.
         </p>
       </div>
 
       <div className="space-y-2">
         <Label htmlFor="round-loser">Taper</Label>
-        <div className="rounded-2xl border border-border/70 bg-background p-1">
+        <div className="border-border/70 bg-background rounded-2xl border p-1">
           <select
             id="round-loser"
             value={loserId}
             onChange={(event) => setLoserId(event.target.value)}
-            className="w-full rounded-2xl bg-background px-4 py-3 text-sm focus-visible:outline-hidden focus-visible:ring-2 focus-visible:ring-ring"
+            className="bg-background focus-visible:ring-ring w-full rounded-2xl px-4 py-3 text-sm focus-visible:ring-2 focus-visible:outline-hidden"
             disabled={loserOptions.length === 0}
           >
             <option value="" disabled>
@@ -137,7 +144,7 @@ export function RoundForm({ onSubmit, players, initialData }: RoundFormProps) {
         </div>
       </div>
 
-      {error ? <p className="text-sm text-destructive">{error}</p> : null}
+      {error ? <p className="text-destructive text-sm">{error}</p> : null}
 
       <Button type="submit" disabled={isSubmitDisabled}>
         Lagre runde

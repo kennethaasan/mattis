@@ -33,7 +33,9 @@ export async function createTestDatabase(): Promise<TestDatabaseContext> {
     rows?: unknown[];
     fields?: { name: string }[];
   }
-  const baseQuery = pool.query.bind(pool) as (...args: unknown[]) => Promise<QueryResultShape>;
+  const baseQuery = pool.query.bind(pool) as (
+    ...args: unknown[]
+  ) => Promise<QueryResultShape>;
   pool.query = (async (...args: Parameters<typeof baseQuery>) => {
     const [first, ...rest] = args;
     if (typeof first === "object" && first !== null) {
@@ -50,21 +52,25 @@ export async function createTestDatabase(): Promise<TestDatabaseContext> {
       const fields = result.fields ?? [];
       result.rows = result.rows.map((entry, _index) => {
         if (Array.isArray(entry)) {
-          return entry.reduce<Record<string, unknown>>((acc, value, valueIndex) => {
-            const fieldName = toCamelCase(fields[valueIndex]?.name ?? String(valueIndex));
-            acc[fieldName] = value;
-            return acc;
-          }, {});
-        }
-
-        if (entry && typeof entry === "object") {
-          return Object.entries(entry as Record<string, unknown>).reduce<Record<string, unknown>>(
-            (acc, [key, value]) => {
-              acc[toCamelCase(key)] = value;
+          return entry.reduce<Record<string, unknown>>(
+            (acc, value, valueIndex) => {
+              const fieldName = toCamelCase(
+                fields[valueIndex]?.name ?? String(valueIndex),
+              );
+              acc[fieldName] = value;
               return acc;
             },
             {},
           );
+        }
+
+        if (entry && typeof entry === "object") {
+          return Object.entries(entry as Record<string, unknown>).reduce<
+            Record<string, unknown>
+          >((acc, [key, value]) => {
+            acc[toCamelCase(key)] = value;
+            return acc;
+          }, {});
         }
 
         return entry;

@@ -38,10 +38,16 @@ beforeEach(() => {
 });
 
 test("T014: DELETE /api/fettmattis/{fettmattisId} should return 404 if the fettmattis does not exist", async () => {
-  mocks.revokeFettMattis.mockRejectedValueOnce(new mocks.MockNotFoundError("Fettmattis not found."));
+  mocks.revokeFettMattis.mockRejectedValueOnce(
+    new mocks.MockNotFoundError("Fettmattis not found."),
+  );
 
   const req = createMockRequest();
-  const res = await DELETE(req, { params: Promise.resolve({ fettmattisId: "00000000-0000-7000-0000-000000000005" }) });
+  const res = await DELETE(req, {
+    params: Promise.resolve({
+      fettmattisId: "00000000-0000-7000-0000-000000000005",
+    }),
+  });
 
   expect(res.status).toBe(404);
   const contentType = res.headers.get("Content-Type") ?? "";
@@ -56,10 +62,16 @@ test("T014: DELETE /api/fettmattis/{fettmattisId} should return 204 on success",
   mocks.revokeFettMattis.mockResolvedValueOnce(undefined);
 
   const req = createMockRequest();
-  const res = await DELETE(req, { params: Promise.resolve({ fettmattisId: "00000000-0000-7000-0000-000000000005" }) });
+  const res = await DELETE(req, {
+    params: Promise.resolve({
+      fettmattisId: "00000000-0000-7000-0000-000000000005",
+    }),
+  });
 
   expect(res.status).toBe(204);
 
   // Ensure the database function was called with the correct data
-  expect(mocks.revokeFettMattis).toHaveBeenCalledWith("00000000-0000-7000-0000-000000000005");
+  expect(mocks.revokeFettMattis).toHaveBeenCalledWith(
+    "00000000-0000-7000-0000-000000000005",
+  );
 });

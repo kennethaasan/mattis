@@ -26,7 +26,7 @@ export function SiteHeader() {
   }, [pathname]);
 
   return (
-    <header className="sticky top-0 z-50 border-b border-border/60 bg-background/75 backdrop-blur-xl">
+    <header className="border-border/60 bg-background/75 sticky top-0 z-50 border-b backdrop-blur-xl">
       <div className="container flex h-16 items-center justify-between gap-3">
         <div className="flex items-center gap-6">
           <Link
@@ -34,7 +34,7 @@ export function SiteHeader() {
             className="flex items-center gap-2 text-lg font-semibold"
             aria-label="Mattis forside"
           >
-            <span className="grid h-9 w-9 place-items-center rounded-full bg-primary text-primary-foreground shadow-lg shadow-primary/40">
+            <span className="bg-primary text-primary-foreground shadow-primary/40 grid h-9 w-9 place-items-center rounded-full shadow-lg">
               M
             </span>
             <span className="hidden sm:inline-flex">Mattis</span>
@@ -53,7 +53,7 @@ export function SiteHeader() {
                   className={cn(
                     "rounded-full px-4 py-2 text-sm font-medium transition",
                     isActive
-                      ? "bg-primary/10 text-primary shadow-xs shadow-primary/10"
+                      ? "bg-primary/10 text-primary shadow-primary/10 shadow-xs"
                       : "text-muted-foreground hover:bg-muted/60",
                   )}
                 >
@@ -65,8 +65,17 @@ export function SiteHeader() {
         </div>
         <div className="flex items-center gap-2">
           <ModeToggle />
-          <Button variant="outline" size="sm" asChild className="hidden sm:inline-flex">
-            <Link href="https://mattis.vanvikil.no/" target="_blank" rel="noreferrer">
+          <Button
+            variant="outline"
+            size="sm"
+            asChild
+            className="hidden sm:inline-flex"
+          >
+            <Link
+              href="https://mattis.vanvikil.no/"
+              target="_blank"
+              rel="noreferrer"
+            >
               Klassisk app
               <ArrowRight className="ml-2 h-4 w-4" />
             </Link>
@@ -88,7 +97,9 @@ export function SiteHeader() {
         id="mobile-nav"
         className={cn(
           "md:hidden",
-          isMenuOpen ? "block border-t border-border/60 bg-background/95 backdrop-blur-xl" : "hidden",
+          isMenuOpen
+            ? "border-border/60 bg-background/95 block border-t backdrop-blur-xl"
+            : "hidden",
         )}
       >
         <nav className="container flex flex-col gap-2 py-4">
@@ -105,7 +116,7 @@ export function SiteHeader() {
                 className={cn(
                   "rounded-2xl px-4 py-3 text-sm font-medium transition",
                   isActive
-                    ? "bg-primary/10 text-primary shadow-xs shadow-primary/20"
+                    ? "bg-primary/10 text-primary shadow-primary/20 shadow-xs"
                     : "text-muted-foreground hover:bg-muted/60",
                 )}
               >
@@ -114,7 +125,11 @@ export function SiteHeader() {
             );
           })}
           <Button variant="outline" className="w-full" asChild>
-            <Link href="https://mattis.vanvikil.no/" target="_blank" rel="noreferrer">
+            <Link
+              href="https://mattis.vanvikil.no/"
+              target="_blank"
+              rel="noreferrer"
+            >
               Klassisk app
               <ArrowRight className="ml-2 h-4 w-4" />
             </Link>

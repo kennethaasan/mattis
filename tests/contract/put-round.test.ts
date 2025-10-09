@@ -45,7 +45,11 @@ test("T011: PUT /api/rounds/{roundId} should return 400 if the request body is i
   const invalidBody = { participant_ids: ["p1"] }; // Invalid because less than 2 participants
 
   const req = createMockRequest(invalidBody);
-  const res = await PUT(req, { params: Promise.resolve({ roundId: "00000000-0000-7000-0000-000000000004" }) });
+  const res = await PUT(req, {
+    params: Promise.resolve({
+      roundId: "00000000-0000-7000-0000-000000000004",
+    }),
+  });
 
   expect(res.status).toBe(400);
   const contentType = res.headers.get("Content-Type") ?? "";
@@ -60,14 +64,23 @@ test("T011: PUT /api/rounds/{roundId} should return 400 if the request body is i
 
 test("T011: PUT /api/rounds/{roundId} should return 404 if the round does not exist", async () => {
   const validBody = {
-    participant_ids: ["00000000-0000-7000-0000-000000000001", "00000000-0000-7000-0000-000000000002"],
+    participant_ids: [
+      "00000000-0000-7000-0000-000000000001",
+      "00000000-0000-7000-0000-000000000002",
+    ],
     loser_id: "00000000-0000-7000-0000-000000000001",
   };
 
-  mocks.updateRound.mockRejectedValueOnce(new mocks.MockNotFoundError("Round not found."));
+  mocks.updateRound.mockRejectedValueOnce(
+    new mocks.MockNotFoundError("Round not found."),
+  );
 
   const req = createMockRequest(validBody);
-  const res = await PUT(req, { params: Promise.resolve({ roundId: "00000000-0000-7000-0000-000000000004" }) });
+  const res = await PUT(req, {
+    params: Promise.resolve({
+      roundId: "00000000-0000-7000-0000-000000000004",
+    }),
+  });
 
   expect(res.status).toBe(404);
   const contentType = res.headers.get("Content-Type") ?? "";
@@ -80,7 +93,10 @@ test("T011: PUT /api/rounds/{roundId} should return 404 if the round does not ex
 
 test("T011: PUT /api/rounds/{roundId} should return 200 and the updated round on success", async () => {
   const validBody = {
-    participant_ids: ["00000000-0000-7000-0000-000000000001", "00000000-0000-7000-0000-000000000002"],
+    participant_ids: [
+      "00000000-0000-7000-0000-000000000001",
+      "00000000-0000-7000-0000-000000000002",
+    ],
     loser_id: "00000000-0000-7000-0000-000000000001",
   };
   const updatedRound = {
@@ -89,16 +105,32 @@ test("T011: PUT /api/rounds/{roundId} should return 200 and the updated round on
     createdBy: "00000000-0000-7000-0000-000000000099",
     deletedAt: null,
     participants: [
-      { id: "00000000-0000-7000-0000-000000000001", displayName: "Alice", active: true },
-      { id: "00000000-0000-7000-0000-000000000002", displayName: "Bob", active: true },
+      {
+        id: "00000000-0000-7000-0000-000000000001",
+        displayName: "Alice",
+        active: true,
+      },
+      {
+        id: "00000000-0000-7000-0000-000000000002",
+        displayName: "Bob",
+        active: true,
+      },
     ],
-    loser: { id: "00000000-0000-7000-0000-000000000001", displayName: "Alice", active: true },
+    loser: {
+      id: "00000000-0000-7000-0000-000000000001",
+      displayName: "Alice",
+      active: true,
+    },
   };
 
   mocks.updateRound.mockResolvedValueOnce(updatedRound);
 
   const req = createMockRequest(validBody);
-  const res = await PUT(req, { params: Promise.resolve({ roundId: "00000000-0000-7000-0000-000000000004" }) });
+  const res = await PUT(req, {
+    params: Promise.resolve({
+      roundId: "00000000-0000-7000-0000-000000000004",
+    }),
+  });
 
   expect(res.status).toBe(200);
   const contentType = res.headers.get("Content-Type") ?? "";
@@ -109,15 +141,30 @@ test("T011: PUT /api/rounds/{roundId} should return 200 and the updated round on
     id: "00000000-0000-7000-0000-000000000004",
     created_at: "2025-01-01T00:00:00.000Z",
     participants: [
-      { id: "00000000-0000-7000-0000-000000000001", display_name: "Alice", active: true },
-      { id: "00000000-0000-7000-0000-000000000002", display_name: "Bob", active: true },
+      {
+        id: "00000000-0000-7000-0000-000000000001",
+        display_name: "Alice",
+        active: true,
+      },
+      {
+        id: "00000000-0000-7000-0000-000000000002",
+        display_name: "Bob",
+        active: true,
+      },
     ],
-    loser: { id: "00000000-0000-7000-0000-000000000001", display_name: "Alice", active: true },
+    loser: {
+      id: "00000000-0000-7000-0000-000000000001",
+      display_name: "Alice",
+      active: true,
+    },
   });
 
   // Ensure the database function was called with the correct data
-  expect(mocks.updateRound).toHaveBeenCalledWith("00000000-0000-7000-0000-000000000004", {
-    participantIds: validBody.participant_ids,
-    loserId: validBody.loser_id,
-  });
+  expect(mocks.updateRound).toHaveBeenCalledWith(
+    "00000000-0000-7000-0000-000000000004",
+    {
+      participantIds: validBody.participant_ids,
+      loserId: validBody.loser_id,
+    },
+  );
 });

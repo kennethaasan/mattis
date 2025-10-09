@@ -23,7 +23,8 @@ import {
 } from "@/lib/api/players-client";
 
 const DEFAULT_USER_ID =
-  process.env.NEXT_PUBLIC_DEFAULT_USER_ID ?? "00000000-0000-7000-0000-000000000000";
+  process.env.NEXT_PUBLIC_DEFAULT_USER_ID ??
+  "00000000-0000-7000-0000-000000000000";
 
 interface ProblemDetailPayload {
   readonly detail?: unknown;
@@ -150,16 +151,20 @@ export default function RoundsPage() {
   };
 
   return (
-    <div className="container space-y-10 pb-16 pt-12">
+    <div className="container space-y-10 pt-12 pb-16">
       <div className="flex flex-col gap-2 text-left">
-        <Badge variant="outline" className="w-fit border-primary/40 text-primary">
+        <Badge
+          variant="outline"
+          className="border-primary/40 text-primary w-fit"
+        >
           Kontrollsenter for runder
         </Badge>
         <h1 className="text-3xl font-semibold tracking-tight sm:text-4xl">
           Loggfør runder og Fettmattis-øyeblikk
         </h1>
-        <p className="max-w-2xl text-sm text-muted-foreground">
-          Registrer spillerne, lås taperen og feir Fettmattis-utdelinger – alt fra ett sted.
+        <p className="text-muted-foreground max-w-2xl text-sm">
+          Registrer spillerne, lås taperen og feir Fettmattis-utdelinger – alt
+          fra ett sted.
         </p>
       </div>
 
@@ -167,11 +172,12 @@ export default function RoundsPage() {
         <Card>
           <CardHeader>
             <CardTitle className="flex items-center gap-2">
-              <CalendarCheck className="h-5 w-5 text-primary" />
+              <CalendarCheck className="text-primary h-5 w-5" />
               Registrer en runde
             </CardTitle>
             <CardDescription>
-              Velg minst to spillere og marker den uheldige taperen. Tallene oppdateres idet du lagrer.
+              Velg minst to spillere og marker den uheldige taperen. Tallene
+              oppdateres idet du lagrer.
             </CardDescription>
           </CardHeader>
           <CardContent className="space-y-4">
@@ -180,12 +186,15 @@ export default function RoundsPage() {
                 {Array.from({ length: 4 }).map((_, index) => (
                   <div
                     key={index}
-                    className="h-12 w-full animate-pulse rounded-2xl bg-muted/50"
+                    className="bg-muted/50 h-12 w-full animate-pulse rounded-2xl"
                   />
                 ))}
               </div>
             ) : (
-              <RoundForm onSubmit={handleRoundSubmit} players={hydratablePlayers} />
+              <RoundForm
+                onSubmit={handleRoundSubmit}
+                players={hydratablePlayers}
+              />
             )}
           </CardContent>
         </Card>
@@ -193,7 +202,7 @@ export default function RoundsPage() {
         <Card>
           <CardHeader>
             <CardTitle className="flex items-center gap-2">
-              <Trophy className="h-5 w-5 text-primary" />
+              <Trophy className="text-primary h-5 w-5" />
               Tildel en Fettmattis
             </CardTitle>
             <CardDescription>
@@ -206,7 +215,7 @@ export default function RoundsPage() {
                 {Array.from({ length: 3 }).map((_, index) => (
                   <div
                     key={index}
-                    className="h-11 w-full animate-pulse rounded-2xl bg-muted/50"
+                    className="bg-muted/50 h-11 w-full animate-pulse rounded-2xl"
                   />
                 ))}
               </div>
@@ -221,17 +230,16 @@ export default function RoundsPage() {
         </Card>
       </div>
 
-      {status ? <p className="text-sm text-primary">{status}</p> : null}
-      {error ? <p className="text-sm text-destructive">{error}</p> : null}
+      {status ? <p className="text-primary text-sm">{status}</p> : null}
+      {error ? <p className="text-destructive text-sm">{error}</p> : null}
       {playersQuery.error ? (
-        <p className="text-sm text-destructive">
-          {playersQuery.error.message}
-        </p>
+        <p className="text-destructive text-sm">{playersQuery.error.message}</p>
       ) : null}
 
-      <div className="flex flex-wrap items-center gap-3 rounded-3xl border border-border/70 bg-muted/30 px-4 py-5 text-xs text-muted-foreground">
+      <div className="border-border/70 bg-muted/30 text-muted-foreground flex flex-wrap items-center gap-3 rounded-3xl border px-4 py-5 text-xs">
         <span>
-          Endringer kan redigeres i 24 timer – deretter låses posten for å verne om konkurransen.
+          Endringer kan redigeres i 24 timer – deretter låses posten for å verne
+          om konkurransen.
         </span>
         <Button
           variant="ghost"

@@ -4,7 +4,10 @@ import { useEffect, useState } from "react";
 
 import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
-import { FettMattisCreateSchema, type FettMattisCreate } from "@/lib/api/schemas";
+import {
+  FettMattisCreateSchema,
+  type FettMattisCreate,
+} from "@/lib/api/schemas";
 
 interface SimplePlayer {
   readonly id: string;
@@ -23,7 +26,12 @@ interface FettMattisFormProps {
   readonly initialData?: FettMattisCreate;
 }
 
-export function FettMattisForm({ onSubmit, players, rounds, initialData }: FettMattisFormProps) {
+export function FettMattisForm({
+  onSubmit,
+  players,
+  rounds,
+  initialData,
+}: FettMattisFormProps) {
   const [playerId, setPlayerId] = useState(initialData?.player_id ?? "");
   const [roundId, setRoundId] = useState(initialData?.round_id ?? "");
   const [error, setError] = useState<string | null>(null);
@@ -66,12 +74,12 @@ export function FettMattisForm({ onSubmit, players, rounds, initialData }: FettM
     >
       <div className="space-y-2">
         <Label htmlFor="fettmattis-player">Spiller</Label>
-        <div className="rounded-2xl border border-border/70 bg-background p-1">
+        <div className="border-border/70 bg-background rounded-2xl border p-1">
           <select
             id="fettmattis-player"
             value={playerId}
             onChange={(event) => setPlayerId(event.target.value)}
-            className="w-full rounded-2xl bg-background px-4 py-3 text-sm focus-visible:outline-hidden focus-visible:ring-2 focus-visible:ring-ring"
+            className="bg-background focus-visible:ring-ring w-full rounded-2xl px-4 py-3 text-sm focus-visible:ring-2 focus-visible:outline-hidden"
           >
             <option value="" disabled>
               Velg spilleren som hedres
@@ -88,14 +96,16 @@ export function FettMattisForm({ onSubmit, players, rounds, initialData }: FettM
       <div className="space-y-2">
         <div className="flex items-center justify-between">
           <Label htmlFor="fettmattis-round">Valgfri kobling til runde</Label>
-          <span className="text-xs text-muted-foreground">Holder historikken ryddig</span>
+          <span className="text-muted-foreground text-xs">
+            Holder historikken ryddig
+          </span>
         </div>
-        <div className="rounded-2xl border border-border/60 bg-background p-1">
+        <div className="border-border/60 bg-background rounded-2xl border p-1">
           <select
             id="fettmattis-round"
             value={roundId}
             onChange={(event) => setRoundId(event.target.value)}
-            className="w-full rounded-2xl bg-background px-4 py-3 text-sm focus-visible:outline-hidden focus-visible:ring-2 focus-visible:ring-ring"
+            className="bg-background focus-visible:ring-ring w-full rounded-2xl px-4 py-3 text-sm focus-visible:ring-2 focus-visible:outline-hidden"
           >
             <option value="">Ingen tilknyttet runde</option>
             {rounds.map((round) => (
@@ -107,7 +117,7 @@ export function FettMattisForm({ onSubmit, players, rounds, initialData }: FettM
         </div>
       </div>
 
-      {error ? <p className="text-sm text-destructive">{error}</p> : null}
+      {error ? <p className="text-destructive text-sm">{error}</p> : null}
 
       <Button type="submit" disabled={isSubmitDisabled}>
         Tildel Fettmattis

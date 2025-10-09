@@ -18,8 +18,16 @@ beforeEach(() => {
 
 test("T009: GET /api/players returns 200 with all players", async () => {
   mocks.listPlayers.mockResolvedValueOnce([
-    { id: "00000000-0000-7000-0000-000000000020", displayName: "Aria", active: true },
-    { id: "00000000-0000-7000-0000-000000000021", displayName: "Bryn", active: false },
+    {
+      id: "00000000-0000-7000-0000-000000000020",
+      displayName: "Aria",
+      active: true,
+    },
+    {
+      id: "00000000-0000-7000-0000-000000000021",
+      displayName: "Bryn",
+      active: false,
+    },
   ]);
 
   const response = await GET(new Request("http://localhost/api/players"));

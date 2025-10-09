@@ -1,4 +1,3 @@
-
 "use client";
 
 import { useEffect, useMemo, useState } from "react";
@@ -58,7 +57,7 @@ export function PlayerForm({ onSubmit, initialData }: PlayerFormProps) {
         />
       </div>
       {error ? (
-        <p id="player-form-error" className="text-sm text-destructive">
+        <p id="player-form-error" className="text-destructive text-sm">
           {error}
         </p>
       ) : null}

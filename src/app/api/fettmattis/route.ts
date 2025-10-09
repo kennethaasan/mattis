@@ -4,7 +4,11 @@ import { NextResponse } from "next/server";
 import { env } from "@/env";
 import { badRequest, createProblemResponse } from "@/lib/api/problem-details";
 import { FettMattisCreateSchema } from "@/lib/api/schemas";
-import { ConflictError, NotFoundError, createFettMattis } from "@/lib/db-client";
+import {
+  ConflictError,
+  NotFoundError,
+  createFettMattis,
+} from "@/lib/db-client";
 
 // Placeholder for authentication/user context
 const getUserId = (req: NextRequest): string => {
@@ -34,7 +38,10 @@ export async function POST(req: NextRequest) {
     const validatedData = FettMattisCreateSchema.safeParse(body);
 
     if (!validatedData.success) {
-      return NextResponse.json({ error: validatedData.error.issues }, { status: 400 });
+      return NextResponse.json(
+        { error: validatedData.error.issues },
+        { status: 400 },
+      );
     }
 
     const { player_id: playerId, round_id: roundId } = validatedData.data;
@@ -45,15 +52,29 @@ export async function POST(req: NextRequest) {
       createdBy: userId,
     });
 
-    return NextResponse.json(toFettMattisResponse(newFettmattis), { status: 201 });
+    return NextResponse.json(toFettMattisResponse(newFettmattis), {
+      status: 201,
+    });
   } catch (error) {
     if (error instanceof NotFoundError) {
-      return createProblemResponse({ status: 404, title: "Not Found", detail: error.message });
+      return createProblemResponse({
+        status: 404,
+        title: "Not Found",
+        detail: error.message,
+      });
     }
     if (error instanceof ConflictError) {
-      return createProblemResponse({ status: 409, title: "Conflict", detail: error.message });
+      return createProblemResponse({
+        status: 409,
+        title: "Conflict",
+        detail: error.message,
+      });
     }
-    return createProblemResponse({ status: 500, title: "Internal Server Error", detail: "Internal Server Error" });
+    return createProblemResponse({
+      status: 500,
+      title: "Internal Server Error",
+      detail: "Internal Server Error",
+    });
   }
 }
 
@@ -71,7 +92,11 @@ function toFettMattisResponse(record: {
   };
 }
 
-function toPlayerResponse(player: { id: string; displayName: string; active: boolean }) {
+function toPlayerResponse(player: {
+  id: string;
+  displayName: string;
+  active: boolean;
+}) {
   return {
     id: player.id,
     display_name: player.displayName,

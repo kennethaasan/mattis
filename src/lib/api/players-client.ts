@@ -14,7 +14,9 @@ export async function fetchPlayers(): Promise<PlayersApiRecord[]> {
   });
 
   if (!response.ok) {
-    throw new Error("We couldn't load the players right now. Please try again.");
+    throw new Error(
+      "We couldn't load the players right now. Please try again.",
+    );
   }
 
   return (await response.json()) as PlayersApiRecord[];

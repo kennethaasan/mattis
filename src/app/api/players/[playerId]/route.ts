@@ -1,14 +1,25 @@
 import { NextResponse } from "next/server";
 
 import { PlayerUpdateSchema, uuidSchema } from "@/lib/api/schemas";
-import { ConflictError, NotFoundError, getPlayerById, updatePlayer } from "@/lib/db-client";
+import {
+  ConflictError,
+  NotFoundError,
+  getPlayerById,
+  updatePlayer,
+} from "@/lib/db-client";
 
-export async function GET(_req: Request, context: { params: Promise<{ playerId: string }> }) {
+export async function GET(
+  _req: Request,
+  context: { params: Promise<{ playerId: string }> },
+) {
   const { playerId } = await context.params;
 
   const validation = uuidSchema.safeParse(playerId);
   if (!validation.success) {
-    return NextResponse.json({ error: validation.error.issues }, { status: 400 });
+    return NextResponse.json(
+      { error: validation.error.issues },
+      { status: 400 },
+    );
   }
 
   try {
@@ -18,20 +29,34 @@ export async function GET(_req: Request, context: { params: Promise<{ playerId: 
   } catch (error) {
     if (error instanceof NotFoundError) {
       return NextResponse.json(
-        { type: "about:blank", title: "Not Found", status: 404, detail: error.message },
+        {
+          type: "about:blank",
+          title: "Not Found",
+          status: 404,
+          detail: error.message,
+        },
         { status: 404 },
       );
     }
-    return NextResponse.json({ type: "about:blank", title: "Internal Server Error", status: 500 }, { status: 500 });
+    return NextResponse.json(
+      { type: "about:blank", title: "Internal Server Error", status: 500 },
+      { status: 500 },
+    );
   }
 }
 
-export async function PUT(req: Request, context: { params: Promise<{ playerId: string }> }) {
+export async function PUT(
+  req: Request,
+  context: { params: Promise<{ playerId: string }> },
+) {
   const { playerId } = await context.params;
 
   const validation = uuidSchema.safeParse(playerId);
   if (!validation.success) {
-    return NextResponse.json({ error: validation.error.issues }, { status: 400 });
+    return NextResponse.json(
+      { error: validation.error.issues },
+      { status: 400 },
+    );
   }
 
   try {
@@ -39,7 +64,10 @@ export async function PUT(req: Request, context: { params: Promise<{ playerId: s
     const bodyValidation = PlayerUpdateSchema.safeParse(body);
 
     if (!bodyValidation.success) {
-      return NextResponse.json({ error: bodyValidation.error.issues }, { status: 400 });
+      return NextResponse.json(
+        { error: bodyValidation.error.issues },
+        { status: 400 },
+      );
     }
 
     const { display_name, active } = bodyValidation.data;
@@ -53,21 +81,38 @@ export async function PUT(req: Request, context: { params: Promise<{ playerId: s
   } catch (error) {
     if (error instanceof NotFoundError) {
       return NextResponse.json(
-        { type: "about:blank", title: "Not Found", status: 404, detail: error.message },
+        {
+          type: "about:blank",
+          title: "Not Found",
+          status: 404,
+          detail: error.message,
+        },
         { status: 404 },
       );
     }
     if (error instanceof ConflictError) {
       return NextResponse.json(
-        { type: "about:blank", title: "Conflict", status: 409, detail: error.message },
+        {
+          type: "about:blank",
+          title: "Conflict",
+          status: 409,
+          detail: error.message,
+        },
         { status: 409 },
       );
     }
-    return NextResponse.json({ type: "about:blank", title: "Internal Server Error", status: 500 }, { status: 500 });
+    return NextResponse.json(
+      { type: "about:blank", title: "Internal Server Error", status: 500 },
+      { status: 500 },
+    );
   }
 }
 
-function toPlayerResponse(player: { id: string; displayName: string; active: boolean }) {
+function toPlayerResponse(player: {
+  id: string;
+  displayName: string;
+  active: boolean;
+}) {
   return {
     id: player.id,
     display_name: player.displayName,

@@ -12,7 +12,7 @@ export default defineConfig({
       "src/**/*.test.tsx",
       "tests/**/*.test.ts",
       "tests/**/*.test.tsx",
-      "infra/**/*.test.ts"
+      "infra/**/*.test.ts",
     ],
     clearMocks: true,
     testTimeout: 30000,

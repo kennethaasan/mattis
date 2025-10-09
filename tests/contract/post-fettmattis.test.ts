@@ -42,7 +42,11 @@ beforeEach(() => {
 test("T013: POST /api/fettmattis returns 201 with the created record", async () => {
   const record = {
     id: "00000000-0000-7000-0000-000000000080",
-    player: { id: "00000000-0000-7000-0000-000000000081", displayName: "Zia", active: true },
+    player: {
+      id: "00000000-0000-7000-0000-000000000081",
+      displayName: "Zia",
+      active: true,
+    },
     roundId: "00000000-0000-7000-0000-000000000090",
     createdAt: new Date("2025-01-01T00:00:00.000Z"),
   };
@@ -88,7 +92,9 @@ test("T013: POST /api/fettmattis returns 400 when validation fails", async () =>
 });
 
 test("T013: POST /api/fettmattis returns 404 when the player or round is missing", async () => {
-  mocks.createFettMattis.mockRejectedValueOnce(new mocks.MockNotFoundError("Missing player"));
+  mocks.createFettMattis.mockRejectedValueOnce(
+    new mocks.MockNotFoundError("Missing player"),
+  );
 
   const request = createRequest({
     player_id: "00000000-0000-7000-0000-000000000081",
@@ -102,7 +108,9 @@ test("T013: POST /api/fettmattis returns 404 when the player or round is missing
 });
 
 test("T013: POST /api/fettmattis returns 409 when a duplicate is detected", async () => {
-  mocks.createFettMattis.mockRejectedValueOnce(new mocks.MockConflictError("Duplicate"));
+  mocks.createFettMattis.mockRejectedValueOnce(
+    new mocks.MockConflictError("Duplicate"),
+  );
 
   const request = createRequest({
     player_id: "00000000-0000-7000-0000-000000000081",

@@ -172,7 +172,10 @@ async function seed(): Promise<void> {
       try {
         await client.query("ROLLBACK");
       } catch (rollbackError: unknown) {
-        writeLine(process.stderr, `Rollback failed: ${formatError(rollbackError)}`);
+        writeLine(
+          process.stderr,
+          `Rollback failed: ${formatError(rollbackError)}`,
+        );
       }
     }
 
@@ -208,7 +211,9 @@ async function ensureDevUser(client: Client): Promise<void> {
   writeLine(process.stdout, `Ensured developer user ${username}.`);
 }
 
-async function insertPlayers(client: Client): Promise<Map<string, PlayerRecord>> {
+async function insertPlayers(
+  client: Client,
+): Promise<Map<string, PlayerRecord>> {
   writeLine(process.stdout, "Inserting players...");
   const playerMap = new Map<string, PlayerRecord>();
 
@@ -219,7 +224,12 @@ async function insertPlayers(client: Client): Promise<Map<string, PlayerRecord>>
         VALUES ($1, $2, $3, $4)
         RETURNING id, display_name
       `,
-      [player.id, player.displayName, player.userId ?? null, player.active ?? true],
+      [
+        player.id,
+        player.displayName,
+        player.userId ?? null,
+        player.active ?? true,
+      ],
     );
 
     const [created] = rows;
@@ -238,7 +248,10 @@ async function insertPlayers(client: Client): Promise<Map<string, PlayerRecord>>
   return playerMap;
 }
 
-async function insertRounds(client: Client, players: Map<string, PlayerRecord>): Promise<Map<string, RoundRecord>> {
+async function insertRounds(
+  client: Client,
+  players: Map<string, PlayerRecord>,
+): Promise<Map<string, RoundRecord>> {
   writeLine(process.stdout, "Recording rounds...");
   const roundsMap = new Map<string, RoundRecord>();
 
@@ -246,14 +259,18 @@ async function insertRounds(client: Client, players: Map<string, PlayerRecord>):
     const participantIds = round.participants.map((key) => {
       const record = players.get(key);
       if (!record) {
-        throw new Error(`Participant ${key} not found while seeding round ${round.key}.`);
+        throw new Error(
+          `Participant ${key} not found while seeding round ${round.key}.`,
+        );
       }
       return record.id;
     });
 
     const loser = players.get(round.loser);
     if (!loser) {
-      throw new Error(`Loser ${round.loser} not found while seeding round ${round.key}.`);
+      throw new Error(
+        `Loser ${round.loser} not found while seeding round ${round.key}.`,
+      );
     }
 
     await client.query(
@@ -312,7 +329,13 @@ async function insertFettMattis(
         INSERT INTO fettmattis (id, player_id, round_id, created_by, created_at, revoked_at)
         VALUES ($1, $2, $3, $4, $5, NULL)
       `,
-      [entry.id, player.id, roundRecord ? roundRecord.id : null, entry.createdBy, entry.createdAt.toISOString()],
+      [
+        entry.id,
+        player.id,
+        roundRecord ? roundRecord.id : null,
+        entry.createdBy,
+        entry.createdAt.toISOString(),
+      ],
     );
 
     writeLine(process.stdout, `  • ${player.displayName}`);

@@ -43,7 +43,9 @@ test("T016: recording a round updates the regular and FettMattis leaderboards", 
     createdBy: userId,
   });
 
-  const regularLeaderboard = await getRegularLeaderboard(new Date().getFullYear());
+  const regularLeaderboard = await getRegularLeaderboard(
+    new Date().getFullYear(),
+  );
 
   expect(regularLeaderboard).toHaveLength(3);
   expect(regularLeaderboard[0]).toMatchObject({
@@ -68,7 +70,9 @@ test("T016: recording a round updates the regular and FettMattis leaderboards", 
     createdBy: userId,
   });
 
-  const fettMattisLeaderboard = await getFettMattisLeaderboard(new Date().getFullYear());
+  const fettMattisLeaderboard = await getFettMattisLeaderboard(
+    new Date().getFullYear(),
+  );
 
   expect(fettMattisLeaderboard).toHaveLength(1);
   expect(fettMattisLeaderboard[0]).toMatchObject({
@@ -125,8 +129,12 @@ test("T068: all-time leaderboards aggregate results across seasons", async () =>
   const currentRegularLeaderboard = await getRegularLeaderboard(currentYear);
 
   expect(currentRegularLeaderboard).toHaveLength(2);
-  const adaCurrent = currentRegularLeaderboard.find((entry) => entry.player.displayName === "Ada");
-  const benCurrent = currentRegularLeaderboard.find((entry) => entry.player.displayName === "Ben");
+  const adaCurrent = currentRegularLeaderboard.find(
+    (entry) => entry.player.displayName === "Ada",
+  );
+  const benCurrent = currentRegularLeaderboard.find(
+    (entry) => entry.player.displayName === "Ben",
+  );
   const adaCurrentEntry = expectDefined(
     adaCurrent,
     "Expected Ada to appear in the current year leaderboard.",
@@ -162,7 +170,8 @@ test("T068: all-time leaderboards aggregate results across seasons", async () =>
   });
   expect(topAllTimeEntry.lossPercentage).toBeCloseTo(100);
 
-  const currentFettMattisLeaderboard = await getFettMattisLeaderboard(currentYear);
+  const currentFettMattisLeaderboard =
+    await getFettMattisLeaderboard(currentYear);
   expect(currentFettMattisLeaderboard).toHaveLength(1);
 
   const currentFettMattisLeader = expectDefined(

@@ -10,7 +10,10 @@ export async function POST(req: Request) {
     const validation = PlayerCreateSchema.safeParse(body);
 
     if (!validation.success) {
-      return NextResponse.json({ error: validation.error.issues }, { status: 400 });
+      return NextResponse.json(
+        { error: validation.error.issues },
+        { status: 400 },
+      );
     }
 
     const { display_name } = validation.data;
@@ -21,7 +24,12 @@ export async function POST(req: Request) {
   } catch (error) {
     if (error instanceof ConflictError) {
       return NextResponse.json(
-        { type: "about:blank", title: "Conflict", status: 409, detail: error.message },
+        {
+          type: "about:blank",
+          title: "Conflict",
+          status: 409,
+          detail: error.message,
+        },
         { status: 409 },
       );
     }
@@ -47,7 +55,11 @@ export async function GET(_req: Request) {
   }
 }
 
-function toPlayerResponse(player: { id: string; displayName: string; active: boolean }) {
+function toPlayerResponse(player: {
+  id: string;
+  displayName: string;
+  active: boolean;
+}) {
   return {
     id: player.id,
     display_name: player.displayName,

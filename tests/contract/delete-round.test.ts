@@ -38,10 +38,16 @@ beforeEach(() => {
 });
 
 test("T012: DELETE /api/rounds/{roundId} should return 404 if the round does not exist", async () => {
-  mocks.deleteRound.mockRejectedValueOnce(new mocks.MockNotFoundError("Round not found."));
+  mocks.deleteRound.mockRejectedValueOnce(
+    new mocks.MockNotFoundError("Round not found."),
+  );
 
   const req = createMockRequest();
-  const res = await DELETE(req, { params: Promise.resolve({ roundId: "00000000-0000-7000-0000-000000000004" }) });
+  const res = await DELETE(req, {
+    params: Promise.resolve({
+      roundId: "00000000-0000-7000-0000-000000000004",
+    }),
+  });
 
   expect(res.status).toBe(404);
   const contentType = res.headers.get("Content-Type") ?? "";
@@ -56,10 +62,16 @@ test("T012: DELETE /api/rounds/{roundId} should return 204 on success", async ()
   mocks.deleteRound.mockResolvedValueOnce(undefined);
 
   const req = createMockRequest();
-  const res = await DELETE(req, { params: Promise.resolve({ roundId: "00000000-0000-7000-0000-000000000004" }) });
+  const res = await DELETE(req, {
+    params: Promise.resolve({
+      roundId: "00000000-0000-7000-0000-000000000004",
+    }),
+  });
 
   expect(res.status).toBe(204);
 
   // Ensure the database function was called with the correct data
-  expect(mocks.deleteRound).toHaveBeenCalledWith("00000000-0000-7000-0000-000000000004");
+  expect(mocks.deleteRound).toHaveBeenCalledWith(
+    "00000000-0000-7000-0000-000000000004",
+  );
 });

@@ -85,8 +85,10 @@ async function main(): Promise<void> {
     );
   }
 
-  const migrationUserId = process.env.MIGRATION_CREATED_BY_USER_ID ?? randomUUID();
-  const migrationUsername = process.env.MIGRATION_CREATED_BY_USERNAME ?? "legacy-importer";
+  const migrationUserId =
+    process.env.MIGRATION_CREATED_BY_USER_ID ?? randomUUID();
+  const migrationUsername =
+    process.env.MIGRATION_CREATED_BY_USERNAME ?? "legacy-importer";
 
   writeInfo("Connecting to source MySQL database…");
   const mysqlPool = createMySqlPool(sourceUrl);
@@ -157,8 +159,14 @@ async function ensureTargetIsEmpty(db: TargetDatabase): Promise<void> {
     db.select({ id: schema.users.id }).from(schema.users).limit(1),
     db.select({ id: schema.players.id }).from(schema.players).limit(1),
     db.select({ id: schema.rounds.id }).from(schema.rounds).limit(1),
-    db.select({ id: schema.roundParticipants.roundId }).from(schema.roundParticipants).limit(1),
-    db.select({ id: schema.roundLoser.roundId }).from(schema.roundLoser).limit(1),
+    db
+      .select({ id: schema.roundParticipants.roundId })
+      .from(schema.roundParticipants)
+      .limit(1),
+    db
+      .select({ id: schema.roundLoser.roundId })
+      .from(schema.roundLoser)
+      .limit(1),
     db.select({ id: schema.fettmattis.id }).from(schema.fettmattis).limit(1),
   ]);
 
@@ -185,7 +193,11 @@ async function migrateData(
   await db.transaction(async (tx) => {
     await ensureMigrationUser(tx, options);
     await migrateLegacyUsers(tx, sourceData.users);
-    const playerWarnings = await migrateLegacyPlayers(tx, sourceData.players, playerIdMap);
+    const playerWarnings = await migrateLegacyPlayers(
+      tx,
+      sourceData.players,
+      playerIdMap,
+    );
     warnings.push(...playerWarnings);
 
     const roundInsertData = buildRoundInsertData(
@@ -197,7 +209,11 @@ async function migrateData(
     warnings.push(...roundInsertData.warnings);
     await insertRounds(tx, roundInsertData);
 
-    const fettMattisInsert = buildFettMattisInsert(sourceData.fettRounds, playerIdMap, options);
+    const fettMattisInsert = buildFettMattisInsert(
+      sourceData.fettRounds,
+      playerIdMap,
+      options,
+    );
     warnings.push(...fettMattisInsert.warnings);
     await insertFettMattis(tx, fettMattisInsert.items);
   });
@@ -210,7 +226,10 @@ async function migrateData(
   }
 }
 
-async function ensureMigrationUser(tx: TargetDatabase, options: MigrationOptions): Promise<void> {
+async function ensureMigrationUser(
+  tx: TargetDatabase,
+  options: MigrationOptions,
+): Promise<void> {
   const now = new Date();
   const migrationUser: UserInsertRow = {
     id: options.migrationUserId,
@@ -257,11 +276,8 @@ async function migrateLegacyPlayers(
     const id = randomUUID();
     playerIdMap.set(row.id, id);
 
-    const { displayName, warnings: displayNameWarnings } = resolvePlayerDisplayName(
-      row.name,
-      row.id,
-      usedDisplayNames,
-    );
+    const { displayName, warnings: displayNameWarnings } =
+      resolvePlayerDisplayName(row.name, row.id, usedDisplayNames);
     warnings.push(...displayNameWarnings);
 
     return {
@@ -407,7 +423,10 @@ function buildRoundInsertData(
   };
 }
 
-async function insertRounds(tx: TargetDatabase, data: RoundInsertData): Promise<void> {
+async function insertRounds(
+  tx: TargetDatabase,
+  data: RoundInsertData,
+): Promise<void> {
   if (data.rounds.length > 0) {
     await tx.insert(schema.rounds).values(data.rounds);
   }
@@ -467,7 +486,10 @@ function buildFettMattisInsert(
   return { items, warnings };
 }
 
-async function insertFettMattis(tx: TargetDatabase, items: FettMattisInsertRow[]): Promise<void> {
+async function insertFettMattis(
+  tx: TargetDatabase,
+  items: FettMattisInsertRow[],
+): Promise<void> {
   if (items.length === 0) {
     return;
   }
@@ -475,7 +497,9 @@ async function insertFettMattis(tx: TargetDatabase, items: FettMattisInsertRow[]
   await tx.insert(schema.fettmattis).values(items);
 }
 
-function groupParticipants(rows: SourcePlayerRoundRow[]): Map<number, SourcePlayerRoundRow[]> {
+function groupParticipants(
+  rows: SourcePlayerRoundRow[],
+): Map<number, SourcePlayerRoundRow[]> {
   const grouped = new Map<number, SourcePlayerRoundRow[]>();
 
   for (const row of rows) {
@@ -532,6 +556,8 @@ function writeError(message: string): void {
 }
 
 main().catch((error: unknown) => {
-  writeError(error instanceof Error ? error.stack ?? error.message : String(error));
+  writeError(
+    error instanceof Error ? (error.stack ?? error.message) : String(error),
+  );
   process.exitCode = 1;
 });

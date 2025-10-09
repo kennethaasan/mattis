@@ -5,8 +5,8 @@ on:
     branches:
       - main
       - develop
-      - 'feature/**'
-      - 'bugfix/**'
+      - "feature/**"
+      - "bugfix/**"
   pull_request:
     branches:
       - main
@@ -45,6 +45,10 @@ jobs:
 
       - name: Install dependencies
         run: npm ci
+
+      - name: Formatting Check (Prettier)
+        run: npm run prettier:check
+        timeout-minutes: 3
 
       - name: Lint (ESLint)
         run: npm run lint

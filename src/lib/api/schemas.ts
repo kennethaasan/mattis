@@ -2,9 +2,14 @@ import { z } from "zod";
 
 // --- Base Schemas ---
 
-export const uuidSchema = z.string().refine((val) => {
-  return /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(val);
-}, { message: "Must be a valid UUID." });
+export const uuidSchema = z.string().refine(
+  (val) => {
+    return /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(
+      val,
+    );
+  },
+  { message: "Must be a valid UUID." },
+);
 
 export const PlayerSchema = z.object({
   id: uuidSchema,
@@ -23,26 +28,38 @@ export const PlayerUpdateSchema = z.object({
 
 // --- Round Schemas ---
 
-export const RoundCreateSchema = z.object({
-  participant_ids: z.array(uuidSchema).min(2, "A round must have at least two participants."),
-  loser_id: uuidSchema,
-}).refine(data => data.participant_ids.includes(data.loser_id), {
-  message: "The loser must be one of the participants.",
-  path: ["loser_id"],
-});
+export const RoundCreateSchema = z
+  .object({
+    participant_ids: z
+      .array(uuidSchema)
+      .min(2, "A round must have at least two participants."),
+    loser_id: uuidSchema,
+  })
+  .refine((data) => data.participant_ids.includes(data.loser_id), {
+    message: "The loser must be one of the participants.",
+    path: ["loser_id"],
+  });
 
-export const RoundUpdateSchema = z.object({
-  participant_ids: z.array(uuidSchema).min(2, "A round must have at least two participants.").optional(),
-  loser_id: uuidSchema.optional(),
-}).refine(data => {
-  if (data.participant_ids && data.loser_id) {
-    return data.participant_ids.includes(data.loser_id);
-  }
-  return true;
-}, {
-  message: "The loser must be one of the participants.",
-  path: ["loser_id"],
-});
+export const RoundUpdateSchema = z
+  .object({
+    participant_ids: z
+      .array(uuidSchema)
+      .min(2, "A round must have at least two participants.")
+      .optional(),
+    loser_id: uuidSchema.optional(),
+  })
+  .refine(
+    (data) => {
+      if (data.participant_ids && data.loser_id) {
+        return data.participant_ids.includes(data.loser_id);
+      }
+      return true;
+    },
+    {
+      message: "The loser must be one of the participants.",
+      path: ["loser_id"],
+    },
+  );
 
 // --- FettMattis Schemas ---
 
@@ -57,7 +74,10 @@ const CURRENT_YEAR = new Date().getFullYear();
 
 export const LeaderboardQuerySchema = z.object({
   year: z
-    .union([z.literal("all"), z.coerce.number().int().min(2000).max(CURRENT_YEAR)])
+    .union([
+      z.literal("all"),
+      z.coerce.number().int().min(2000).max(CURRENT_YEAR),
+    ])
     .optional(),
 });
 

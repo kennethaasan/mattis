@@ -59,7 +59,9 @@ test("T011: GET /api/players/{id} should return 200 and player", async () => {
 
 test("T011: GET /api/players/{id} should return 404 when not found", async () => {
   const playerId = "00000000-0000-7000-0000-000000000031";
-  mocks.getPlayerById.mockRejectedValueOnce(new mocks.MockNotFoundError("Player not found."));
+  mocks.getPlayerById.mockRejectedValueOnce(
+    new mocks.MockNotFoundError("Player not found."),
+  );
 
   const req = createMockRequest(playerId);
   const res = await GET(req, { params: Promise.resolve({ playerId }) });

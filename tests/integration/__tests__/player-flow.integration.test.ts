@@ -10,10 +10,7 @@ vi.mock("@/lib/db", () => ({
   db: testDatabase.db,
 }));
 
-const {
-  createPlayer,
-  listPlayers,
-} = await import("@/lib/db-client");
+const { createPlayer, listPlayers } = await import("@/lib/db-client");
 
 beforeEach(async () => {
   await testDatabase.reset();

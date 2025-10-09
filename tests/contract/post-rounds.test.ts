@@ -44,10 +44,22 @@ test("T010: POST /api/rounds returns 201 with the created round", async () => {
     id: "00000000-0000-7000-0000-000000000060",
     createdAt: new Date("2025-01-01T12:00:00.000Z"),
     participants: [
-      { id: "00000000-0000-7000-0000-000000000061", displayName: "Kai", active: true },
-      { id: "00000000-0000-7000-0000-000000000062", displayName: "Mina", active: true },
+      {
+        id: "00000000-0000-7000-0000-000000000061",
+        displayName: "Kai",
+        active: true,
+      },
+      {
+        id: "00000000-0000-7000-0000-000000000062",
+        displayName: "Mina",
+        active: true,
+      },
     ],
-    loser: { id: "00000000-0000-7000-0000-000000000062", displayName: "Mina", active: true },
+    loser: {
+      id: "00000000-0000-7000-0000-000000000062",
+      displayName: "Mina",
+      active: true,
+    },
   };
 
   mocks.createRound.mockResolvedValueOnce(roundRecord);
@@ -68,8 +80,16 @@ test("T010: POST /api/rounds returns 201 with the created round", async () => {
     id: roundRecord.id,
     created_at: roundRecord.createdAt.toISOString(),
     participants: [
-      { id: "00000000-0000-7000-0000-000000000061", display_name: "Kai", active: true },
-      { id: "00000000-0000-7000-0000-000000000062", display_name: "Mina", active: true },
+      {
+        id: "00000000-0000-7000-0000-000000000061",
+        display_name: "Kai",
+        active: true,
+      },
+      {
+        id: "00000000-0000-7000-0000-000000000062",
+        display_name: "Mina",
+        active: true,
+      },
     ],
     loser: {
       id: "00000000-0000-7000-0000-000000000062",
@@ -101,7 +121,9 @@ test("T010: POST /api/rounds returns 400 when validation fails", async () => {
 });
 
 test("T010: POST /api/rounds returns 404 when a participant is missing", async () => {
-  mocks.createRound.mockRejectedValueOnce(new mocks.MockNotFoundError("Missing participant"));
+  mocks.createRound.mockRejectedValueOnce(
+    new mocks.MockNotFoundError("Missing participant"),
+  );
 
   const request = createRequest({
     participant_ids: [
@@ -119,7 +141,9 @@ test("T010: POST /api/rounds returns 404 when a participant is missing", async (
 });
 
 test("T010: POST /api/rounds returns 409 when there is a conflict", async () => {
-  mocks.createRound.mockRejectedValueOnce(new mocks.MockConflictError("Conflict"));
+  mocks.createRound.mockRejectedValueOnce(
+    new mocks.MockConflictError("Conflict"),
+  );
 
   const request = createRequest({
     participant_ids: [

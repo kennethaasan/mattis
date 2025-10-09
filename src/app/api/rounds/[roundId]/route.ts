@@ -20,12 +20,18 @@ const getUserId = (req: NextRequest): string => {
   return req.headers.get("X-User-Id") ?? env.DEV_USER_ID;
 };
 
-export async function GET(_req: Request, context: { params: Promise<{ roundId: string }> }) {
+export async function GET(
+  _req: Request,
+  context: { params: Promise<{ roundId: string }> },
+) {
   const { roundId } = await context.params;
 
   const validation = uuidSchema.safeParse(roundId);
   if (!validation.success) {
-    return NextResponse.json({ error: validation.error.issues }, { status: 400 });
+    return NextResponse.json(
+      { error: validation.error.issues },
+      { status: 400 },
+    );
   }
 
   try {
@@ -34,13 +40,24 @@ export async function GET(_req: Request, context: { params: Promise<{ roundId: s
     return NextResponse.json(toRoundResponse(round));
   } catch (error) {
     if (error instanceof NotFoundError) {
-      return createProblemResponse({ status: 404, title: "Not Found", detail: error.message });
+      return createProblemResponse({
+        status: 404,
+        title: "Not Found",
+        detail: error.message,
+      });
     }
-    return createProblemResponse({ status: 500, title: "Internal Server Error", detail: "Internal Server Error" });
+    return createProblemResponse({
+      status: 500,
+      title: "Internal Server Error",
+      detail: "Internal Server Error",
+    });
   }
 }
 
-export async function PUT(req: NextRequest, context: { params: Promise<{ roundId: string }> }) {
+export async function PUT(
+  req: NextRequest,
+  context: { params: Promise<{ roundId: string }> },
+) {
   const userId = getUserId(req);
   if (!userId) {
     return badRequest("Authentication required.");
@@ -50,7 +67,10 @@ export async function PUT(req: NextRequest, context: { params: Promise<{ roundId
 
   const validation = uuidSchema.safeParse(roundId);
   if (!validation.success) {
-    return NextResponse.json({ error: validation.error.issues }, { status: 400 });
+    return NextResponse.json(
+      { error: validation.error.issues },
+      { status: 400 },
+    );
   }
 
   let body: unknown;
@@ -62,7 +82,10 @@ export async function PUT(req: NextRequest, context: { params: Promise<{ roundId
 
   const parsedBody = RoundUpdateSchema.safeParse(body);
   if (!parsedBody.success) {
-    return NextResponse.json({ error: parsedBody.error.issues }, { status: 400 });
+    return NextResponse.json(
+      { error: parsedBody.error.issues },
+      { status: 400 },
+    );
   }
 
   try {
@@ -74,19 +97,38 @@ export async function PUT(req: NextRequest, context: { params: Promise<{ roundId
     return NextResponse.json(toRoundResponse(updatedRound));
   } catch (error) {
     if (error instanceof NotFoundError) {
-      return createProblemResponse({ status: 404, title: "Not Found", detail: error.message });
+      return createProblemResponse({
+        status: 404,
+        title: "Not Found",
+        detail: error.message,
+      });
     }
     if (error instanceof ConflictError) {
-      return createProblemResponse({ status: 409, title: "Conflict", detail: error.message });
+      return createProblemResponse({
+        status: 409,
+        title: "Conflict",
+        detail: error.message,
+      });
     }
     if (error instanceof ForbiddenError) {
-      return createProblemResponse({ status: 403, title: "Forbidden", detail: error.message });
+      return createProblemResponse({
+        status: 403,
+        title: "Forbidden",
+        detail: error.message,
+      });
     }
-    return createProblemResponse({ status: 500, title: "Internal Server Error", detail: "Internal Server Error" });
+    return createProblemResponse({
+      status: 500,
+      title: "Internal Server Error",
+      detail: "Internal Server Error",
+    });
   }
 }
 
-export async function DELETE(req: NextRequest, context: { params: Promise<{ roundId: string }> }) {
+export async function DELETE(
+  req: NextRequest,
+  context: { params: Promise<{ roundId: string }> },
+) {
   const userId = getUserId(req);
   if (!userId) {
     return badRequest("Authentication required.");
@@ -96,7 +138,10 @@ export async function DELETE(req: NextRequest, context: { params: Promise<{ roun
 
   const validation = uuidSchema.safeParse(roundId);
   if (!validation.success) {
-    return NextResponse.json({ error: validation.error.issues }, { status: 400 });
+    return NextResponse.json(
+      { error: validation.error.issues },
+      { status: 400 },
+    );
   }
 
   try {
@@ -104,12 +149,24 @@ export async function DELETE(req: NextRequest, context: { params: Promise<{ roun
     return new Response(null, { status: 204 });
   } catch (error) {
     if (error instanceof NotFoundError) {
-      return createProblemResponse({ status: 404, title: "Not Found", detail: error.message });
+      return createProblemResponse({
+        status: 404,
+        title: "Not Found",
+        detail: error.message,
+      });
     }
     if (error instanceof ForbiddenError) {
-      return createProblemResponse({ status: 403, title: "Forbidden", detail: error.message });
+      return createProblemResponse({
+        status: 403,
+        title: "Forbidden",
+        detail: error.message,
+      });
     }
-    return createProblemResponse({ status: 500, title: "Internal Server Error", detail: "Internal Server Error" });
+    return createProblemResponse({
+      status: 500,
+      title: "Internal Server Error",
+      detail: "Internal Server Error",
+    });
   }
 }
 
@@ -127,7 +184,11 @@ function toRoundResponse(round: {
   };
 }
 
-function toPlayerResponse(player: { id: string; displayName: string; active: boolean }) {
+function toPlayerResponse(player: {
+  id: string;
+  displayName: string;
+  active: boolean;
+}) {
   return {
     id: player.id,
     display_name: player.displayName,

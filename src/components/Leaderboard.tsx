@@ -13,7 +13,10 @@ import {
   TableRow,
 } from "@/components/ui/table";
 import { Badge } from "@/components/ui/badge";
-import { getFettmattisLeaderboard, getRegularLeaderboard } from "@/lib/leaderboard";
+import {
+  getFettmattisLeaderboard,
+  getRegularLeaderboard,
+} from "@/lib/leaderboard";
 import type {
   FettmattisLeaderboard,
   LeaderboardScope,
@@ -21,7 +24,9 @@ import type {
 } from "@/lib/leaderboard-types";
 
 export function Leaderboard() {
-  const [scope, setScope] = useState<LeaderboardScope>(new Date().getFullYear());
+  const [scope, setScope] = useState<LeaderboardScope>(
+    new Date().getFullYear(),
+  );
   const regularQuery = useQuery<RegularLeaderboard>({
     queryKey: ["leaderboard", "regular", scope],
     queryFn: () => getRegularLeaderboard(scope),
@@ -35,7 +40,8 @@ export function Leaderboard() {
   const regular = regularQuery.data ?? [];
   const fettmattis = fettmattisQuery.data ?? [];
   const regularLoading = regularQuery.isLoading || regularQuery.isFetching;
-  const fettmattisLoading = fettmattisQuery.isLoading || fettmattisQuery.isFetching;
+  const fettmattisLoading =
+    fettmattisQuery.isLoading || fettmattisQuery.isFetching;
   const errorMessage =
     regularQuery.error?.message ?? fettmattisQuery.error?.message ?? null;
   const isAllTime = scope === "all";
@@ -59,7 +65,9 @@ export function Leaderboard() {
     regularContent = (
       <EmptyState
         message={
-          isAllTime ? "Ingen runder registrert ennå." : "Ingen runder registrert denne sesongen ennå."
+          isAllTime
+            ? "Ingen runder registrert ennå."
+            : "Ingen runder registrert denne sesongen ennå."
         }
       />
     );
@@ -81,24 +89,26 @@ export function Leaderboard() {
               <TableCell className="font-semibold">#{entry.rank}</TableCell>
               <TableCell className="flex items-center gap-3">
                 <div className="flex flex-col">
-                  <span className="font-medium text-foreground">
+                  <span className="text-foreground font-medium">
                     {entry.playerName}
                   </span>
-                  <span className="text-xs text-muted-foreground">
+                  <span className="text-muted-foreground text-xs">
                     {entry.roundsPlayed} runder spilt
                   </span>
                 </div>
-                <Badge variant={entry.lossPercentage < 30 ? "success" : "outline"}>
+                <Badge
+                  variant={entry.lossPercentage < 30 ? "success" : "outline"}
+                >
                   {entry.lossPercentage.toFixed(1)}%
                 </Badge>
               </TableCell>
               <TableCell className="text-right font-semibold">
                 {entry.lossPercentage.toFixed(1)}%
               </TableCell>
-              <TableCell className="text-right text-muted-foreground">
+              <TableCell className="text-muted-foreground text-right">
                 {entry.totalLosses}
               </TableCell>
-              <TableCell className="text-right text-muted-foreground">
+              <TableCell className="text-muted-foreground text-right">
                 {entry.roundsPlayed}
               </TableCell>
             </TableRow>
@@ -115,7 +125,9 @@ export function Leaderboard() {
     fettmattisContent = (
       <EmptyState
         message={
-          isAllTime ? "Ingen Fettmattis utdelt ennå." : "Ingen Fettmattis utdelt i år ennå."
+          isAllTime
+            ? "Ingen Fettmattis utdelt ennå."
+            : "Ingen Fettmattis utdelt i år ennå."
         }
       />
     );
@@ -134,12 +146,12 @@ export function Leaderboard() {
             <TableRow key={entry.playerId}>
               <TableCell className="font-semibold">#{entry.rank}</TableCell>
               <TableCell className="flex items-center gap-3">
-                <span className="font-medium text-foreground">
+                <span className="text-foreground font-medium">
                   {entry.playerName}
                 </span>
                 <Badge variant="secondary">Fettmattis-helt</Badge>
               </TableCell>
-              <TableCell className="text-right text-muted-foreground">
+              <TableCell className="text-muted-foreground text-right">
                 {entry.fettmattisCount}
               </TableCell>
             </TableRow>
@@ -156,18 +168,22 @@ export function Leaderboard() {
           <h2 className="text-2xl font-semibold tracking-tight md:text-3xl">
             Sesongoversikt for {isAllTime ? "alle år" : scope}
           </h2>
-          <p className="max-w-2xl text-sm text-muted-foreground">
-            Tap-prosentene oppdateres med én gang en runde lagres. Fettmattis-utdelinger følger 24-timersfristen for tilbakekalling.
+          <p className="text-muted-foreground max-w-2xl text-sm">
+            Tap-prosentene oppdateres med én gang en runde lagres.
+            Fettmattis-utdelinger følger 24-timersfristen for tilbakekalling.
           </p>
         </div>
         <div className="flex items-center gap-3">
-          <label className="text-sm font-medium text-muted-foreground" htmlFor="leaderboard-year">
+          <label
+            className="text-muted-foreground text-sm font-medium"
+            htmlFor="leaderboard-year"
+          >
             Sesong
           </label>
           <div className="relative">
             <select
               id="leaderboard-year"
-              className="h-10 appearance-none rounded-full border border-border/60 bg-background px-5 pr-12 text-sm font-medium shadow-xs transition focus-visible:outline-hidden focus-visible:ring-2 focus-visible:ring-ring"
+              className="border-border/60 bg-background focus-visible:ring-ring h-10 appearance-none rounded-full border px-5 pr-12 text-sm font-medium shadow-xs transition focus-visible:ring-2 focus-visible:outline-hidden"
               value={String(scope)}
               onChange={(event) => {
                 const value = event.target.value;
@@ -180,13 +196,13 @@ export function Leaderboard() {
                 </option>
               ))}
             </select>
-            <ChevronDown className="pointer-events-none absolute right-4 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
+            <ChevronDown className="text-muted-foreground pointer-events-none absolute top-1/2 right-4 h-4 w-4 -translate-y-1/2" />
           </div>
         </div>
       </div>
 
       {errorMessage ? (
-        <div className="flex items-center gap-3 rounded-2xl border border-destructive/40 bg-destructive/10 px-4 py-3 text-sm text-destructive">
+        <div className="border-destructive/40 bg-destructive/10 text-destructive flex items-center gap-3 rounded-2xl border px-4 py-3 text-sm">
           <AlertTriangle className="h-4 w-4" />
           {errorMessage}
         </div>
@@ -218,7 +234,7 @@ export function Leaderboard() {
 
 function LoadingNotice() {
   return (
-    <div className="flex items-center gap-2 text-xs font-medium uppercase tracking-[0.2em] text-muted-foreground">
+    <div className="text-muted-foreground flex items-center gap-2 text-xs font-medium tracking-[0.2em] uppercase">
       <Loader2 className="h-4 w-4 animate-spin" />
       Oppdaterer tabellene…
     </div>
@@ -231,8 +247,8 @@ interface EmptyStateProps {
 
 function EmptyState({ message }: EmptyStateProps) {
   return (
-    <div className="flex flex-col items-center justify-center gap-3 rounded-3xl border border-dashed border-border/70 bg-muted/40 px-6 py-12 text-center">
-      <p className="text-sm text-muted-foreground">{message}</p>
+    <div className="border-border/70 bg-muted/40 flex flex-col items-center justify-center gap-3 rounded-3xl border border-dashed px-6 py-12 text-center">
+      <p className="text-muted-foreground text-sm">{message}</p>
     </div>
   );
 }
@@ -241,7 +257,10 @@ function TableSkeleton() {
   return (
     <div className="space-y-2">
       {Array.from({ length: 4 }).map((_, index) => (
-        <div key={index} className="h-12 w-full animate-pulse rounded-2xl bg-muted/60" />
+        <div
+          key={index}
+          className="bg-muted/60 h-12 w-full animate-pulse rounded-2xl"
+        />
       ))}
     </div>
   );

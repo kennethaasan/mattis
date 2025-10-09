@@ -1,6 +1,8 @@
 import { expect, test } from "@playwright/test";
 
-test("T037: user can create a player from the roster page", async ({ page }) => {
+test("T037: user can create a player from the roster page", async ({
+  page,
+}) => {
   const players = [
     {
       id: "00000000-0000-7000-0000-000000000101",
@@ -44,7 +46,9 @@ test("T037: user can create a player from the roster page", async ({ page }) => 
   await expect(page.getByRole("cell", { name: "Nova" })).toBeVisible();
 });
 
-test("T037: recording a round confirms the success banner", async ({ page }) => {
+test("T037: recording a round confirms the success banner", async ({
+  page,
+}) => {
   const roster = [
     {
       id: "00000000-0000-7000-0000-000000000301",
@@ -108,7 +112,9 @@ test("T037: recording a round confirms the success banner", async ({ page }) => 
   ).toBeVisible();
 });
 
-test("T037: leaderboard view surfaces regular and FettMattis standings", async ({ page }) => {
+test("T037: leaderboard view surfaces regular and FettMattis standings", async ({
+  page,
+}) => {
   await page.route("**/api/leaderboard/regular**", async (route) => {
     await route.fulfill({
       status: 200,

@@ -61,7 +61,9 @@ test("T008: POST /api/players returns 400 when validation fails", async () => {
 });
 
 test("T008: POST /api/players returns 409 on duplicate display name", async () => {
-  mocks.createPlayer.mockRejectedValueOnce(new mocks.MockConflictError("Duplicate"));
+  mocks.createPlayer.mockRejectedValueOnce(
+    new mocks.MockConflictError("Duplicate"),
+  );
 
   const request = new Request("http://localhost/api/players", {
     method: "POST",

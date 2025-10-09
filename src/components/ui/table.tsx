@@ -8,8 +8,12 @@ const Table = React.forwardRef<
   HTMLTableElement,
   React.HTMLAttributes<HTMLTableElement>
 >(({ className, children, ...props }, ref) => (
-  <div className="relative w-full overflow-hidden rounded-3xl border border-border/60 bg-card shadow-xs">
-    <table ref={ref} className={cn("w-full caption-bottom text-sm", className)} {...props}>
+  <div className="border-border/60 bg-card relative w-full overflow-hidden rounded-3xl border shadow-xs">
+    <table
+      ref={ref}
+      className={cn("w-full caption-bottom text-sm", className)}
+      {...props}
+    >
       {children}
     </table>
   </div>
@@ -23,7 +27,7 @@ const TableHeader = React.forwardRef<
   <thead
     ref={ref}
     className={cn(
-      "[&_tr]:bg-muted/40 [&_tr]:text-xs [&_tr]:uppercase [&_tr]:tracking-wide",
+      "[&_tr]:bg-muted/40 [&_tr]:text-xs [&_tr]:tracking-wide [&_tr]:uppercase",
       className,
     )}
     {...props}
@@ -50,7 +54,7 @@ const TableFooter = React.forwardRef<
   <tfoot
     ref={ref}
     className={cn(
-      "bg-muted/40 font-medium text-foreground last:[&>tr]:border-b-0",
+      "bg-muted/40 text-foreground font-medium last:[&>tr]:border-b-0",
       className,
     )}
     {...props}
@@ -65,7 +69,7 @@ const TableRow = React.forwardRef<
   <tr
     ref={ref}
     className={cn(
-      "border-b border-border/60 transition hover:bg-muted/40",
+      "border-border/60 hover:bg-muted/40 border-b transition",
       className,
     )}
     {...props}
@@ -80,7 +84,7 @@ const TableHead = React.forwardRef<
   <th
     ref={ref}
     className={cn(
-      "px-6 py-3 text-left font-semibold text-muted-foreground",
+      "text-muted-foreground px-6 py-3 text-left font-semibold",
       className,
     )}
     {...props}
@@ -106,7 +110,7 @@ const TableCaption = React.forwardRef<
 >(({ className, ...props }, ref) => (
   <caption
     ref={ref}
-    className={cn("mt-4 text-sm text-muted-foreground", className)}
+    className={cn("text-muted-foreground mt-4 text-sm", className)}
     {...props}
   />
 ));

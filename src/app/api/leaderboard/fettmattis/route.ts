@@ -11,12 +11,15 @@ export async function GET(req: Request) {
   const validation = LeaderboardQuerySchema.safeParse(query);
 
   if (!validation.success) {
-    return NextResponse.json({ error: validation.error.issues }, { status: 400 });
+    return NextResponse.json(
+      { error: validation.error.issues },
+      { status: 400 },
+    );
   }
 
   const requestedYear = validation.data.year;
   const fallbackYear = new Date().getFullYear();
-  const year = requestedYear === "all" ? null : requestedYear ?? fallbackYear;
+  const year = requestedYear === "all" ? null : (requestedYear ?? fallbackYear);
 
   try {
     const leaderboard = await getFettMattisLeaderboard(year);
