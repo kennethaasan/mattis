@@ -2,9 +2,15 @@ import { NextResponse } from "next/server";
 
 import { createProblemResponse } from "@/lib/api/problem-details";
 import { PlayerCreateSchema } from "@/lib/api/schemas";
+import { authenticateHeaders } from "@/lib/auth/basic-auth";
 import { createPlayer, listPlayers, ConflictError } from "@/lib/db-client";
 
 export async function POST(req: Request) {
+  const authResult = authenticateHeaders(req.headers);
+  if (!authResult.ok) {
+    return authResult.response;
+  }
+
   try {
     const body = (await req.json()) as unknown;
     const validation = PlayerCreateSchema.safeParse(body);

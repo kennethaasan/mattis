@@ -11,10 +11,17 @@ import {
 } from "aws-cdk-lib";
 import type { StackProps } from "aws-cdk-lib";
 import type { Construct } from "constructs";
-import { HttpApi, HttpMethod } from "aws-cdk-lib/aws-apigatewayv2";
+import {
+  CorsHttpMethod,
+  HttpApi,
+  HttpMethod,
+} from "aws-cdk-lib/aws-apigatewayv2";
 import { HttpLambdaIntegration } from "aws-cdk-lib/aws-apigatewayv2-integrations";
 import {
-  Peer,
+  GatewayVpcEndpointAwsService,
+  InstanceClass,
+  InstanceSize,
+  InstanceType,
   Port,
   SecurityGroup,
   SubnetType,
@@ -27,14 +34,15 @@ import {
   FunctionUrlAuthType,
   InvokeMode,
   Runtime,
+  FunctionUrlCorsHttpMethod,
 } from "aws-cdk-lib/aws-lambda";
 import { RetentionDays } from "aws-cdk-lib/aws-logs";
 import {
-  AuroraCapacityUnit,
-  AuroraPostgresEngineVersion,
   Credentials,
-  DatabaseClusterEngine,
-  ServerlessCluster,
+  DatabaseInstance,
+  DatabaseInstanceEngine,
+  PostgresEngineVersion,
+  StorageType,
 } from "aws-cdk-lib/aws-rds";
 import {
   BlockPublicAccess,
@@ -96,7 +104,7 @@ export class MattisStack extends Stack {
     }
 
     const vpc = new Vpc(this, "MattisVpc", {
-      natGateways: isProduction ? 1 : 0,
+      natGateways: 0,
       maxAzs: 2,
       subnetConfiguration: [
         {
@@ -104,12 +112,17 @@ export class MattisStack extends Stack {
           subnetType: SubnetType.PUBLIC,
         },
         {
-          name: "private-egress",
-          subnetType: SubnetType.PRIVATE_WITH_EGRESS,
-        },
-        {
           name: "isolated",
           subnetType: SubnetType.PRIVATE_ISOLATED,
+        },
+      ],
+    });
+
+    vpc.addGatewayEndpoint("S3GatewayEndpoint", {
+      service: GatewayVpcEndpointAwsService.S3,
+      subnets: [
+        {
+          subnets: vpc.isolatedSubnets,
         },
       ],
     });
@@ -139,23 +152,12 @@ export class MattisStack extends Stack {
       Port.tcp(5432),
       "Allow application Lambdas to reach the database",
     );
-    databaseSecurityGroup.addIngressRule(
-      Peer.ipv4(vpc.vpcCidrBlock),
-      Port.tcp(5432),
-      "Allow VPC resources to reach the database on the default port",
-    );
-
-    const databaseCluster = new ServerlessCluster(this, "MattisDatabase", {
+    const databaseInstance = new DatabaseInstance(this, "MattisDatabase", {
       vpc,
-      engine: DatabaseClusterEngine.auroraPostgres({
-        version: AuroraPostgresEngineVersion.VER_14_6,
+      engine: DatabaseInstanceEngine.postgres({
+        version: PostgresEngineVersion.VER_17_6,
       }),
-      defaultDatabaseName: "mattis",
-      scaling: {
-        autoPause: isProduction ? undefined : Duration.minutes(30),
-        maxCapacity: AuroraCapacityUnit.ACU_32,
-        minCapacity: AuroraCapacityUnit.ACU_2,
-      },
+      databaseName: "mattis",
       credentials: Credentials.fromGeneratedSecret("mattis_app"),
       vpcSubnets: {
         subnetType: SubnetType.PRIVATE_ISOLATED,
@@ -164,6 +166,16 @@ export class MattisStack extends Stack {
       removalPolicy: isProduction
         ? RemovalPolicy.RETAIN
         : RemovalPolicy.DESTROY,
+      publiclyAccessible: false,
+      instanceType: InstanceType.of(InstanceClass.T4G, InstanceSize.MICRO),
+      allocatedStorage: 20,
+      maxAllocatedStorage: 100,
+      storageEncrypted: true,
+      storageType: StorageType.GP2,
+      deletionProtection: isProduction,
+      backupRetention: Duration.days(7),
+      autoMinorVersionUpgrade: true,
+      multiAz: false,
     });
 
     const staticBucket = new Bucket(this, "MattisStaticAssets", {
@@ -189,43 +201,74 @@ export class MattisStack extends Stack {
       runtime: Runtime.NODEJS_20_X,
       handler: "index.handler",
       code: Code.fromAsset(serverFunctionDir),
-      memorySize: 1024,
+      memorySize: 512,
       timeout: Duration.seconds(30),
       architecture: Architecture.ARM_64,
       vpc,
       vpcSubnets: {
-        subnetType: SubnetType.PRIVATE_WITH_EGRESS,
+        subnetType: SubnetType.PRIVATE_ISOLATED,
       },
       securityGroups: [lambdaSecurityGroup],
-      logRetention: RetentionDays.ONE_MONTH,
+      logRetention: RetentionDays.ONE_WEEK,
       environment: {
         NODE_ENV: "production",
         STAGE: stage,
         DATABASE_NAME: "mattis",
-        DATABASE_SECRET_ARN: databaseCluster.secret?.secretArn ?? "",
+        DATABASE_SECRET_ARN: databaseInstance.secret?.secretArn ?? "",
         STATIC_ASSET_BUCKET_NAME: staticBucket.bucketName,
         NEXT_SHARP_PATH: "/opt/nodejs/node_modules/sharp",
         NEXT_TELEMETRY_DISABLED: "1",
       },
     });
 
-    if (databaseCluster.secret === undefined) {
+    if (databaseInstance.secret === undefined) {
       Annotations.of(this).addError(
-        "Aurora cluster did not expose a secret. The Lambda functions cannot authenticate.",
+        "Database instance did not expose a secret. The Lambda functions cannot authenticate.",
       );
     } else {
-      databaseCluster.secret.grantRead(serverFunction);
+      databaseInstance.secret.grantRead(serverFunction);
     }
 
     staticBucket.grantRead(serverFunction);
 
+    const corsAllowedOrigins = [
+      "https://mattis.aasan.dev",
+      "https://mattis.vanvikil.no",
+    ];
+
     const serverFunctionUrl = serverFunction.addFunctionUrl({
       authType: FunctionUrlAuthType.NONE,
       invokeMode: InvokeMode.BUFFERED,
+      cors: {
+        allowedOrigins: corsAllowedOrigins,
+        allowedHeaders: ["authorization", "content-type"],
+        allowCredentials: true,
+        allowedMethods: [
+          FunctionUrlCorsHttpMethod.GET,
+          FunctionUrlCorsHttpMethod.POST,
+          FunctionUrlCorsHttpMethod.PUT,
+          FunctionUrlCorsHttpMethod.PATCH,
+          FunctionUrlCorsHttpMethod.DELETE,
+          FunctionUrlCorsHttpMethod.OPTIONS,
+        ],
+      },
     });
 
     const httpApi = new HttpApi(this, "MattisHttpApi", {
       apiName: `mattis-${stage}`,
+      corsPreflight: {
+        allowOrigins: corsAllowedOrigins,
+        allowHeaders: ["authorization", "content-type"],
+        allowCredentials: true,
+        allowMethods: [
+          CorsHttpMethod.GET,
+          CorsHttpMethod.POST,
+          CorsHttpMethod.PUT,
+          CorsHttpMethod.PATCH,
+          CorsHttpMethod.DELETE,
+          CorsHttpMethod.OPTIONS,
+        ],
+      },
     });
 
     const apiIntegration = new HttpLambdaIntegration(
@@ -253,14 +296,14 @@ export class MattisStack extends Stack {
         handler: "index.handler",
         code: Code.fromAsset(imageFunctionDir),
         architecture: Architecture.ARM_64,
-        memorySize: 512,
+        memorySize: 256,
         timeout: Duration.seconds(10),
         vpc,
         vpcSubnets: {
-          subnetType: SubnetType.PRIVATE_WITH_EGRESS,
+          subnetType: SubnetType.PRIVATE_ISOLATED,
         },
         securityGroups: [lambdaSecurityGroup],
-        logRetention: RetentionDays.ONE_MONTH,
+        logRetention: RetentionDays.ONE_WEEK,
         environment: {
           NODE_ENV: "production",
           STAGE: stage,
@@ -291,9 +334,9 @@ export class MattisStack extends Stack {
     new CfnOutput(this, "StaticAssetBucketName", {
       value: staticBucket.bucketName,
     });
-    if (databaseCluster.secret !== undefined) {
+    if (databaseInstance.secret !== undefined) {
       new CfnOutput(this, "DatabaseSecretArn", {
-        value: databaseCluster.secret.secretArn,
+        value: databaseInstance.secret.secretArn,
       });
     }
   }

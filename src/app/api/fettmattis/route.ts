@@ -4,17 +4,21 @@ import { NextResponse } from "next/server";
 import { env } from "@/env";
 import { badRequest, createProblemResponse } from "@/lib/api/problem-details";
 import { FettMattisCreateSchema } from "@/lib/api/schemas";
+import { authenticateHeaders } from "@/lib/auth/basic-auth";
 import {
   ConflictError,
   NotFoundError,
   createFettMattis,
 } from "@/lib/db-client";
 
-// Placeholder for authentication/user context
-const getUserId = (req: NextRequest): string => {
-  // In a real app, this would come from a session or token.
-  // For development, we use a placeholder from the environment.
-  return req.headers.get("X-User-Id") ?? env.DEV_USER_ID;
+const getUserId = (req: NextRequest, fallbackUserId: string): string => {
+  return (
+    req.headers.get("x-authenticated-user-id") ??
+    req.headers.get("x-user-id") ??
+    fallbackUserId ??
+    env.BASIC_AUTH_USER_ID ??
+    env.DEV_USER_ID
+  );
 };
 
 /**
@@ -22,10 +26,12 @@ const getUserId = (req: NextRequest): string => {
  * Creates a new fettmattis.
  */
 export async function POST(req: NextRequest) {
-  const userId = getUserId(req);
-  if (!userId) {
-    return badRequest("Authentication required.");
+  const authResult = authenticateHeaders(req.headers);
+  if (!authResult.ok) {
+    return authResult.response;
   }
+
+  const userId = getUserId(req, authResult.userId);
 
   try {
     let body: unknown;

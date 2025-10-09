@@ -46,6 +46,10 @@ jobs:
       - name: Install dependencies
         run: npm ci
 
+      - name: Install infra dependencies
+        run: npm ci
+        working-directory: infra
+
       - name: Formatting Check (Prettier)
         run: npm run prettier:check
         timeout-minutes: 3
@@ -61,6 +65,11 @@ jobs:
       - name: Unit Tests
         run: npm run test:unit
         timeout-minutes: 6
+
+      - name: Infra Build (PR only)
+        if: github.event_name == 'pull_request'
+        run: npm run build
+        working-directory: infra
 
       - name: Dependency Review
         if: github.event_name == 'pull_request'
