@@ -8,13 +8,11 @@ import { authenticateHeaders } from "@/lib/auth/basic-auth";
 import { ConflictError, NotFoundError, createRound } from "@/lib/db-client";
 
 const getUserId = (req: NextRequest, fallbackUserId: string): string => {
-  return (
+  const headerUserId =
     req.headers.get("x-authenticated-user-id") ??
-    req.headers.get("x-user-id") ??
-    fallbackUserId ??
-    env.BASIC_AUTH_USER_ID ??
-    env.DEV_USER_ID
-  );
+    req.headers.get("x-user-id");
+
+  return headerUserId ?? fallbackUserId;
 };
 
 /**

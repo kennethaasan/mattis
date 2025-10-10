@@ -11,11 +11,7 @@ import {
 } from "aws-cdk-lib";
 import type { StackProps } from "aws-cdk-lib";
 import type { Construct } from "constructs";
-import {
-  CorsHttpMethod,
-  HttpApi,
-  HttpMethod,
-} from "aws-cdk-lib/aws-apigatewayv2";
+import { CorsHttpMethod, HttpApi } from "aws-cdk-lib/aws-apigatewayv2";
 import { HttpLambdaIntegration } from "aws-cdk-lib/aws-apigatewayv2-integrations";
 import {
   GatewayVpcEndpointAwsService,
@@ -34,7 +30,6 @@ import {
   FunctionUrlAuthType,
   InvokeMode,
   Runtime,
-  FunctionUrlCorsHttpMethod,
 } from "aws-cdk-lib/aws-lambda";
 import { RetentionDays } from "aws-cdk-lib/aws-logs";
 import {
@@ -243,14 +238,7 @@ export class MattisStack extends Stack {
         allowedOrigins: corsAllowedOrigins,
         allowedHeaders: ["authorization", "content-type"],
         allowCredentials: true,
-        allowedMethods: [
-          FunctionUrlCorsHttpMethod.GET,
-          FunctionUrlCorsHttpMethod.POST,
-          FunctionUrlCorsHttpMethod.PUT,
-          FunctionUrlCorsHttpMethod.PATCH,
-          FunctionUrlCorsHttpMethod.DELETE,
-          FunctionUrlCorsHttpMethod.OPTIONS,
-        ],
+        allowedMethods: ["GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS"],
       },
     });
 
