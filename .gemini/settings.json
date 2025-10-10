@@ -1,0 +1,8 @@
+{
+  "privacy": {
+    "usageStatisticsEnabled": false
+  },
+  "context": {
+    "fileName": ["CONTEXT.md", "instructions/*.md"]
+  }
+}

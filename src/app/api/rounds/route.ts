@@ -1,0 +1,105 @@
+import type { NextRequest } from "next/server";
+import { NextResponse } from "next/server";
+
+import { env } from "@/env";
+import { badRequest, createProblemResponse } from "@/lib/api/problem-details";
+import { RoundCreateSchema } from "@/lib/api/schemas";
+import { authenticateHeaders } from "@/lib/auth/basic-auth";
+import { ConflictError, NotFoundError, createRound } from "@/lib/db-client";
+
+const getUserId = (req: NextRequest, fallbackUserId: string): string => {
+  const headerUserId =
+    req.headers.get("x-authenticated-user-id") ??
+    req.headers.get("x-user-id");
+
+  return headerUserId ?? fallbackUserId;
+};
+
+/**
+ * POST /api/rounds
+ * Creates a new round.
+ */
+export async function POST(req: NextRequest) {
+  const authResult = authenticateHeaders(req.headers);
+  if (!authResult.ok) {
+    return authResult.response;
+  }
+
+  const userId = getUserId(req, authResult.userId);
+
+  try {
+    let body: unknown;
+    try {
+      body = await req.json();
+    } catch {
+      return badRequest("Malformed JSON in request body.");
+    }
+
+    const validatedData = RoundCreateSchema.safeParse(body);
+
+    if (!validatedData.success) {
+      return NextResponse.json(
+        { error: validatedData.error.issues },
+        { status: 400 },
+      );
+    }
+
+    const { participant_ids, loser_id } = validatedData.data;
+
+    const newRound = await createRound({
+      participantIds: participant_ids,
+      loserId: loser_id,
+      createdBy: userId,
+    });
+
+    return NextResponse.json(toRoundResponse(newRound), { status: 201 });
+  } catch (error) {
+    if (error instanceof NotFoundError) {
+      return createProblemResponse({
+        status: 404,
+        title: "Not Found",
+        detail: error.message,
+      });
+    }
+
+    if (error instanceof ConflictError) {
+      return createProblemResponse({
+        status: 409,
+        title: "Conflict",
+        detail: error.message,
+      });
+    }
+
+    return createProblemResponse({
+      status: 500,
+      title: "Internal Server Error",
+      detail: "Internal Server Error",
+    });
+  }
+}
+
+function toRoundResponse(round: {
+  id: string;
+  createdAt: Date;
+  participants: { id: string; displayName: string; active: boolean }[];
+  loser: { id: string; displayName: string; active: boolean };
+}) {
+  return {
+    id: round.id,
+    created_at: round.createdAt.toISOString(),
+    participants: round.participants.map(toPlayerResponse),
+    loser: toPlayerResponse(round.loser),
+  };
+}
+
+function toPlayerResponse(player: {
+  id: string;
+  displayName: string;
+  active: boolean;
+}) {
+  return {
+    id: player.id,
+    display_name: player.displayName,
+    active: player.active,
+  };
+}

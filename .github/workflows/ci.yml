@@ -1,0 +1,109 @@
+name: Build and Validate
+
+on:
+  push:
+    branches:
+      - main
+      - develop
+      - "feature/**"
+      - "bugfix/**"
+  pull_request:
+    branches:
+      - main
+      - develop
+
+concurrency:
+  group: ci-${{ github.ref }}
+  cancel-in-progress: true
+
+permissions:
+  contents: read
+
+defaults:
+  run:
+    shell: bash
+
+jobs:
+  quality-checks:
+    name: Lint, Type Check & Unit Tests
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 1
+
+      - name: Setup Node.js 22.x
+        uses: actions/setup-node@v4
+        with:
+          node-version: 22.x
+          cache: npm
+          cache-dependency-path: |
+            package-lock.json
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Install infra dependencies
+        run: npm ci
+        working-directory: infra
+
+      - name: Formatting Check (Prettier)
+        run: npm run prettier:check
+        timeout-minutes: 3
+
+      - name: Lint (ESLint)
+        run: npm run lint
+        timeout-minutes: 6
+
+      - name: Type Check (TypeScript)
+        run: npm run tsc
+        timeout-minutes: 6
+
+      - name: Unit Tests
+        run: npm run test:unit
+        timeout-minutes: 6
+
+      - name: Infra Build (PR only)
+        if: github.event_name == 'pull_request'
+        run: npm run build
+        working-directory: infra
+
+      - name: Dependency Review
+        if: github.event_name == 'pull_request'
+        uses: actions/dependency-review-action@v4
+
+  e2e-tests:
+    name: Playwright E2E (Chromium)
+    runs-on: ubuntu-latest
+    timeout-minutes: 25
+    needs: quality-checks
+    permissions:
+      contents: read
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 1
+
+      - name: Setup Node.js 22.x
+        uses: actions/setup-node@v4
+        with:
+          node-version: 22.x
+          cache: npm
+          cache-dependency-path: |
+            package-lock.json
+            infra/package-lock.json
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Install Playwright browsers
+        run: npx playwright install --with-deps chromium
+
+      - name: Run Playwright tests
+        env:
+          PLAYWRIGHT_BASE_URL: http://127.0.0.1:3000
+        run: npm run test:e2e -- --project=chromium
