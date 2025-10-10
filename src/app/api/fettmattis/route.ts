@@ -1,7 +1,5 @@
 import type { NextRequest } from "next/server";
 import { NextResponse } from "next/server";
-
-import { env } from "@/env";
 import { badRequest, createProblemResponse } from "@/lib/api/problem-details";
 import { FettMattisCreateSchema } from "@/lib/api/schemas";
 import { authenticateHeaders } from "@/lib/auth/basic-auth";
@@ -15,9 +13,7 @@ const getUserId = (req: NextRequest, fallbackUserId: string): string => {
   return (
     req.headers.get("x-authenticated-user-id") ??
     req.headers.get("x-user-id") ??
-    fallbackUserId ??
-    env.BASIC_AUTH_USER_ID ??
-    env.DEV_USER_ID
+    fallbackUserId
   );
 };
 

@@ -22,7 +22,9 @@ export const env = createEnv({
     BASIC_AUTH_USERNAME: process.env.BASIC_AUTH_USERNAME,
     BASIC_AUTH_PASSWORD: process.env.BASIC_AUTH_PASSWORD,
     BASIC_AUTH_USER_ID:
-      process.env.BASIC_AUTH_USER_ID ?? process.env.DEV_USER_ID ?? DEFAULT_DEV_USER_ID,
+      process.env.BASIC_AUTH_USER_ID ??
+      process.env.DEV_USER_ID ??
+      DEFAULT_DEV_USER_ID,
     NEXT_PUBLIC_DEFAULT_USER_ID:
       process.env.NEXT_PUBLIC_DEFAULT_USER_ID ?? DEFAULT_DEV_USER_ID,
   },

@@ -317,7 +317,7 @@ function resolvePlayerDisplayName(
 
   while (usedDisplayNames.has(uniqueName)) {
     suffix += 1;
-    uniqueName = `${baseName} (${suffix})`;
+    uniqueName = `${baseName} (${suffix.toString()})`;
   }
 
   usedDisplayNames.add(uniqueName);
