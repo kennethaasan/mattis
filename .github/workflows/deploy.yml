@@ -25,11 +25,75 @@ defaults:
     shell: bash
 
 jobs:
+  quality:
+    name: Run quality checks
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js 22.x
+        uses: actions/setup-node@v4
+        with:
+          node-version: 22.x
+          cache: npm
+          cache-dependency-path: package-lock.json
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Lint
+        run: npm run lint
+
+      - name: Type check
+        run: npm run tsc
+
+      - name: Run unit tests
+        run: npm test
+
+      - name: Setup Terraform
+        uses: hashicorp/setup-terraform@v3
+        with:
+          terraform_version: 1.13.3
+
+      - name: Check Terraform formatting
+        working-directory: iac
+        run: terraform fmt -check -recursive
+
+      - name: Terraform validate
+        working-directory: iac
+        env:
+          TF_VAR_neon_api_key: dummy
+        run: |
+          terraform init -backend=false
+          terraform validate
+
+      - name: Setup TFLint
+        uses: terraform-linters/setup-tflint@v3
+
+      - name: Run TFLint
+        working-directory: iac
+        run: |
+          tflint --init
+          tflint --minimum-failure-severity=error
+
+      - name: Run Trivy config scan
+        uses: aquasecurity/trivy-action@0.24.0
+        with:
+          scan-type: config
+          scan-ref: iac
+          exit-code: '1'
+          ignore-unfixed: true
+          severity: HIGH,CRITICAL
+          skip-dirs: iac/.terraform
+
   deploy:
     name: Deploy Mattis Stack
     runs-on: ubuntu-latest
     timeout-minutes: 40
     if: github.ref == 'refs/heads/main' || github.event_name == 'workflow_dispatch'
+    needs: quality
     environment:
       name: production
     steps:
@@ -44,9 +108,7 @@ jobs:
         with:
           node-version: 22.x
           cache: npm
-          cache-dependency-path: |
-            package-lock.json
-            infra/package-lock.json
+          cache-dependency-path: package-lock.json
 
       - name: Install web dependencies
         run: npm ci
@@ -57,13 +119,10 @@ jobs:
       - name: Bundle Next.js with OpenNext
         run: npx open-next@latest build
 
-      - name: Install infrastructure dependencies
-        run: npm ci
-        working-directory: infra
-
-      - name: Build CDK application
-        run: npm run build
-        working-directory: infra
+      - name: Setup Terraform
+        uses: hashicorp/setup-terraform@v3
+        with:
+          terraform_version: 1.13.3
 
       - name: Configure AWS credentials
         uses: aws-actions/configure-aws-credentials@v4
@@ -72,10 +131,39 @@ jobs:
           aws-region: ${{ vars.AWS_REGION }}
           role-session-name: mattisDeploySession
 
-      - name: Deploy AWS infrastructure
-        run: npx cdk deploy MattisStack --app "node dist/bin/infra.js" --require-approval never --context stage=prod
+      - name: Terraform init
+        working-directory: iac
         env:
-          CI: true
-          DEPLOY_ENV: prod
-          CDK_NEW_BOOTSTRAP: 1
-        working-directory: infra
+          TF_VAR_neon_api_key: ${{ secrets.NEON_API_KEY }}
+        run: terraform init
+
+      - name: Terraform apply
+        working-directory: iac
+        env:
+          TF_VAR_neon_api_key: ${{ secrets.NEON_API_KEY }}
+          TF_VAR_lambda_source_dir: ../.open-next/server-function
+        run: terraform apply -auto-approve
+
+      - name: Capture Terraform outputs
+        id: tf_outputs
+        working-directory: iac
+        env:
+          TF_VAR_neon_api_key: ${{ secrets.NEON_API_KEY }}
+        run: |
+          echo "database_url=$(terraform output -raw database_url)" >> "$GITHUB_OUTPUT"
+          echo "assets_bucket=$(terraform output -raw assets_bucket_name)" >> "$GITHUB_OUTPUT"
+
+      - name: Upload static assets
+        if: steps.tf_outputs.outputs.assets_bucket != ''
+        run: aws s3 sync .open-next/assets "s3://${{ steps.tf_outputs.outputs.assets_bucket }}" --delete
+
+      - name: Write environment for migrations
+        run: |
+          cat <<'ENV' > .env
+          DATABASE_URL="${{ steps.tf_outputs.outputs.database_url }}"
+          ENV
+
+      - name: Run database migrations
+        env:
+          DATABASE_URL: ${{ steps.tf_outputs.outputs.database_url }}
+        run: npm run db:migrate
