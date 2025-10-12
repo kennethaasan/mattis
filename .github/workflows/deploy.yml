@@ -65,6 +65,7 @@ jobs:
         working-directory: iac
         env:
           TF_VAR_neon_api_key: dummy
+          TF_VAR_lambda_source_dir: ./testdata/server-function
         run: |
           terraform init -backend=false
           terraform validate
@@ -74,6 +75,8 @@ jobs:
 
       - name: Run TFLint
         working-directory: iac
+        env:
+          TF_VAR_lambda_source_dir: ./testdata/server-function
         run: |
           tflint --init
           tflint --minimum-failure-severity=error

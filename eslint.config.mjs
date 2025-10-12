@@ -58,6 +58,7 @@ export default tseslint.config(
     "scripts/manual-validation.mjs",
     "postcss.config.mjs",
     "laravel/",
+    "iac/testdata/",
   ]),
   {
     files: ["src/**/*.ts", "src/**/*.tsx"],

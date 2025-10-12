@@ -31,3 +31,7 @@ Other settings—such as Lambda runtime parameters, CloudFront pricing tier, and
 6. Use the CloudFront domain or Route53 record for application traffic, and run `npm run db:migrate` with the generated `database_url` output.
 
 > **Note**: If you use a different Terraform Cloud organisation or workspace, update [`versions.tf`](./versions.tf) accordingly.
+
+### CI validation fixture
+
+The quality checks in `.github/workflows/deploy.yml` run `terraform validate` and `tflint` before the OpenNext bundle is built. A lightweight stub Lambda lives in [`testdata/server-function`](./testdata/server-function) so those tools have a valid `lambda_source_dir` to inspect. The deploy job overrides this path with the real `.open-next/server-function` artifact produced by `npx open-next build`.
