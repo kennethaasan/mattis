@@ -21,12 +21,8 @@ vi.mock("@/lib/db-client", () => ({
 
 const { GET } = await import("@/app/api/players/[playerId]/route");
 
-const MOCK_USER_ID = "00000000-0000-7000-0000-000000000000";
-vi.stubEnv("DEV_USER_ID", MOCK_USER_ID);
-
 const createMockRequest = (playerId: string) => {
   return {
-    headers: new Headers({ "X-User-Id": MOCK_USER_ID }),
     nextUrl: new URL(`http://localhost/api/players/${playerId}`),
   } as unknown as NextRequest;
 };

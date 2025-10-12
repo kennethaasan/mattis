@@ -1,7 +1,6 @@
 import { Buffer } from "node:buffer";
 import type { NextRequest } from "next/server";
 import { NextResponse } from "next/server";
-
 import { env } from "@/env";
 
 export interface AuthSuccess {
@@ -25,6 +24,14 @@ export function enforceBasicAuth(req: NextRequest): AuthResult {
 }
 
 export function authenticateHeaders(headers: Headers): AuthResult {
+  if (env.IS_DEVELOPMENT || env.IS_TEST) {
+    return {
+      ok: true,
+      username: env.BASIC_AUTH_USERNAME,
+      userId: env.BASIC_AUTH_USER_ID,
+    };
+  }
+
   const header = headers.get("authorization");
   if (!header?.startsWith(AUTHORIZATION_PREFIX)) {
     return unauthorized();
@@ -57,7 +64,7 @@ export function authenticateHeaders(headers: Headers): AuthResult {
     return unauthorized();
   }
 
-  const userId = env.BASIC_AUTH_USER_ID || env.DEV_USER_ID;
+  const userId = env.BASIC_AUTH_USER_ID;
 
   return {
     ok: true,

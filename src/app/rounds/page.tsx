@@ -22,10 +22,6 @@ import {
   type PlayersApiRecord,
 } from "@/lib/api/players-client";
 
-const DEFAULT_USER_ID =
-  process.env.NEXT_PUBLIC_DEFAULT_USER_ID ??
-  "00000000-0000-7000-0000-000000000000";
-
 interface ProblemDetailPayload {
   readonly detail?: unknown;
   readonly error?: unknown;
@@ -92,7 +88,6 @@ export default function RoundsPage() {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
-          "X-User-Id": DEFAULT_USER_ID,
         },
         body: JSON.stringify(payload),
       });
@@ -120,7 +115,6 @@ export default function RoundsPage() {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
-          "X-User-Id": DEFAULT_USER_ID,
         },
         body: JSON.stringify(payload),
       });

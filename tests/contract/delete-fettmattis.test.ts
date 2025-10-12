@@ -22,14 +22,10 @@ vi.mock("@/lib/db-client", () => ({
 // Import the route under test
 const { DELETE } = await import("@/app/api/fettmattis/[fettmattisId]/route");
 
-// Mock the environment variable for the user ID
-const MOCK_USER_ID = "00000000-0000-7000-0000-000000000000";
-vi.stubEnv("DEV_USER_ID", MOCK_USER_ID);
-
 // Helper function to create a mock NextRequest
 const createMockRequest = () => {
   return {
-    headers: new Headers({ "X-User-Id": MOCK_USER_ID }),
+    headers: new Headers(),
   } as unknown as NextRequest;
 };
 

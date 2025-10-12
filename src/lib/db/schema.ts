@@ -5,51 +5,63 @@ import {
   primaryKey,
   text,
   timestamp,
-  uuid,
 } from "drizzle-orm/pg-core";
+import { v7 } from "uuid";
+
+/*
+  Because we want to use snake_case casing in the database, and it's not supported with
+  pushSchema that we use for tests, we need to define the column names explicitly here.
+  See:
+    - https://github.com/drizzle-team/drizzle-orm/issues/3913
+    - https://github.com/drizzle-team/drizzle-orm/pull/3831
+*/
+
+const getId = () =>
+  text()
+    .primaryKey()
+    .$defaultFn(() => v7());
+
+const getOptionalTimestamp = (name: string) =>
+  timestamp(name, { withTimezone: true });
+const getTimestamp = (name: string) => getOptionalTimestamp(name).notNull();
+
+const getTimestamps = () => ({
+  createdAt: getTimestamp("created_at").defaultNow(),
+  updatedAt: getTimestamp("updated_at")
+    .defaultNow()
+    .$onUpdate(() => new Date()),
+});
 
 export const users = pgTable("users", {
-  id: uuid("id").primaryKey().defaultRandom(),
-  username: text("username").notNull().unique(),
-  createdAt: timestamp("created_at", { withTimezone: true })
-    .defaultNow()
-    .notNull(),
-  updatedAt: timestamp("updated_at", { withTimezone: true })
-    .defaultNow()
-    .notNull(),
+  id: getId(),
+  username: text().notNull().unique(),
+  ...getTimestamps(),
 });
 
 export const players = pgTable("players", {
-  id: uuid("id").primaryKey().defaultRandom(),
+  id: getId(),
   displayName: text("display_name").notNull().unique(),
-  userId: uuid("user_id").references(() => users.id),
-  active: boolean("active").default(true).notNull(),
-  createdAt: timestamp("created_at", { withTimezone: true })
-    .defaultNow()
-    .notNull(),
-  updatedAt: timestamp("updated_at", { withTimezone: true })
-    .defaultNow()
-    .notNull(),
+  userId: text("user_id").references(() => users.id),
+  active: boolean().default(true).notNull(),
+  ...getTimestamps(),
 });
 
 export const rounds = pgTable("rounds", {
-  id: uuid("id").primaryKey().defaultRandom(),
-  createdBy: uuid("created_by")
+  id: getId(),
+  createdBy: text("created_by")
     .references(() => users.id)
     .notNull(),
-  createdAt: timestamp("created_at", { withTimezone: true })
-    .defaultNow()
-    .notNull(),
-  deletedAt: timestamp("deleted_at", { withTimezone: true }),
+  createdAt: getTimestamp("created_at").defaultNow(),
+  deletedAt: getOptionalTimestamp("deleted_at"),
 });
 
 export const roundParticipants = pgTable(
   "round_participants",
   {
-    roundId: uuid("round_id")
+    roundId: text("round_id")
       .references(() => rounds.id)
       .notNull(),
-    playerId: uuid("player_id")
+    playerId: text("player_id")
       .references(() => players.id)
       .notNull(),
   },
@@ -62,28 +74,25 @@ export const roundParticipants = pgTable(
 );
 
 export const roundLoser = pgTable("round_loser", {
-  roundId: uuid("round_id")
+  roundId: text("round_id")
     .primaryKey()
     .references(() => rounds.id)
     .notNull(),
-  loserId: uuid("loser_id")
+  loserId: text("loser_id")
     .references(() => players.id)
     .notNull(),
 });
 
 export const fettmattis = pgTable("fettmattis", {
-  id: uuid("id").primaryKey().defaultRandom(),
-  playerId: uuid("player_id")
+  id: getId(),
+  playerId: text("player_id")
     .references(() => players.id)
     .notNull(),
-  roundId: uuid("round_id").references(() => rounds.id),
-  createdBy: uuid("created_by")
+  createdBy: text("created_by")
     .references(() => users.id)
     .notNull(),
-  createdAt: timestamp("created_at", { withTimezone: true })
-    .defaultNow()
-    .notNull(),
-  revokedAt: timestamp("revoked_at", { withTimezone: true }),
+  createdAt: getTimestamp("created_at").defaultNow(),
+  revokedAt: getOptionalTimestamp("revoked_at"),
 });
 
 // Relations
@@ -139,10 +148,6 @@ export const fettmattisRelations = relations(fettmattis, ({ one }) => ({
   player: one(players, {
     fields: [fettmattis.playerId],
     references: [players.id],
-  }),
-  round: one(rounds, {
-    fields: [fettmattis.roundId],
-    references: [rounds.id],
   }),
 }));
 

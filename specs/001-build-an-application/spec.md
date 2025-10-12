@@ -123,7 +123,7 @@ _See Resolved Clarifications section for FR-CLAR-01 & FR-CLAR-02 decisions._
 ### Key Entities
 
 - **Player**: display name (unique), active flag, created date. Relationships: Participates in many Rounds; may receive many FettMattiss.
-- **Round**: created timestamp (UTC), participants (Players), single loser (Player), deleted_at (nullable for soft delete). _No fettround flag stored._
+- **Round**: created timestamp (UTC), participants (Players), single loser (Player), deleted*at (nullable for soft delete). \_No fettround flag stored.*
 - **FettmattisFettMattis**: id, player_id (required), round_id (optional, nullable), created_at (UTC), revoked_at (nullable), created_by actor id. Represents a discrete recognition; counts only if not revoked.
 - **Yearly Statistics (Derived, not persisted unless cached)**: For each calendar year (UTC): participations, losses, loss %, fettmattis count.
 - **User (Actor)**: Person performing actions. Decision: `User` (auth) is separate from `Player` (profile); `created_by` and audit fields reference `user.id`. Players may optionally link to a `user_id` for auth/profile pairing.

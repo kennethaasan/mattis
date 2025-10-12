@@ -11,7 +11,11 @@ import {
 } from "aws-cdk-lib";
 import type { StackProps } from "aws-cdk-lib";
 import type { Construct } from "constructs";
-import { CorsHttpMethod, HttpApi } from "aws-cdk-lib/aws-apigatewayv2";
+import {
+  CorsHttpMethod,
+  HttpApi,
+  HttpMethod as ApiGatewayV2HttpMethod,
+} from "aws-cdk-lib/aws-apigatewayv2";
 import { HttpLambdaIntegration } from "aws-cdk-lib/aws-apigatewayv2-integrations";
 import {
   GatewayVpcEndpointAwsService,
@@ -30,6 +34,7 @@ import {
   FunctionUrlAuthType,
   InvokeMode,
   Runtime,
+  HttpMethod as LambdaHttpMethod,
 } from "aws-cdk-lib/aws-lambda";
 import { RetentionDays } from "aws-cdk-lib/aws-logs";
 import {
@@ -238,7 +243,7 @@ export class MattisStack extends Stack {
         allowedOrigins: corsAllowedOrigins,
         allowedHeaders: ["authorization", "content-type"],
         allowCredentials: true,
-        allowedMethods: ["GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS"],
+        allowedMethods: [LambdaHttpMethod.ALL],
       },
     });
 
@@ -266,12 +271,12 @@ export class MattisStack extends Stack {
 
     httpApi.addRoutes({
       path: "/",
-      methods: [HttpMethod.ANY],
+      methods: [ApiGatewayV2HttpMethod.ANY],
       integration: apiIntegration,
     });
     httpApi.addRoutes({
       path: "/{proxy+}",
-      methods: [HttpMethod.ANY],
+      methods: [ApiGatewayV2HttpMethod.ANY],
       integration: apiIntegration,
     });
 
@@ -308,7 +313,7 @@ export class MattisStack extends Stack {
 
       httpApi.addRoutes({
         path: "/_next/image",
-        methods: [HttpMethod.GET],
+        methods: [ApiGatewayV2HttpMethod.ANY],
         integration: imageIntegration,
       });
     }

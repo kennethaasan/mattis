@@ -2,6 +2,7 @@ import { beforeEach, expect, test, vi } from "vitest";
 import type { NextRequest } from "next/server";
 
 import { ProblemDetailsSchema } from "@/lib/api/schemas";
+import { env } from "process";
 
 const mocks = vi.hoisted(() => {
   class MockNotFoundError extends Error {}
@@ -22,15 +23,9 @@ vi.mock("@/lib/db-client", () => ({
 
 const { POST } = await import("@/app/api/fettmattis/route");
 
-const MOCK_USER_ID = "00000000-0000-7000-0000-000000000070";
-vi.stubEnv("DEV_USER_ID", MOCK_USER_ID);
-
-const createRequest = (body: unknown, headers?: HeadersInit) => {
-  const requestHeaders = new Headers(headers);
-  requestHeaders.set("X-User-Id", MOCK_USER_ID);
-
+const createRequest = (body: unknown) => {
   return {
-    headers: requestHeaders,
+    headers: new Headers(),
     json: () => Promise.resolve(body),
   } as unknown as NextRequest;
 };
@@ -47,7 +42,6 @@ test("T013: POST /api/fettmattis returns 201 with the created record", async () 
       displayName: "Zia",
       active: true,
     },
-    roundId: "00000000-0000-7000-0000-000000000090",
     createdAt: new Date("2025-01-01T00:00:00.000Z"),
   };
 
@@ -55,7 +49,6 @@ test("T013: POST /api/fettmattis returns 201 with the created record", async () 
 
   const request = createRequest({
     player_id: record.player.id,
-    round_id: record.roundId,
   });
 
   const response = await POST(request);
@@ -69,13 +62,11 @@ test("T013: POST /api/fettmattis returns 201 with the created record", async () 
       display_name: record.player.displayName,
       active: true,
     },
-    round_id: record.roundId,
     created_at: record.createdAt.toISOString(),
   });
   expect(mocks.createFettMattis).toHaveBeenCalledWith({
     playerId: record.player.id,
-    roundId: record.roundId,
-    createdBy: MOCK_USER_ID,
+    createdBy: env.BASIC_AUTH_USER_ID,
   });
 });
 

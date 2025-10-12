@@ -25,7 +25,7 @@ async function main() {
   }
 
   const sql = neon(databaseUrl);
-  const db = drizzle(sql);
+  const db = drizzle({ client: sql, casing: "snake_case" });
 
   writeLine(process.stdout, "Starting database migration...");
   await migrate(db, { migrationsFolder: "drizzle" });

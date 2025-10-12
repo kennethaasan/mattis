@@ -1,7 +1,5 @@
 import type { NextRequest } from "next/server";
 import { NextResponse } from "next/server";
-
-import { env } from "@/env";
 import { badRequest, createProblemResponse } from "@/lib/api/problem-details";
 import { FettMattisCreateSchema } from "@/lib/api/schemas";
 import { authenticateHeaders } from "@/lib/auth/basic-auth";
@@ -10,16 +8,6 @@ import {
   NotFoundError,
   createFettMattis,
 } from "@/lib/db-client";
-
-const getUserId = (req: NextRequest, fallbackUserId: string): string => {
-  return (
-    req.headers.get("x-authenticated-user-id") ??
-    req.headers.get("x-user-id") ??
-    fallbackUserId ??
-    env.BASIC_AUTH_USER_ID ??
-    env.DEV_USER_ID
-  );
-};
 
 /**
  * POST /api/fettmattis
@@ -31,7 +19,7 @@ export async function POST(req: NextRequest) {
     return authResult.response;
   }
 
-  const userId = getUserId(req, authResult.userId);
+  const userId = authResult.userId;
 
   try {
     let body: unknown;
@@ -50,11 +38,10 @@ export async function POST(req: NextRequest) {
       );
     }
 
-    const { player_id: playerId, round_id: roundId } = validatedData.data;
+    const { player_id: playerId } = validatedData.data;
 
     const newFettmattis = await createFettMattis({
       playerId,
-      roundId,
       createdBy: userId,
     });
 
@@ -87,13 +74,11 @@ export async function POST(req: NextRequest) {
 function toFettMattisResponse(record: {
   id: string;
   player: { id: string; displayName: string; active: boolean };
-  roundId: string | null;
   createdAt: Date;
 }) {
   return {
     id: record.id,
     player: toPlayerResponse(record.player),
-    round_id: record.roundId,
     created_at: record.createdAt.toISOString(),
   };
 }
