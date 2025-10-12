@@ -16,5 +16,5 @@ AGENT QUICK REFERENCE
 14. Adding deps: maintain engines; after adding, run npm run lint && npm run tsc && npm test.
 15. Database (drizzle): generate/migrate with db:generate, db:migrate. All seeding handled by npm run seed command.
 16. Never modify generated or ignored paths (dist/, reports/, migrations/, .next/). Commit messages follow Conventional Commits (feat|fix|docs|refactor|test|chore|build|ci|perf|revert).
-17. NEVER commit or stage changes without asking
-18. Use git mv when moving/renaming files to preserve git history
+17. Use git mv when moving/renaming files to preserve git history
+18. The canonical API contract lives at /openapi.yaml — keep it in sync when backend behaviour changes.

@@ -1,4 +1,4 @@
-import { asc, eq, inArray, isNull, sql } from "drizzle-orm";
+import { asc, desc, eq, inArray, isNull, sql } from "drizzle-orm";
 import type { SQL } from "drizzle-orm";
 import { db } from "@/lib/db/db";
 import {
@@ -391,6 +391,27 @@ export async function getRoundById(roundId: string): Promise<RoundRecord> {
 
   if (!round || round.deletedAt) {
     throw new NotFoundError("Round not found.");
+  }
+
+  return round;
+}
+
+export async function getMostRecentRound(): Promise<RoundRecord | null> {
+  const [latest] = await db
+    .select({ id: rounds.id })
+    .from(rounds)
+    .where(isNull(rounds.deletedAt))
+    .orderBy(desc(rounds.createdAt))
+    .limit(1);
+
+  if (!latest) {
+    return null;
+  }
+
+  const round = await loadRound(db, latest.id);
+
+  if (!round || round.deletedAt) {
+    return null;
   }
 
   return round;

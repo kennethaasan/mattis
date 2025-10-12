@@ -35,6 +35,14 @@ export function RoundForm({ onSubmit, players, initialData }: RoundFormProps) {
   }, [initialData?.loser_id, initialData?.participant_ids]);
 
   useEffect(() => {
+    const validPlayerIds = new Set(players.map((player) => player.id));
+
+    setParticipantIds((current) =>
+      current.filter((participantId) => validPlayerIds.has(participantId)),
+    );
+  }, [players]);
+
+  useEffect(() => {
     if (loserId && !participantIds.includes(loserId)) {
       setLoserId("");
     }

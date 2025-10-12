@@ -1,4 +1,4 @@
-name: Build and Validate
+name: Continuous Integration
 
 on:
   push:
@@ -25,7 +25,7 @@ defaults:
 
 jobs:
   quality-checks:
-    name: Lint, Test & Validate Terraform
+    name: Lint, Type Check, Tests, Formatting, and Terraform quality checks
     runs-on: ubuntu-latest
     timeout-minutes: 20
 
@@ -46,6 +46,10 @@ jobs:
       - name: Install dependencies
         run: npm ci
 
+      - name: Install infra dependencies
+        run: npm ci
+        working-directory: infra
+
       - name: Formatting Check (Prettier)
         run: npm run prettier:check
         timeout-minutes: 3
@@ -62,20 +66,14 @@ jobs:
         run: npm test
         timeout-minutes: 6
 
+      - name: Infra Build (PR only)
+        if: github.event_name == 'pull_request'
+        run: npm run build
+        working-directory: infra
+
       - name: Dependency Review
         if: github.event_name == 'pull_request'
         uses: actions/dependency-review-action@v4
-
-      - name: Create OpenNext stub bundle
-        run: |
-          mkdir -p .open-next/server-function
-          cat <<'JS' > .open-next/server-function/index.mjs
-          export const handler = async () => ({
-            statusCode: 200,
-            headers: { 'content-type': 'text/plain' },
-            body: 'ok',
-          });
-          JS
 
       - name: Setup Terraform
         uses: hashicorp/setup-terraform@v3
@@ -108,39 +106,70 @@ jobs:
         with:
           scan-type: config
           scan-ref: iac
-          exit-code: '1'
+          exit-code: "1"
           ignore-unfixed: true
           severity: HIGH,CRITICAL
           skip-dirs: iac/.terraform
 
-  # e2e-tests:
-  #   name: Playwright E2E (Chromium)
-  #   runs-on: ubuntu-latest
-  #   timeout-minutes: 25
-  #   needs: quality-checks
-  #   permissions:
-  #     contents: read
-  #   steps:
-  #     - name: Checkout repository
-  #       uses: actions/checkout@v4
-  #       with:
-  #         fetch-depth: 1
+  e2e-tests:
+    name: Playwright E2E (Chromium)
+    runs-on: ubuntu-latest
+    timeout-minutes: 25
+    needs: quality-checks
+    permissions:
+      contents: read
+    services:
+      postgres:
+        image: postgres:17
+        ports:
+          - 5432:5432
+        env:
+          POSTGRES_DB: mattis_db
+          POSTGRES_USER: user
+          POSTGRES_PASSWORD: password
+        options: >-
+          --health-cmd "pg_isready -U user -d mattis_db"
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
+    env:
+      DATABASE_URL: postgresql://user:password@127.0.0.1:5432/mattis_db
+      BASIC_AUTH_USERNAME: admin
+      BASIC_AUTH_PASSWORD: admin
+      BASIC_AUTH_USER_ID: 00000000-0000-7000-8000-000000000000
+      PLAYWRIGHT_BASE_URL: http://127.0.0.1:3000
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 1
 
-  #     - name: Setup Node.js 22.x
-  #       uses: actions/setup-node@v4
-  #       with:
-  #         node-version: 22.x
-  #         cache: npm
-  #         cache-dependency-path: |
-  #           package-lock.json
+      - name: Setup Node.js 22.x
+        uses: actions/setup-node@v4
+        with:
+          node-version: 22.x
+          cache: npm
+          cache-dependency-path: |
+            package-lock.json
+            infra/package-lock.json
 
-  #     - name: Install dependencies
-  #       run: npm ci
+      - name: Install dependencies
+        run: npm ci
 
-  #     - name: Install Playwright browsers
-  #       run: npx playwright install --with-deps chromium
+      - name: Create environment file
+        run: |
+          cat <<EOF > .env
+          DATABASE_URL=${DATABASE_URL}
+          BASIC_AUTH_USERNAME=${BASIC_AUTH_USERNAME}
+          BASIC_AUTH_PASSWORD=${BASIC_AUTH_PASSWORD}
+          BASIC_AUTH_USER_ID=${BASIC_AUTH_USER_ID}
+          EOF
 
-  #     - name: Run Playwright tests
-  #       env:
-  #         PLAYWRIGHT_BASE_URL: http://127.0.0.1:3000
-  #       run: npm run test:e2e
+      - name: Seed database
+        run: npm run seed
+
+      - name: Install Playwright browsers
+        run: npx playwright install --with-deps chromium
+
+      - name: Run Playwright tests
+        run: npm run test:e2e

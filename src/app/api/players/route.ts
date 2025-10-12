@@ -2,6 +2,7 @@ import { NextResponse } from "next/server";
 
 import { createProblemResponse } from "@/lib/api/problem-details";
 import { PlayerCreateSchema } from "@/lib/api/schemas";
+import { toPlayerResponse } from "@/lib/api/response-helpers";
 import { authenticateHeaders } from "@/lib/auth/basic-auth";
 import { createPlayer, listPlayers, ConflictError } from "@/lib/db-client";
 
@@ -59,16 +60,4 @@ export async function GET(_req: Request) {
       detail: error instanceof Error ? error.message : undefined,
     });
   }
-}
-
-function toPlayerResponse(player: {
-  id: string;
-  displayName: string;
-  active: boolean;
-}) {
-  return {
-    id: player.id,
-    display_name: player.displayName,
-    active: player.active,
-  };
 }

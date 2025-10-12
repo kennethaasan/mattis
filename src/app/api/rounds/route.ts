@@ -2,6 +2,7 @@ import type { NextRequest } from "next/server";
 import { NextResponse } from "next/server";
 import { badRequest, createProblemResponse } from "@/lib/api/problem-details";
 import { RoundCreateSchema } from "@/lib/api/schemas";
+import { toRoundResponse } from "@/lib/api/response-helpers";
 import { authenticateHeaders } from "@/lib/auth/basic-auth";
 import { ConflictError, NotFoundError, createRound } from "@/lib/db-client";
 
@@ -73,30 +74,4 @@ export async function POST(req: NextRequest) {
       detail: "Internal Server Error",
     });
   }
-}
-
-function toRoundResponse(round: {
-  id: string;
-  createdAt: Date;
-  participants: { id: string; displayName: string; active: boolean }[];
-  loser: { id: string; displayName: string; active: boolean };
-}) {
-  return {
-    id: round.id,
-    created_at: round.createdAt.toISOString(),
-    participants: round.participants.map(toPlayerResponse),
-    loser: toPlayerResponse(round.loser),
-  };
-}
-
-function toPlayerResponse(player: {
-  id: string;
-  displayName: string;
-  active: boolean;
-}) {
-  return {
-    id: player.id,
-    display_name: player.displayName,
-    active: player.active,
-  };
 }
