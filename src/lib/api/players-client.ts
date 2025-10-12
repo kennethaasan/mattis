@@ -6,6 +6,11 @@ export interface PlayersApiRecord {
   active: boolean;
 }
 
+export interface PlayerUpdatePayload {
+  display_name?: string;
+  active?: boolean;
+}
+
 export const PLAYERS_QUERY_KEY = ["players"] as const satisfies QueryKey;
 
 export async function fetchPlayers(): Promise<PlayersApiRecord[]> {
@@ -51,3 +56,29 @@ export const resolvePlayerError = (payload: unknown): string | undefined => {
 
   return undefined;
 };
+
+export async function updatePlayer(
+  playerId: string,
+  payload: PlayerUpdatePayload,
+): Promise<PlayersApiRecord> {
+  const response = await fetch(`/api/players/${playerId}`, {
+    method: "PUT",
+    headers: {
+      "Content-Type": "application/json",
+    },
+    body: JSON.stringify(payload),
+  });
+
+  if (!response.ok) {
+    let detail: string | undefined;
+    try {
+      detail = resolvePlayerError(await response.json());
+    } catch {
+      detail = undefined;
+    }
+
+    throw new Error(detail ?? "We couldn't update the player right now.");
+  }
+
+  return (await response.json()) as PlayersApiRecord;
+}

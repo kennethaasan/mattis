@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 
 import { PlayerUpdateSchema, uuidSchema } from "@/lib/api/schemas";
+import { toPlayerResponse } from "@/lib/api/response-helpers";
 import {
   ConflictError,
   NotFoundError,
@@ -106,16 +107,4 @@ export async function PUT(
       { status: 500 },
     );
   }
-}
-
-function toPlayerResponse(player: {
-  id: string;
-  displayName: string;
-  active: boolean;
-}) {
-  return {
-    id: player.id,
-    display_name: player.displayName,
-    active: player.active,
-  };
 }

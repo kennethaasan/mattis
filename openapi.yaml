@@ -134,6 +134,23 @@ paths:
         "400":
           $ref: "#/components/responses/BadRequest"
 
+  /rounds/latest:
+    get:
+      summary: Get Most Recent Round
+      description: Returns the most recently created round when available.
+      operationId: getLatestRound
+      tags:
+        - Rounds
+      responses:
+        "200":
+          description: The most recent round or null when no rounds exist.
+          content:
+            application/json:
+              schema:
+                oneOf:
+                  - $ref: "#/components/schemas/Round"
+                  - type: "null"
+
   /rounds/{roundId}:
     get:
       summary: Get Round Details
