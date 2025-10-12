@@ -115,7 +115,6 @@ export default function RoundsPage() {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
-          "X-User-Id": DEFAULT_USER_ID,
         },
         body: JSON.stringify(payload),
       });
