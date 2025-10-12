@@ -1,15 +1,20 @@
 name: Deploy to AWS
 
 on:
-  push:
+  workflow_run:
+    workflows:
+      - Build and Validate
     branches:
       - main
+    types:
+      - completed
   workflow_dispatch:
     inputs:
       ref:
         description: Git ref to deploy (defaults to main)
         required: false
         type: string
+        default: main
 
 permissions:
   contents: read
@@ -29,7 +34,7 @@ jobs:
     name: Deploy Mattis Stack
     runs-on: ubuntu-latest
     timeout-minutes: 40
-    if: github.ref == 'refs/heads/main' || github.event_name == 'workflow_dispatch'
+    if: github.event_name == 'workflow_dispatch' || (github.event_name == 'workflow_run' && github.event.workflow_run.conclusion == 'success')
     environment:
       name: production
     steps:
@@ -37,16 +42,14 @@ jobs:
         uses: actions/checkout@v4
         with:
           fetch-depth: 1
-          ref: ${{ inputs.ref || github.ref }}
+          ref: ${{ github.event_name == 'workflow_dispatch' && github.event.inputs.ref || github.event.workflow_run.head_sha }}
 
       - name: Setup Node.js 22.x
         uses: actions/setup-node@v4
         with:
           node-version: 22.x
           cache: npm
-          cache-dependency-path: |
-            package-lock.json
-            infra/package-lock.json
+          cache-dependency-path: package-lock.json
 
       - name: Install web dependencies
         run: npm ci
@@ -57,13 +60,10 @@ jobs:
       - name: Bundle Next.js with OpenNext
         run: npx open-next@latest build
 
-      - name: Install infrastructure dependencies
-        run: npm ci
-        working-directory: infra
-
-      - name: Build CDK application
-        run: npm run build
-        working-directory: infra
+      - name: Setup Terraform
+        uses: hashicorp/setup-terraform@v3
+        with:
+          terraform_version: 1.13.3
 
       - name: Configure AWS credentials
         uses: aws-actions/configure-aws-credentials@v4
@@ -72,10 +72,39 @@ jobs:
           aws-region: ${{ vars.AWS_REGION }}
           role-session-name: mattisDeploySession
 
-      - name: Deploy AWS infrastructure
-        run: npx cdk deploy MattisStack --app "node dist/bin/infra.js" --require-approval never --context stage=prod
+      - name: Terraform init
+        working-directory: iac
         env:
-          CI: true
-          DEPLOY_ENV: prod
-          CDK_NEW_BOOTSTRAP: 1
-        working-directory: infra
+          TF_VAR_neon_api_key: ${{ secrets.NEON_API_KEY }}
+        run: terraform init
+
+      - name: Terraform apply
+        working-directory: iac
+        env:
+          TF_VAR_neon_api_key: ${{ secrets.NEON_API_KEY }}
+          TF_VAR_lambda_source_dir: ../.open-next/server-function
+        run: terraform apply -auto-approve
+
+      - name: Capture Terraform outputs
+        id: tf_outputs
+        working-directory: iac
+        env:
+          TF_VAR_neon_api_key: ${{ secrets.NEON_API_KEY }}
+        run: |
+          echo "database_url=$(terraform output -raw database_url)" >> "$GITHUB_OUTPUT"
+          echo "assets_bucket=$(terraform output -raw assets_bucket_name)" >> "$GITHUB_OUTPUT"
+
+      - name: Upload static assets
+        if: steps.tf_outputs.outputs.assets_bucket != ''
+        run: aws s3 sync .open-next/assets "s3://${{ steps.tf_outputs.outputs.assets_bucket }}" --delete
+
+      - name: Write environment for migrations
+        run: |
+          cat <<'ENV' > .env
+          DATABASE_URL="${{ steps.tf_outputs.outputs.database_url }}"
+          ENV
+
+      - name: Run database migrations
+        env:
+          DATABASE_URL: ${{ steps.tf_outputs.outputs.database_url }}
+        run: npm run db:migrate
