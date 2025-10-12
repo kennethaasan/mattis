@@ -59,7 +59,7 @@ test("T025: GET /api/rounds/latest returns the most recent round", async () => {
     },
   });
 
-  const response = await GET(new Request("http://localhost/api/rounds/latest"));
+  const response = await GET();
 
   expect(response.status).toBe(200);
   const payload = await response.json();
@@ -69,7 +69,7 @@ test("T025: GET /api/rounds/latest returns the most recent round", async () => {
 test("T025: GET /api/rounds/latest returns null when there are no rounds", async () => {
   mocks.getMostRecentRound.mockResolvedValueOnce(null);
 
-  const response = await GET(new Request("http://localhost/api/rounds/latest"));
+  const response = await GET();
 
   expect(response.status).toBe(200);
   const payload = await response.json();
@@ -79,7 +79,7 @@ test("T025: GET /api/rounds/latest returns null when there are no rounds", async
 test("T025: GET /api/rounds/latest returns 500 on database errors", async () => {
   mocks.getMostRecentRound.mockRejectedValueOnce(new Error("db offline"));
 
-  const response = await GET(new Request("http://localhost/api/rounds/latest"));
+  const response = await GET();
 
   expect(response.status).toBe(500);
   const payload = await response.json();
