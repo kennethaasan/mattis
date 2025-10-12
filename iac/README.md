@@ -12,12 +12,12 @@ This directory contains the Terraform configuration that provisions the Mattis p
 
 The configuration expects the following values (see `variables.tf` for defaults):
 
-| Variable | Description |
-| --- | --- |
-| `neon_api_key` | Neon API key with permissions to manage projects. |
-| `aws_region` | Region for Lambda (defaults to `eu-north-1`). |
+| Variable        | Description                                           |
+| --------------- | ----------------------------------------------------- |
+| `neon_api_key`  | Neon API key with permissions to manage projects.     |
+| `aws_region`    | Region for Lambda (defaults to `eu-north-1`).         |
 | `parent_domain` | Public Route53 hosted zone (defaults to `aasan.dev`). |
-| `app_domain` | Application domain (defaults to `mattis.aasan.dev`). |
+| `app_domain`    | Application domain (defaults to `mattis.aasan.dev`).  |
 
 Other settings—such as Lambda runtime parameters, CloudFront pricing tier, and resource tagging—can be overridden as needed.
 
@@ -31,4 +31,3 @@ Other settings—such as Lambda runtime parameters, CloudFront pricing tier, and
 6. Use the CloudFront domain or Route53 record for application traffic, and run `npm run db:migrate` with the generated `database_url` output.
 
 > **Note**: If you use a different Terraform Cloud organisation or workspace, update [`versions.tf`](./versions.tf) accordingly.
-
