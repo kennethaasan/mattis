@@ -12,12 +12,12 @@ terraform {
   required_providers {
     aws = {
       source  = "hashicorp/aws"
-      version = "~> 5.74"
+      version = "~> 6.16"
     }
 
     neon = {
-      source  = "neondatabase/neon"
-      version = "~> 0.11"
+      source  = "kislerdm/neon"
+      version = ">= 0.1.0"
     }
 
     random = {
