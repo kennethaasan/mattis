@@ -48,6 +48,7 @@ export default tseslint.config(
     },
   },
   globalIgnores([
+    "iac/.terraform/",
     "eslint.config.mjs",
     "next-env.d.ts",
     ".next/",
