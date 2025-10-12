@@ -12,6 +12,7 @@ import { drizzle } from "drizzle-orm/pglite";
 import { PGlite } from "@electric-sql/pglite";
 import * as schema from "@/lib/db/schema";
 
+// This is based on https://github.com/drizzle-team/drizzle-orm/issues/4205
 vi.mock("@/lib/db/db", async () => {
   const { createRequire } =
     await vi.importActual<typeof import("node:module")>("node:module");
@@ -35,6 +36,7 @@ vi.mock("@/lib/db/db", async () => {
 
   // now we can seed some data
   const { env } = await import("@/env");
+
   await db.insert(schema.users).values([
     {
       id: env.BASIC_AUTH_USER_ID,
