@@ -11,11 +11,7 @@ export default defineConfig({
         test: {
           name: "node",
           environment: "node",
-          include: [
-            "src/**/*.test.ts",
-            "tests/**/*.test.ts",
-            "infra/**/*.test.ts",
-          ],
+          include: ["src/**/*.test.ts", "tests/**/*.test.ts"],
         },
       },
       // React tests with jsdom
@@ -37,7 +33,7 @@ export default defineConfig({
     ],
     coverage: {
       enabled: true,
-      include: ["src/**/*.{ts,tsx}", "infra/**/*.ts"],
+      include: ["src/**/*.{ts,tsx}"],
       thresholds: {
         global: {
           statements: 20,

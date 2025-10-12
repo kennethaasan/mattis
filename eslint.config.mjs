@@ -53,7 +53,6 @@ export default tseslint.config(
     ".next/",
     "coverage/**/*",
     "reports/**/*",
-    "infra/dist/**/*",
     ".prettierrc.cjs",
     "scripts/manual-validation.mjs",
     "postcss.config.mjs",
