@@ -89,7 +89,7 @@ module "opennext" {
   source  = "nhs-england-tools/opennext/aws"
   version = "~> 1.0.6"
 
-  prefix              = var.app_name
+  prefix              = local.stack_name
   opennext_build_path = var.opennext_build_path
   region              = var.aws_region
   hosted_zone_id      = data.aws_route53_zone.zone.zone_id

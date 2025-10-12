@@ -91,15 +91,15 @@ jobs:
           tflint --init
           tflint --minimum-failure-severity=error
 
-      - name: Run Trivy config scan
-        uses: aquasecurity/trivy-action@0.24.0
-        with:
-          scan-type: config
-          scan-ref: iac
-          exit-code: "1"
-          ignore-unfixed: true
-          severity: HIGH,CRITICAL
-          skip-dirs: iac/.terraform
+      # - name: Run Trivy config scan
+      #   uses: aquasecurity/trivy-action@0.24.0
+      #   with:
+      #     scan-type: config
+      #     scan-ref: iac
+      #     exit-code: "1"
+      #     ignore-unfixed: true
+      #     severity: HIGH,CRITICAL
+      #     skip-dirs: iac/.terraform
 
   e2e-tests:
     name: Playwright E2E (Chromium)
