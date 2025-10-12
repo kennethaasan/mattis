@@ -2,13 +2,14 @@
 
 import * as React from "react";
 import Link from "next/link";
-import { usePathname } from "next/navigation";
+import { usePathname, useRouter } from "next/navigation";
 import type { Route } from "next";
 import { ArrowRight, Menu } from "lucide-react";
 
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
 import { ModeToggle } from "@/components/mode-toggle";
+import { useAuth } from "@/contexts/AuthContext";
 
 const navLinks = [
   { href: "/", label: "Oversikt" },
@@ -18,12 +19,33 @@ const navLinks = [
 ] as const satisfies readonly { href: Route; label: string }[];
 
 export function SiteHeader() {
+  const router = useRouter();
   const pathname = usePathname();
   const [isMenuOpen, setIsMenuOpen] = React.useState(false);
+  const { authorization, isReady, logout } = useAuth();
+  const loginHref = `/login?next=${encodeURIComponent(pathname)}`;
 
   React.useEffect(() => {
     setIsMenuOpen(false);
   }, [pathname]);
+
+  const handleLogout = () => {
+    logout();
+    router.push("/login");
+  };
+
+  let authControl: React.ReactNode = null;
+  if (isReady) {
+    authControl = authorization ? (
+      <Button variant="ghost" size="sm" onClick={handleLogout}>
+        Logg ut
+      </Button>
+    ) : (
+      <Button variant="default" size="sm" asChild>
+        <Link href={loginHref}>Logg inn</Link>
+      </Button>
+    );
+  }
 
   return (
     <header className="border-border/60 bg-background/75 sticky top-0 z-50 border-b backdrop-blur-xl">
@@ -65,6 +87,7 @@ export function SiteHeader() {
         </div>
         <div className="flex items-center gap-2">
           <ModeToggle />
+          {authControl}
           <Button
             variant="outline"
             size="sm"

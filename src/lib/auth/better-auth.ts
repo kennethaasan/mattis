@@ -1,7 +1,13 @@
-import { Buffer } from "node:buffer";
 import type { NextRequest } from "next/server";
 import { NextResponse } from "next/server";
+
 import { env } from "@/env";
+import {
+  BASIC_AUTH_PREFIX,
+  createBasicToken,
+  decodeBasicToken,
+  extractBasicToken,
+} from "@/lib/auth/credentials";
 
 export interface AuthSuccess {
   ok: true;
@@ -17,9 +23,9 @@ export interface AuthFailure {
 export type AuthResult = AuthSuccess | AuthFailure;
 
 const BASIC_AUTH_REALM = "Mattis API";
-const AUTHORIZATION_PREFIX = "Basic ";
+export const AUTHORIZATION_PREFIX = BASIC_AUTH_PREFIX;
 
-export function enforceBasicAuth(req: NextRequest): AuthResult {
+export function enforceBetterAuth(req: NextRequest): AuthResult {
   return authenticateHeaders(req.headers);
 }
 
@@ -33,29 +39,17 @@ export function authenticateHeaders(headers: Headers): AuthResult {
   }
 
   const header = headers.get("authorization");
-  if (!header?.startsWith(AUTHORIZATION_PREFIX)) {
+  const encodedCredentials = extractBasicToken(header);
+  if (!encodedCredentials) {
     return unauthorized();
   }
 
-  const encodedCredentials = header.slice(AUTHORIZATION_PREFIX.length).trim();
-  if (encodedCredentials.length === 0) {
+  const decoded = decodeBasicToken(encodedCredentials.trim());
+  if (!decoded) {
     return unauthorized();
   }
 
-  let decoded: string;
-  try {
-    decoded = Buffer.from(encodedCredentials, "base64").toString("utf8");
-  } catch {
-    return unauthorized();
-  }
-
-  const separatorIndex = decoded.indexOf(":");
-  if (separatorIndex === -1) {
-    return unauthorized();
-  }
-
-  const username = decoded.slice(0, separatorIndex);
-  const password = decoded.slice(separatorIndex + 1);
+  const { username, password } = decoded;
 
   if (
     username !== env.BASIC_AUTH_USERNAME ||
@@ -79,4 +73,11 @@ function unauthorized(): AuthFailure {
   });
   response.headers.set("WWW-Authenticate", `Basic realm="${BASIC_AUTH_REALM}"`);
   return { ok: false, response };
+}
+
+export function buildBasicAuthorization(
+  username: string,
+  password: string,
+): string {
+  return createBasicToken(username, password);
 }

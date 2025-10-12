@@ -1,6 +1,12 @@
 import "dotenv/config";
-import { Client } from "pg";
-import { env } from "@/env";
+import type { NodePgDatabase } from "drizzle-orm/node-postgres";
+import { drizzle } from "drizzle-orm/node-postgres";
+import { Pool as PostgresPool } from "pg";
+import * as schema from "@/lib/db/schema";
+import {
+  ensureEnvBasicAuthUser,
+  resolveEnvBasicAuthUser,
+} from "@/scripts/utils/basic-auth-user";
 
 interface PlayerSeed {
   key: string;
@@ -50,7 +56,8 @@ const formatError = (error: unknown): string => {
 };
 
 const currentYear = new Date().getUTCFullYear();
-const devUserId = env.BASIC_AUTH_USER_ID;
+const envAuthUser = resolveEnvBasicAuthUser();
+const devUserId = envAuthUser.id;
 
 const playerSeeds: PlayerSeed[] = [
   {
@@ -140,6 +147,8 @@ const fettMattisSeeds: FettMattisSeed[] = [
   },
 ];
 
+type SeedDatabase = NodePgDatabase<typeof schema>;
+
 async function seed(): Promise<void> {
   const databaseUrl = process.env.DATABASE_URL;
 
@@ -147,98 +156,94 @@ async function seed(): Promise<void> {
     throw new Error("DATABASE_URL must be set before running the seed script.");
   }
 
-  const client = new Client({ connectionString: databaseUrl });
-  await client.connect();
+  const pool = new PostgresPool({ connectionString: databaseUrl });
+  const db = drizzle({ client: pool, schema, casing: "snake_case" });
 
   writeLine(process.stdout, "Starting database seed...");
 
-  let transactionStarted = false;
-
   try {
-    await client.query("BEGIN");
-    transactionStarted = true;
+    await db.transaction(async (tx) => {
+      await resetTables(tx);
+      await ensureAuthUser(tx);
+      const players = await insertPlayers(tx);
+      const rounds = await insertRounds(tx, players);
+      await insertFettMattis(tx, players, rounds);
+    });
 
-    await resetTables(client);
-    await ensureDevUser(client);
-    const players = await insertPlayers(client);
-    const rounds = await insertRounds(client, players);
-    await insertFettMattis(client, players, rounds);
-
-    await client.query("COMMIT");
     writeLine(process.stdout, "Database seed completed successfully.");
   } catch (error: unknown) {
-    if (transactionStarted) {
-      try {
-        await client.query("ROLLBACK");
-      } catch (rollbackError: unknown) {
-        writeLine(
-          process.stderr,
-          `Rollback failed: ${formatError(rollbackError)}`,
-        );
-      }
-    }
-
     writeLine(process.stderr, `Database seed failed: ${formatError(error)}`);
     process.exitCode = 1;
   } finally {
-    await client.end();
+    await pool.end();
   }
 }
 
-async function resetTables(client: Client): Promise<void> {
+async function resetTables(db: SeedDatabase): Promise<void> {
   writeLine(process.stdout, "Clearing existing data...");
-  await client.query("DELETE FROM fettmattis");
-  await client.query("DELETE FROM round_loser");
-  await client.query("DELETE FROM round_participants");
-  await client.query("DELETE FROM rounds");
-  await client.query("DELETE FROM players");
-  await client.query("DELETE FROM users");
+  await db.delete(schema.fettmattis);
+  await db.delete(schema.roundLoser);
+  await db.delete(schema.roundParticipants);
+  await db.delete(schema.rounds);
+  await db.delete(schema.players);
+  await db.delete(schema.users);
 }
 
-async function ensureDevUser(client: Client): Promise<void> {
-  const username = `dev-${devUserId.slice(0, 8)}`;
+async function ensureAuthUser(db: SeedDatabase): Promise<void> {
+  const ensuredUser = await ensureEnvBasicAuthUser({
+    async upsert(user) {
+      const now = new Date();
+      await db
+        .insert(schema.users)
+        .values({
+          id: user.id,
+          username: user.username,
+          createdAt: now,
+          updatedAt: now,
+        })
+        .onConflictDoUpdate({
+          target: schema.users.id,
+          set: {
+            username: user.username,
+            updatedAt: now,
+          },
+        });
+    },
+  });
 
-  await client.query(
-    `
-      INSERT INTO users (id, username)
-      VALUES ($1, $2)
-      ON CONFLICT (id) DO UPDATE SET username = EXCLUDED.username, updated_at = NOW()
-    `,
-    [devUserId, username],
+  writeLine(
+    process.stdout,
+    `Ensured authentication user ${ensuredUser.username} (${ensuredUser.id}).`,
   );
-
-  writeLine(process.stdout, `Ensured developer user ${username}.`);
 }
 
 async function insertPlayers(
-  client: Client,
+  db: SeedDatabase,
 ): Promise<Map<string, PlayerRecord>> {
   writeLine(process.stdout, "Inserting players...");
   const playerMap = new Map<string, PlayerRecord>();
 
   for (const player of playerSeeds) {
-    const { rows } = await client.query<{ id: string; display_name: string }>(
-      `
-        INSERT INTO players (id, display_name, user_id, active)
-        VALUES ($1, $2, $3, $4)
-        RETURNING id, display_name
-      `,
-      [
-        player.id,
-        player.displayName,
-        player.userId ?? null,
-        player.active ?? true,
-      ],
-    );
+    const [created] = await db
+      .insert(schema.players)
+      .values({
+        id: player.id,
+        displayName: player.displayName,
+        userId: player.userId ?? null,
+        active: player.active ?? true,
+      })
+      .returning({
+        id: schema.players.id,
+        displayName: schema.players.displayName,
+      });
 
-    const [created] = rows;
     if (!created) {
       throw new Error(`Failed to insert player ${player.displayName}.`);
     }
 
     playerMap.set(player.key, {
       id: created.id,
-      displayName: created.display_name,
+      displayName: created.displayName,
     });
 
     writeLine(process.stdout, `  • ${player.displayName}`);
@@ -248,7 +253,7 @@ async function insertPlayers(
 }
 
 async function insertRounds(
-  client: Client,
+  db: SeedDatabase,
   players: Map<string, PlayerRecord>,
 ): Promise<Map<string, RoundRecord>> {
   writeLine(process.stdout, "Recording rounds...");
@@ -272,31 +277,26 @@ async function insertRounds(
       );
     }
 
-    await client.query(
-      `
-        INSERT INTO rounds (id, created_by, created_at, deleted_at)
-        VALUES ($1, $2, $3, NULL)
-      `,
-      [round.id, round.createdBy, round.createdAt.toISOString()],
-    );
+    await db.insert(schema.rounds).values({
+      id: round.id,
+      createdBy: round.createdBy,
+      createdAt: round.createdAt,
+      deletedAt: null,
+    });
 
-    for (const participantId of participantIds) {
-      await client.query(
-        `
-          INSERT INTO round_participants (round_id, player_id)
-          VALUES ($1, $2)
-        `,
-        [round.id, participantId],
+    if (participantIds.length > 0) {
+      await db.insert(schema.roundParticipants).values(
+        participantIds.map((participantId) => ({
+          roundId: round.id,
+          playerId: participantId,
+        })),
       );
     }
 
-    await client.query(
-      `
-        INSERT INTO round_loser (round_id, loser_id)
-        VALUES ($1, $2)
-      `,
-      [round.id, loser.id],
-    );
+    await db.insert(schema.roundLoser).values({
+      roundId: round.id,
+      loserId: loser.id,
+    });
 
     roundsMap.set(round.key, { id: round.id });
     writeLine(process.stdout, `  • ${round.label}`);
@@ -306,7 +306,7 @@ async function insertRounds(
 }
 
 async function insertFettMattis(
-  client: Client,
+  db: SeedDatabase,
   players: Map<string, PlayerRecord>,
   rounds: Map<string, RoundRecord>,
 ): Promise<void> {
@@ -323,13 +323,13 @@ async function insertFettMattis(
       throw new Error(`Fettmattis round ${entry.round} not found.`);
     }
 
-    await client.query(
-      `
-        INSERT INTO fettmattis (id, player_id, created_by, created_at, revoked_at)
-        VALUES ($1, $2, $3, $4, NULL)
-      `,
-      [entry.id, player.id, entry.createdBy, entry.createdAt.toISOString()],
-    );
+    await db.insert(schema.fettmattis).values({
+      id: entry.id,
+      playerId: player.id,
+      createdBy: entry.createdBy,
+      createdAt: entry.createdAt,
+      revokedAt: null,
+    });
 
     writeLine(process.stdout, `  • ${player.displayName}`);
   }

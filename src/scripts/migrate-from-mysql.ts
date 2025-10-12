@@ -7,6 +7,7 @@ import { drizzle } from "drizzle-orm/node-postgres";
 import { Pool as PostgresPool } from "pg";
 import * as schema from "@/lib/db/schema";
 import { generateId } from "@/lib/utils/id";
+import { ensureEnvBasicAuthUser } from "@/scripts/utils/basic-auth-user";
 
 type TargetDatabase = NodePgDatabase<typeof schema>;
 type UserInsertRow = typeof schema.users.$inferInsert;
@@ -192,6 +193,7 @@ async function migrateData(
   const warnings: string[] = [];
 
   await db.transaction(async (tx) => {
+    await ensureEnvironmentAuthUser(tx);
     await ensureMigrationUser(tx, options);
     await migrateLegacyUsers(tx, sourceData.users);
     const playerWarnings = await migrateLegacyPlayers(
@@ -240,6 +242,30 @@ async function ensureMigrationUser(
   };
 
   await tx.insert(schema.users).values(migrationUser).onConflictDoNothing();
+}
+
+async function ensureEnvironmentAuthUser(tx: TargetDatabase): Promise<void> {
+  const now = new Date();
+
+  await ensureEnvBasicAuthUser({
+    async upsert(user) {
+      await tx
+        .insert(schema.users)
+        .values({
+          id: user.id,
+          username: user.username,
+          createdAt: now,
+          updatedAt: now,
+        })
+        .onConflictDoUpdate({
+          target: schema.users.id,
+          set: {
+            username: user.username,
+            updatedAt: now,
+          },
+        });
+    },
+  });
 }
 
 async function migrateLegacyUsers(

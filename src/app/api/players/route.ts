@@ -1,14 +1,17 @@
 import { NextResponse } from "next/server";
 
+import { finalizeResponse } from "@/lib/api/cors";
 import { createProblemResponse } from "@/lib/api/problem-details";
 import { PlayerCreateSchema } from "@/lib/api/schemas";
-import { authenticateHeaders } from "@/lib/auth/basic-auth";
+import { toApiPlayer } from "@/lib/api/serializers";
+import { validationErrorResponse } from "@/lib/api/validation";
+import { authenticateHeaders } from "@/lib/auth/better-auth";
 import { createPlayer, listPlayers, ConflictError } from "@/lib/db-client";
 
 export async function POST(req: Request) {
   const authResult = authenticateHeaders(req.headers);
   if (!authResult.ok) {
-    return authResult.response;
+    return finalizeResponse(req, authResult.response);
   }
 
   try {
@@ -16,9 +19,9 @@ export async function POST(req: Request) {
     const validation = PlayerCreateSchema.safeParse(body);
 
     if (!validation.success) {
-      return NextResponse.json(
-        { error: validation.error.issues },
-        { status: 400 },
+      return finalizeResponse(
+        req,
+        validationErrorResponse(validation.error.issues),
       );
     }
 
@@ -26,10 +29,13 @@ export async function POST(req: Request) {
 
     const newPlayer = await createPlayer({ displayName: display_name });
 
-    return NextResponse.json(toPlayerResponse(newPlayer), { status: 201 });
+    const response = NextResponse.json(toApiPlayer(newPlayer), {
+      status: 201,
+    });
+    return finalizeResponse(req, response);
   } catch (error) {
     if (error instanceof ConflictError) {
-      return NextResponse.json(
+      const response = NextResponse.json(
         {
           type: "about:blank",
           title: "Conflict",
@@ -38,37 +44,36 @@ export async function POST(req: Request) {
         },
         { status: 409 },
       );
+      return finalizeResponse(req, response);
     }
 
-    return createProblemResponse({
+    const response = createProblemResponse({
       status: 500,
       title: "Internal Server Error",
       detail: error instanceof Error ? error.message : undefined,
     });
+    return finalizeResponse(req, response);
   }
 }
 
-export async function GET(_req: Request) {
+export async function GET(req: Request) {
+  const authResult = authenticateHeaders(req.headers);
+  if (!authResult.ok) {
+    return finalizeResponse(req, authResult.response);
+  }
+
   try {
     const allPlayers = await listPlayers();
-    return NextResponse.json(allPlayers.map(toPlayerResponse));
+    return finalizeResponse(
+      req,
+      NextResponse.json(allPlayers.map(toApiPlayer)),
+    );
   } catch (error) {
-    return createProblemResponse({
+    const response = createProblemResponse({
       status: 500,
       title: "Internal Server Error",
       detail: error instanceof Error ? error.message : undefined,
     });
+    return finalizeResponse(req, response);
   }
-}
-
-function toPlayerResponse(player: {
-  id: string;
-  displayName: string;
-  active: boolean;
-}) {
-  return {
-    id: player.id,
-    display_name: player.displayName,
-    active: player.active,
-  };
 }

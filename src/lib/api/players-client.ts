@@ -8,9 +8,17 @@ export interface PlayersApiRecord {
 
 export const PLAYERS_QUERY_KEY = ["players"] as const satisfies QueryKey;
 
-export async function fetchPlayers(): Promise<PlayersApiRecord[]> {
+export async function fetchPlayers(
+  authorization?: string,
+): Promise<PlayersApiRecord[]> {
+  const headers: Record<string, string> = {};
+  if (authorization) {
+    headers.Authorization = authorization;
+  }
+
   const response = await fetch("/api/players", {
     cache: "no-store",
+    headers: Object.keys(headers).length > 0 ? headers : undefined,
   });
 
   if (!response.ok) {
@@ -21,33 +29,3 @@ export async function fetchPlayers(): Promise<PlayersApiRecord[]> {
 
   return (await response.json()) as PlayersApiRecord[];
 }
-
-export const resolvePlayerError = (payload: unknown): string | undefined => {
-  if (typeof payload !== "object" || payload === null) {
-    return undefined;
-  }
-
-  const candidate = payload as {
-    error?: unknown;
-    detail?: unknown;
-  };
-
-  if (Array.isArray(candidate.error)) {
-    for (const issue of candidate.error) {
-      if (
-        typeof issue === "object" &&
-        issue !== null &&
-        "message" in issue &&
-        typeof (issue as { message?: unknown }).message === "string"
-      ) {
-        return (issue as { message?: string }).message;
-      }
-    }
-  }
-
-  if (typeof candidate.detail === "string") {
-    return candidate.detail;
-  }
-
-  return undefined;
-};

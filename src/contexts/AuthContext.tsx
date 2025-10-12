@@ -1,6 +1,20 @@
 "use client";
 
-import { createContext, type ReactNode, useContext, useState } from "react";
+import {
+  createContext,
+  type ReactNode,
+  useContext,
+  useEffect,
+  useMemo,
+  useState,
+} from "react";
+
+import {
+  clearStoredAuth,
+  readStoredAuth,
+  storeAuthorizationToken,
+  writeStoredAuth,
+} from "@/lib/auth/storage";
 
 interface User {
   id: string;
@@ -9,7 +23,9 @@ interface User {
 
 interface AuthContextType {
   user: User | null;
-  login: (user: User) => void;
+  authorization: string | null;
+  isReady: boolean;
+  login: (payload: { user: User; token: string }) => void;
   logout: () => void;
 }
 
@@ -21,19 +37,46 @@ interface AuthProviderProps {
 
 export function AuthProvider({ children }: AuthProviderProps) {
   const [user, setUser] = useState<User | null>(null);
+  const [authorization, setAuthorization] = useState<string | null>(null);
+  const [isReady, setIsReady] = useState(false);
 
-  const login = (user: User) => {
-    setUser(user);
-  };
+  useEffect(() => {
+    const stored = readStoredAuth();
+    if (stored) {
+      setUser(stored.user);
+      setAuthorization(storeAuthorizationToken(stored.token));
+    }
+    setIsReady(true);
+  }, []);
 
-  const logout = () => {
-    setUser(null);
-  };
+  const contextValue = useMemo(() => {
+    const login = (payload: { user: User; token: string }) => {
+      const normalizedToken = storeAuthorizationToken(payload.token);
+      setUser(payload.user);
+      setAuthorization(normalizedToken);
+      writeStoredAuth({
+        token: normalizedToken,
+        user: payload.user,
+      });
+    };
+
+    const logout = () => {
+      setUser(null);
+      setAuthorization(null);
+      clearStoredAuth();
+    };
+
+    return {
+      user,
+      authorization,
+      isReady,
+      login,
+      logout,
+    } satisfies AuthContextType;
+  }, [authorization, isReady, user]);
 
   return (
-    <AuthContext.Provider value={{ user, login, logout }}>
-      {children}
-    </AuthContext.Provider>
+    <AuthContext.Provider value={contextValue}>{children}</AuthContext.Provider>
   );
 }
 

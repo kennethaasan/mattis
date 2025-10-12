@@ -1,8 +1,12 @@
 import type { NextRequest } from "next/server";
 import { NextResponse } from "next/server";
+
+import { finalizeResponse } from "@/lib/api/cors";
 import { badRequest, createProblemResponse } from "@/lib/api/problem-details";
 import { RoundCreateSchema } from "@/lib/api/schemas";
-import { authenticateHeaders } from "@/lib/auth/basic-auth";
+import { toApiRound } from "@/lib/api/serializers";
+import { validationErrorResponse } from "@/lib/api/validation";
+import { authenticateHeaders } from "@/lib/auth/better-auth";
 import { ConflictError, NotFoundError, createRound } from "@/lib/db-client";
 
 const getUserId = (req: NextRequest, fallbackUserId: string): string => {
@@ -19,7 +23,7 @@ const getUserId = (req: NextRequest, fallbackUserId: string): string => {
 export async function POST(req: NextRequest) {
   const authResult = authenticateHeaders(req.headers);
   if (!authResult.ok) {
-    return authResult.response;
+    return finalizeResponse(req, authResult.response);
   }
 
   const userId = getUserId(req, authResult.userId);
@@ -29,15 +33,18 @@ export async function POST(req: NextRequest) {
     try {
       body = await req.json();
     } catch {
-      return badRequest("Malformed JSON in request body.");
+      return finalizeResponse(
+        req,
+        badRequest("Malformed JSON in request body."),
+      );
     }
 
     const validatedData = RoundCreateSchema.safeParse(body);
 
     if (!validatedData.success) {
-      return NextResponse.json(
-        { error: validatedData.error.issues },
-        { status: 400 },
+      return finalizeResponse(
+        req,
+        validationErrorResponse(validatedData.error.issues),
       );
     }
 
@@ -49,54 +56,34 @@ export async function POST(req: NextRequest) {
       createdBy: userId,
     });
 
-    return NextResponse.json(toRoundResponse(newRound), { status: 201 });
+    const response = NextResponse.json(toApiRound(newRound), {
+      status: 201,
+    });
+    return finalizeResponse(req, response);
   } catch (error) {
     if (error instanceof NotFoundError) {
-      return createProblemResponse({
+      const response = createProblemResponse({
         status: 404,
         title: "Not Found",
         detail: error.message,
       });
+      return finalizeResponse(req, response);
     }
 
     if (error instanceof ConflictError) {
-      return createProblemResponse({
+      const response = createProblemResponse({
         status: 409,
         title: "Conflict",
         detail: error.message,
       });
+      return finalizeResponse(req, response);
     }
 
-    return createProblemResponse({
+    const response = createProblemResponse({
       status: 500,
       title: "Internal Server Error",
       detail: "Internal Server Error",
     });
+    return finalizeResponse(req, response);
   }
-}
-
-function toRoundResponse(round: {
-  id: string;
-  createdAt: Date;
-  participants: { id: string; displayName: string; active: boolean }[];
-  loser: { id: string; displayName: string; active: boolean };
-}) {
-  return {
-    id: round.id,
-    created_at: round.createdAt.toISOString(),
-    participants: round.participants.map(toPlayerResponse),
-    loser: toPlayerResponse(round.loser),
-  };
-}
-
-function toPlayerResponse(player: {
-  id: string;
-  displayName: string;
-  active: boolean;
-}) {
-  return {
-    id: player.id,
-    display_name: player.displayName,
-    active: player.active,
-  };
 }

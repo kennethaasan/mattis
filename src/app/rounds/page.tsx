@@ -1,6 +1,7 @@
 "use client";
 
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
+import { useRouter } from "next/navigation";
 import { CalendarCheck, Trophy } from "lucide-react";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 
@@ -21,51 +22,29 @@ import {
   fetchPlayers,
   type PlayersApiRecord,
 } from "@/lib/api/players-client";
-
-interface ProblemDetailPayload {
-  readonly detail?: unknown;
-  readonly error?: unknown;
-}
-
-const isMessageRecord = (value: unknown): value is { message: string } => {
-  if (typeof value !== "object" || value === null) {
-    return false;
-  }
-
-  return typeof (value as { message?: unknown }).message === "string";
-};
-
-const extractErrorDetail = (body: unknown): string | undefined => {
-  if (typeof body !== "object" || body === null) {
-    return undefined;
-  }
-
-  const candidate = body as ProblemDetailPayload;
-
-  if (typeof candidate.detail === "string") {
-    return candidate.detail;
-  }
-
-  if (Array.isArray(candidate.error)) {
-    const errors = candidate.error as unknown[];
-    for (const entry of errors) {
-      if (isMessageRecord(entry)) {
-        return entry.message;
-      }
-    }
-  }
-
-  return undefined;
-};
+import { extractProblemDetailMessage } from "@/lib/api/problem-details.client";
+import { useAuth } from "@/contexts/AuthContext";
 
 export default function RoundsPage() {
+  const router = useRouter();
+  const { authorization, isReady } = useAuth();
   const queryClient = useQueryClient();
   const [status, setStatus] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
 
+  useEffect(() => {
+    if (isReady && authorization === null) {
+      const next = encodeURIComponent("/rounds");
+      router.replace(`/login?next=${next}`);
+    }
+  }, [authorization, isReady, router]);
+
+  const isAuthenticated = authorization !== null;
+
   const playersQuery = useQuery<PlayersApiRecord[]>({
-    queryKey: PLAYERS_QUERY_KEY,
-    queryFn: fetchPlayers,
+    queryKey: [...PLAYERS_QUERY_KEY, authorization],
+    queryFn: () => fetchPlayers(authorization ?? undefined),
+    enabled: isAuthenticated,
   });
 
   const players: PlayersApiRecord[] = playersQuery.data ?? [];
@@ -84,17 +63,22 @@ export default function RoundsPage() {
 
   const roundMutation = useMutation<undefined, Error, RoundCreate>({
     mutationFn: async (payload) => {
+      if (authorization === null) {
+        throw new Error("Du må være innlogget for å lagre runder.");
+      }
+
       const response = await fetch("/api/rounds", {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
+          Authorization: authorization,
         },
         body: JSON.stringify(payload),
       });
 
       if (!response.ok) {
         const body: unknown = await response.json();
-        const detail = extractErrorDetail(body);
+        const detail = extractProblemDetailMessage(body);
         throw new Error(detail ?? "Kunne ikke lagre runden.");
       }
     },
@@ -111,17 +95,22 @@ export default function RoundsPage() {
 
   const fettMattisMutation = useMutation<undefined, Error, FettMattisCreate>({
     mutationFn: async (payload) => {
+      if (authorization === null) {
+        throw new Error("Du må være innlogget for å tildele en Fettmattis.");
+      }
+
       const response = await fetch("/api/fettmattis", {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
+          Authorization: authorization,
         },
         body: JSON.stringify(payload),
       });
 
       if (!response.ok) {
         const body: unknown = await response.json();
-        const detail = extractErrorDetail(body);
+        const detail = extractProblemDetailMessage(body);
         throw new Error(detail ?? "Kunne ikke tildele en Fettmattis.");
       }
     },
@@ -143,6 +132,18 @@ export default function RoundsPage() {
   const handleFettMattisSubmit = async (data: FettMattisCreate) => {
     await fettMattisMutation.mutateAsync(data);
   };
+
+  if (!isReady) {
+    return (
+      <div className="container flex min-h-[60vh] items-center justify-center">
+        <p className="text-muted-foreground text-sm">Laster inn…</p>
+      </div>
+    );
+  }
+
+  if (!isAuthenticated) {
+    return null;
+  }
 
   return (
     <div className="container space-y-10 pt-12 pb-16">

@@ -1,8 +1,12 @@
 import type { NextRequest } from "next/server";
 import { NextResponse } from "next/server";
+
+import { finalizeResponse } from "@/lib/api/cors";
 import { badRequest, createProblemResponse } from "@/lib/api/problem-details";
 import { FettMattisCreateSchema } from "@/lib/api/schemas";
-import { authenticateHeaders } from "@/lib/auth/basic-auth";
+import { toApiFettMattis } from "@/lib/api/serializers";
+import { validationErrorResponse } from "@/lib/api/validation";
+import { authenticateHeaders } from "@/lib/auth/better-auth";
 import {
   ConflictError,
   NotFoundError,
@@ -16,7 +20,7 @@ import {
 export async function POST(req: NextRequest) {
   const authResult = authenticateHeaders(req.headers);
   if (!authResult.ok) {
-    return authResult.response;
+    return finalizeResponse(req, authResult.response);
   }
 
   const userId = authResult.userId;
@@ -26,15 +30,18 @@ export async function POST(req: NextRequest) {
     try {
       body = await req.json();
     } catch {
-      return badRequest("Malformed JSON in request body.");
+      return finalizeResponse(
+        req,
+        badRequest("Malformed JSON in request body."),
+      );
     }
 
     const validatedData = FettMattisCreateSchema.safeParse(body);
 
     if (!validatedData.success) {
-      return NextResponse.json(
-        { error: validatedData.error.issues },
-        { status: 400 },
+      return finalizeResponse(
+        req,
+        validationErrorResponse(validatedData.error.issues),
       );
     }
 
@@ -45,52 +52,32 @@ export async function POST(req: NextRequest) {
       createdBy: userId,
     });
 
-    return NextResponse.json(toFettMattisResponse(newFettmattis), {
+    const response = NextResponse.json(toApiFettMattis(newFettmattis), {
       status: 201,
     });
+    return finalizeResponse(req, response);
   } catch (error) {
     if (error instanceof NotFoundError) {
-      return createProblemResponse({
+      const response = createProblemResponse({
         status: 404,
         title: "Not Found",
         detail: error.message,
       });
+      return finalizeResponse(req, response);
     }
     if (error instanceof ConflictError) {
-      return createProblemResponse({
+      const response = createProblemResponse({
         status: 409,
         title: "Conflict",
         detail: error.message,
       });
+      return finalizeResponse(req, response);
     }
-    return createProblemResponse({
+    const response = createProblemResponse({
       status: 500,
       title: "Internal Server Error",
       detail: "Internal Server Error",
     });
+    return finalizeResponse(req, response);
   }
-}
-
-function toFettMattisResponse(record: {
-  id: string;
-  player: { id: string; displayName: string; active: boolean };
-  createdAt: Date;
-}) {
-  return {
-    id: record.id,
-    player: toPlayerResponse(record.player),
-    created_at: record.createdAt.toISOString(),
-  };
-}
-
-function toPlayerResponse(player: {
-  id: string;
-  displayName: string;
-  active: boolean;
-}) {
-  return {
-    id: player.id,
-    display_name: player.displayName,
-    active: player.active,
-  };
 }

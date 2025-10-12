@@ -1,6 +1,7 @@
 "use client";
 
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
+import { useRouter } from "next/navigation";
 import { RefreshCcw } from "lucide-react";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 
@@ -26,21 +27,47 @@ import type { PlayerCreate } from "@/lib/api/schemas";
 import {
   PLAYERS_QUERY_KEY,
   fetchPlayers,
-  resolvePlayerError,
   type PlayersApiRecord,
 } from "@/lib/api/players-client";
+import { extractProblemDetailMessage } from "@/lib/api/problem-details.client";
+import { useAuth } from "@/contexts/AuthContext";
 
 export default function PlayersPage() {
+  const router = useRouter();
+  const { authorization, isReady } = useAuth();
+  const authToken: string | null = authorization;
   const queryClient = useQueryClient();
   const [message, setMessage] = useState<string | null>(null);
   const [formError, setFormError] = useState<string | null>(null);
 
+  useEffect(() => {
+    if (isReady && authorization === null) {
+      const next = encodeURIComponent("/players");
+      router.replace(`/login?next=${next}`);
+    }
+  }, [authorization, isReady, router]);
+
+  const isAuthenticated = authorization !== null;
+
   const playersQuery = useQuery<PlayersApiRecord[]>({
-    queryKey: PLAYERS_QUERY_KEY,
-    queryFn: fetchPlayers,
+    queryKey: [...PLAYERS_QUERY_KEY, authorization],
+    queryFn: () => fetchPlayers(authorization ?? undefined),
+    enabled: isAuthenticated,
   });
 
   const players: PlayersApiRecord[] = playersQuery.data ?? [];
+
+  if (!isReady) {
+    return (
+      <div className="container flex min-h-[60vh] items-center justify-center">
+        <p className="text-muted-foreground text-sm">Laster inn…</p>
+      </div>
+    );
+  }
+
+  if (!isAuthenticated) {
+    return null;
+  }
 
   const createPlayerMutation = useMutation<
     PlayersApiRecord,
@@ -48,16 +75,21 @@ export default function PlayersPage() {
     PlayerCreate
   >({
     mutationFn: async (payload) => {
+      if (authToken === null) {
+        throw new Error("Du må være innlogget for å legge til spillere.");
+      }
+
       const response = await fetch("/api/players", {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
+          Authorization: authToken,
         },
         body: JSON.stringify(payload),
       });
 
       if (!response.ok) {
-        const detail = resolvePlayerError(await response.json());
+        const detail = extractProblemDetailMessage(await response.json());
         throw new Error(detail ?? "Kunne ikke opprette spiller");
       }
 
@@ -80,13 +112,18 @@ export default function PlayersPage() {
   );
 
   const handlePlayerSubmit = async (data: PlayerCreate) => {
+    if (authToken === null) {
+      setFormError("Du må være innlogget for å legge til spillere.");
+      return;
+    }
+
     setMessage(null);
     setFormError(null);
     await createPlayerMutation.mutateAsync(data);
   };
 
   let rosterContent: React.ReactNode;
-  if (playersQuery.isLoading) {
+  if (playersQuery.status === "pending") {
     rosterContent = (
       <div className="space-y-2">
         {Array.from({ length: 5 }).map((_, index) => (
