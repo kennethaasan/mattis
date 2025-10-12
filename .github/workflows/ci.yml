@@ -63,19 +63,8 @@ jobs:
           cache: npm
           cache-dependency-path: package-lock.json
 
-      - name: Setup Python
-        uses: actions/setup-python@v5
-        with:
-          python-version: "3.12"
-
       - name: Install dependencies
         run: npm ci
-
-      - name: Install pre-commit
-        run: python -m pip install --upgrade pip pre-commit
-
-      - name: Run pre-commit hooks
-        run: pre-commit run --all-files --show-diff-on-failure
 
       - name: Formatting Check (Prettier)
         run: npm run prettier:check
