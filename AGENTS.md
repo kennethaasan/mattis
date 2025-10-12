@@ -1,7 +1,7 @@
 AGENT QUICK REFERENCE
 
 1. Node 22 (see .nvmrc). Install: npm install (root workspace). Copy .env.example -> .env.
-2. Build: npm run build. Lint: npm run lint. Type check only: npm run tsc. Format write/check: npm run prettier:write / npm run prettier:check. These scripts are for all workspaces from root.
+2. Build: npm run build. Lint: npm run lint. Type check only: npm run tsc. Format write/check: npm run prettier:write / npm run prettier:check. These scripts are for all workspaces from root. pre-commit is available for local use; install hooks with `pre-commit install` after npm install so local checks mirror the CI stages.
 3. Tests (Vitest multi-project): node + react/jsdom tests: npm test (watch: npm run test:watch). Single test file: npm run test path/to/file.unit.test.ts.
 4. E2E: npm run test:e2e (UI: test:e2e:ui) with Next app. Author specs with native HTML semantics—use `getByRole`/`getByLabel` before CSS selectors, prefer accessible names derived from native markup or aria attributes, and treat explicit `aria-*` targeting or `[data-test-id]` usage as a last resort. To avoid flakes, await concrete UI states (no arbitrary timeouts), prefer `waitUntil: "domcontentloaded"` over `networkidle`, poll for rendered text when content streams in.
 5. Seed/reset local infra: docker:compose:up / down / reset. Unified seeding: npm run seed (migrates DB + seeds DB). Avoid parallel with integration tests.
