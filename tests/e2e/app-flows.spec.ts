@@ -35,13 +35,13 @@ test("T037: user can create a player from the roster page", async ({
     });
   });
 
-  await page.goto("/players", { waitUntil: "domcontentloaded" });
+  await page.goto("/players", { waitUntil: "networkidle" });
 
-  await page.getByLabel("Display name").fill("Nova");
-  await page.getByRole("button", { name: "Save player" }).click();
+  await page.getByLabel("Visningsnavn").fill("Nova");
+  await page.getByRole("button", { name: "Lagre spiller" }).click();
 
   await expect(
-    page.getByText("Player added to the roster. Welcome aboard!"),
+    page.getByText("Spiller lagt til i troppen. Velkommen!"),
   ).toBeVisible();
   await expect(page.getByRole("cell", { name: "Nova" })).toBeVisible();
 });
@@ -100,15 +100,15 @@ test("T037: recording a round confirms the success banner", async ({
     });
   });
 
-  await page.goto("/rounds", { waitUntil: "domcontentloaded" });
+  await page.goto("/rounds", { waitUntil: "networkidle" });
 
   await page.getByRole("button", { name: /Alex/i }).click();
   await page.getByRole("button", { name: /Blair/i }).click();
-  await page.getByLabel("Loser").selectOption({ label: "Blair" });
-  await page.getByRole("button", { name: "Save round" }).click();
+  await page.getByLabel("Taper").selectOption({ label: "Blair" });
+  await page.getByRole("button", { name: "Lagre runde" }).click();
 
   await expect(
-    page.getByText("Round recorded. Leaderboards just updated!"),
+    page.getByText("Runde lagret. Tabellene er oppdatert!"),
   ).toBeVisible();
 });
 
@@ -164,13 +164,22 @@ test("T037: leaderboard view surfaces regular and FettMattis standings", async (
     });
   });
 
-  await page.goto("/leaderboard", { waitUntil: "domcontentloaded" });
+  await page.goto("/leaderboard", { waitUntil: "networkidle" });
 
-  const regularTable = page.getByRole("table").first();
+  const tables = await page.getByRole("table").all();
+
+  const regularTable = tables.at(0);
+  if (!regularTable) {
+    throw new Error("Could not find the regular leaderboard table.");
+  }
   await expect(regularTable.getByRole("row", { name: /Aria/ })).toBeVisible();
   await expect(regularTable.getByRole("row", { name: /Cato/ })).toBeVisible();
 
-  await page.getByRole("tab", { name: /Fettmattis/i }).click();
-
-  await expect(page.getByRole("row", { name: /Nova/ })).toBeVisible();
+  const fettMattisTable = tables.at(1);
+  if (!fettMattisTable) {
+    throw new Error("Could not find the FettMattis leaderboard table.");
+  }
+  await expect(
+    fettMattisTable.getByRole("row", { name: /Nova/ }),
+  ).toBeVisible();
 });

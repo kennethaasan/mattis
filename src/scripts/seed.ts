@@ -325,16 +325,10 @@ async function insertFettMattis(
 
     await client.query(
       `
-        INSERT INTO fettmattis (id, player_id, round_id, created_by, created_at, revoked_at)
-        VALUES ($1, $2, $3, $4, $5, NULL)
+        INSERT INTO fettmattis (id, player_id, created_by, created_at, revoked_at)
+        VALUES ($1, $2, $3, $4, NULL)
       `,
-      [
-        entry.id,
-        player.id,
-        roundRecord ? roundRecord.id : null,
-        entry.createdBy,
-        entry.createdAt.toISOString(),
-      ],
+      [entry.id, player.id, entry.createdBy, entry.createdAt.toISOString()],
     );
 
     writeLine(process.stdout, `  • ${player.displayName}`);

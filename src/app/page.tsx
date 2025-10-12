@@ -115,7 +115,7 @@ export default async function Home() {
           <div className="flex flex-col gap-3 sm:flex-row">
             <Button size="lg" asChild>
               <Link href="/leaderboard">
-                Se live-tabellene
+                Utforsk tabellene
                 <ArrowRight className="ml-2 h-4 w-4" />
               </Link>
             </Button>
