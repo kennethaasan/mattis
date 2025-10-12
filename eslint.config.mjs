@@ -48,12 +48,12 @@ export default tseslint.config(
     },
   },
   globalIgnores([
+    "iac/.terraform/",
     "eslint.config.mjs",
     "next-env.d.ts",
     ".next/",
     "coverage/**/*",
     "reports/**/*",
-    "infra/dist/**/*",
     ".prettierrc.cjs",
     "scripts/manual-validation.mjs",
     "postcss.config.mjs",

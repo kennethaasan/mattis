@@ -35,6 +35,8 @@ Please test all of these features. When done, please ensure that linting, testin
 
 1. Make sure we use the Drizzle models everywhere. I can see that some places like src/scripts/seed.ts are using manual SQL queries. Please change those to use Drizzle models instead.
 
-## Pre-commit hook
+## CI improvements and Pre-commit hook
 
-add https://github.com/pre-commit/pre-commit and relevant pre-commit hooks.
+1. Please make sure that all steps in the .github/workflows/ci.yml need to pass before we merge. Let me know if I need to adjust any settings in github. Is it possible to merge the two jobs? Can we speed it up? Can we speed up the playwright tests?
+2. Update the community actions to the newest version. Uses recommended settings in https://playwright.dev/docs/ci-intro.
+3. add https://github.com/pre-commit/pre-commit and relevant pre-commit hooks.

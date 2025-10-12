@@ -1,4 +1,4 @@
-name: Build and Validate
+name: Continuous Integration
 
 on:
   push:
@@ -25,7 +25,7 @@ defaults:
 
 jobs:
   quality-checks:
-    name: Lint, Type Check & Tests
+    name: Lint, Type Check, Tests, Formatting, and Terraform quality checks
     runs-on: ubuntu-latest
     timeout-minutes: 20
 
@@ -40,15 +40,10 @@ jobs:
         with:
           node-version: 22.x
           cache: npm
-          cache-dependency-path: |
-            package-lock.json
+          cache-dependency-path: package-lock.json
 
       - name: Install dependencies
         run: npm ci
-
-      - name: Install infra dependencies
-        run: npm ci
-        working-directory: infra
 
       - name: Formatting Check (Prettier)
         run: npm run prettier:check
@@ -66,14 +61,45 @@ jobs:
         run: npm test
         timeout-minutes: 6
 
-      - name: Infra Build (PR only)
-        if: github.event_name == 'pull_request'
-        run: npm run build
-        working-directory: infra
-
       - name: Dependency Review
         if: github.event_name == 'pull_request'
         uses: actions/dependency-review-action@v4
+
+      - name: Setup Terraform
+        uses: hashicorp/setup-terraform@v3
+        with:
+          terraform_version: 1.13.3
+
+      - name: Check Terraform formatting
+        working-directory: iac
+        run: terraform fmt -check -recursive
+
+      - name: Terraform validate
+        working-directory: iac
+        env:
+          TF_VAR_neon_api_key: dummy
+        run: |
+          terraform init -backend=false
+          terraform validate
+
+      - name: Setup TFLint
+        uses: terraform-linters/setup-tflint@v3
+
+      - name: Run TFLint
+        working-directory: iac
+        run: |
+          tflint --init
+          tflint --minimum-failure-severity=error
+
+      # - name: Run Trivy config scan
+      #   uses: aquasecurity/trivy-action@0.24.0
+      #   with:
+      #     scan-type: config
+      #     scan-ref: iac
+      #     exit-code: "1"
+      #     ignore-unfixed: true
+      #     severity: HIGH,CRITICAL
+      #     skip-dirs: iac/.terraform
 
   e2e-tests:
     name: Playwright E2E (Chromium)
@@ -113,9 +139,7 @@ jobs:
         with:
           node-version: 22.x
           cache: npm
-          cache-dependency-path: |
-            package-lock.json
-            infra/package-lock.json
+          cache-dependency-path: package-lock.json
 
       - name: Install dependencies
         run: npm ci
