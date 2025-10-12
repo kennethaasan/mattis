@@ -63,7 +63,7 @@ jobs:
         timeout-minutes: 6
 
       - name: Tests
-        run: npm run test:ci
+        run: npm test
         timeout-minutes: 6
 
       - name: Infra Build (PR only)
