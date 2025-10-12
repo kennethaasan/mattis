@@ -31,6 +31,12 @@ Please try to test all of these features. When done, please ensure that linting,
 
 Please test all of these features. When done, please ensure that linting, testing, and prettier are all passing again.
 
+<<<<<<< Updated upstream
 ## Use Drizzle models everywhere
 
 1. Make sure we use the Drizzle models everywhere. I can see that some places like src/scripts/seed.ts are using manual SQL queries. Please change those to use Drizzle models instead.
+=======
+## Pre-commit hook
+
+add https://github.com/pre-commit/pre-commit and relevant pre-commit hooks.
+>>>>>>> Stashed changes
