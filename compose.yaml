@@ -1,7 +1,7 @@
 services:
   postgres:
     # https://docs.aws.amazon.com/AmazonRDS/latest/AuroraPostgreSQLReleaseNotes/aurorapostgresql-release-calendar.html
-    image: postgres:16.6
+    image: postgres:17
     environment:
       POSTGRES_USER: mattis
       POSTGRES_PASSWORD: mattis
