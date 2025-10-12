@@ -17,12 +17,12 @@ terraform {
 
     neon = {
       source  = "kislerdm/neon"
-      version = ">= 0.1.0"
+      version = "~> 0.10"
     }
 
     random = {
       source  = "hashicorp/random"
-      version = "~> 3.6"
+      version = "~> 3.7"
     }
   }
 }
