@@ -29,7 +29,6 @@ interface FettMattisFormProps {
 export function FettMattisForm({
   onSubmit,
   players,
-  rounds,
   initialData,
 }: FettMattisFormProps) {
   const [playerId, setPlayerId] = useState(initialData?.player_id ?? "");
@@ -93,30 +92,6 @@ export function FettMattisForm({
             {players.map((player) => (
               <option key={player.id} value={player.id}>
                 {player.displayName}
-              </option>
-            ))}
-          </select>
-        </div>
-      </div>
-
-      <div className="space-y-2">
-        <div className="flex items-center justify-between">
-          <Label htmlFor="fettmattis-round">Valgfri kobling til runde</Label>
-          <span className="text-muted-foreground text-xs">
-            Holder historikken ryddig
-          </span>
-        </div>
-        <div className="border-border/60 bg-background rounded-2xl border p-1">
-          <select
-            id="fettmattis-round"
-            value={roundId}
-            onChange={(event) => setRoundId(event.target.value)}
-            className="bg-background focus-visible:ring-ring w-full rounded-2xl px-4 py-3 text-sm focus-visible:ring-2 focus-visible:outline-hidden"
-          >
-            <option value="">Ingen tilknyttet runde</option>
-            {rounds.map((round) => (
-              <option key={round.id} value={round.id}>
-                {round.id}
               </option>
             ))}
           </select>
