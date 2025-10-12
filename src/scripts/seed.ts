@@ -1,7 +1,6 @@
 import "dotenv/config";
 import { Client } from "pg";
-
-import { DEFAULT_DEV_USER_ID } from "@/env";
+import { env } from "@/env";
 
 interface PlayerSeed {
   key: string;
@@ -51,7 +50,7 @@ const formatError = (error: unknown): string => {
 };
 
 const currentYear = new Date().getUTCFullYear();
-const devUserId = process.env.DEV_USER_ID ?? DEFAULT_DEV_USER_ID;
+const devUserId = env.BASIC_AUTH_USER_ID;
 
 const playerSeeds: PlayerSeed[] = [
   {

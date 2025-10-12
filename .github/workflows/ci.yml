@@ -25,7 +25,7 @@ defaults:
 
 jobs:
   quality-checks:
-    name: Lint, Type Check & Unit Tests
+    name: Lint, Type Check & Tests
     runs-on: ubuntu-latest
     timeout-minutes: 20
 
@@ -62,8 +62,8 @@ jobs:
         run: npm run tsc
         timeout-minutes: 6
 
-      - name: Unit Tests
-        run: npm run test:unit
+      - name: Tests
+        run: npm run test:ci
         timeout-minutes: 6
 
       - name: Infra Build (PR only)
@@ -106,4 +106,4 @@ jobs:
       - name: Run Playwright tests
         env:
           PLAYWRIGHT_BASE_URL: http://127.0.0.1:3000
-        run: npm run test:e2e -- --project=chromium
+        run: npm run test:e2e

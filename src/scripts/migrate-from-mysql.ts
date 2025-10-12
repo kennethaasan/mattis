@@ -1,17 +1,14 @@
 import "dotenv/config";
 
-import { randomUUID } from "node:crypto";
-
 import type { Pool as MySqlPool, RowDataPacket } from "mysql2/promise";
 import { createPool } from "mysql2/promise";
 import type { NodePgDatabase } from "drizzle-orm/node-postgres";
 import { drizzle } from "drizzle-orm/node-postgres";
 import { Pool as PostgresPool } from "pg";
-
 import * as schema from "@/lib/db/schema";
+import { generateId } from "@/lib/utils/id";
 
 type TargetDatabase = NodePgDatabase<typeof schema>;
-
 type UserInsertRow = typeof schema.users.$inferInsert;
 type PlayerInsertRow = typeof schema.players.$inferInsert;
 type RoundInsertRow = typeof schema.rounds.$inferInsert;
@@ -86,7 +83,7 @@ async function main(): Promise<void> {
   }
 
   const migrationUserId =
-    process.env.MIGRATION_CREATED_BY_USER_ID ?? randomUUID();
+    process.env.MIGRATION_CREATED_BY_USER_ID ?? generateId();
   const migrationUsername =
     process.env.MIGRATION_CREATED_BY_USERNAME ?? "legacy-importer";
 
@@ -103,7 +100,11 @@ async function main(): Promise<void> {
 
   writeInfo("Connecting to target Postgres database…");
   const pgPool = new PostgresPool({ connectionString: targetUrl });
-  const db = drizzle(pgPool, { schema });
+  const db = drizzle({
+    client: pgPool,
+    schema,
+    casing: "snake_case",
+  });
 
   try {
     await ensureTargetIsEmpty(db);
@@ -250,7 +251,7 @@ async function migrateLegacyUsers(
   }
 
   const userValues: UserInsertRow[] = users.map((row) => ({
-    id: randomUUID(),
+    id: generateId(),
     username: row.username,
     createdAt: toDate(row.created_at),
     updatedAt: toDate(row.updated_at ?? row.created_at),
@@ -273,7 +274,7 @@ async function migrateLegacyPlayers(
   const usedDisplayNames = new Set<string>();
 
   const playerValues: PlayerInsertRow[] = players.map((row) => {
-    const id = randomUUID();
+    const id = generateId();
     playerIdMap.set(row.id, id);
 
     const { displayName, warnings: displayNameWarnings } =
@@ -366,7 +367,7 @@ function buildRoundInsertData(
       continue;
     }
 
-    const newRoundId = randomUUID();
+    const newRoundId = generateId();
 
     roundValues.push({
       id: newRoundId,
@@ -471,9 +472,8 @@ function buildFettMattisInsert(
       }
 
       const item: FettMattisInsertRow = {
-        id: randomUUID(),
+        id: generateId(),
         playerId,
-        roundId: null,
         createdBy: options.migrationUserId,
         createdAt: toDate(row.created_at),
         revokedAt: null,

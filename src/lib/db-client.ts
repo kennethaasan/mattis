@@ -1,7 +1,6 @@
-import { and, asc, eq, inArray, isNull, sql } from "drizzle-orm";
+import { asc, eq, inArray, isNull, sql } from "drizzle-orm";
 import type { SQL } from "drizzle-orm";
-
-import { db } from "@/lib/db";
+import { db } from "@/lib/db/db";
 import {
   fettmattis,
   players,
@@ -44,7 +43,6 @@ export interface RoundRecord {
 export interface FettMattisRecord {
   id: string;
   player: RoundParticipantRecord;
-  roundId: string | null;
   createdAt: Date;
   createdBy: string;
   revokedAt: Date | null;
@@ -74,7 +72,6 @@ export interface UpdateRoundInput {
 
 export interface CreateFettMattisInput {
   playerId: string;
-  roundId?: string | null;
   createdBy: string;
 }
 
@@ -189,7 +186,7 @@ async function loadRound(
     id: roundRow.id,
     createdAt: roundRow.createdAt,
     createdBy: roundRow.createdBy,
-    deletedAt: roundRow.deletedAt ?? null,
+    deletedAt: roundRow.deletedAt,
     participants,
     loser: mapParticipant(loserRow),
   };
@@ -500,36 +497,12 @@ export async function createFettMattis(
       throw new NotFoundError("Player not found.");
     }
 
-    if (input.roundId) {
-      const round = await loadRound(tx, input.roundId);
-      if (!round || round.deletedAt) {
-        throw new NotFoundError("Linked round was not found.");
-      }
-    }
-
-    const duplicate = await tx.query.fettmattis.findFirst({
-      where: and(
-        eq(fettmattis.playerId, input.playerId),
-        input.roundId
-          ? eq(fettmattis.roundId, input.roundId)
-          : isNull(fettmattis.roundId),
-        isNull(fettmattis.revokedAt),
-      ),
-    });
-
-    if (duplicate) {
-      throw new ConflictError(
-        "An active Fettmattis already exists for this player and round.",
-      );
-    }
-
     const now = new Date();
 
     const [row] = await tx
       .insert(fettmattis)
       .values({
         playerId: input.playerId,
-        roundId: input.roundId ?? null,
         createdBy: input.createdBy,
         createdAt: now,
       })
@@ -542,10 +515,9 @@ export async function createFettMattis(
     return {
       id: row.id,
       player: mapParticipant(playerRow),
-      roundId: row.roundId ?? null,
       createdAt: row.createdAt,
       createdBy: row.createdBy,
-      revokedAt: row.revokedAt ?? null,
+      revokedAt: row.revokedAt,
     };
   });
 }
@@ -607,10 +579,11 @@ interface FettMattisLeaderboardRow extends Record<string, unknown> {
 export async function getRegularLeaderboard(
   year: number | null,
 ): Promise<RegularLeaderboardEntry[]> {
-  const { rows } = await db.execute(regularLeaderboardQuery(year));
-  const typedRows = rows as RegularLeaderboardRow[];
+  const res = await db.execute<RegularLeaderboardRow>(
+    regularLeaderboardQuery(year),
+  );
 
-  const leaderboard = typedRows
+  const leaderboard = res.rows
     .map(
       (
         row,
@@ -656,10 +629,11 @@ export async function getRegularLeaderboard(
 export async function getFettMattisLeaderboard(
   year: number | null,
 ): Promise<FettMattisLeaderboardEntry[]> {
-  const { rows } = await db.execute(fettMattisLeaderboardQuery(year));
-  const typedRows = rows as FettMattisLeaderboardRow[];
+  const res = await db.execute<FettMattisLeaderboardRow>(
+    fettMattisLeaderboardQuery(year),
+  );
 
-  const leaderboard = typedRows
+  const leaderboard = res.rows
     .map(
       (row): { player: RoundParticipantRecord; fettMattisCount: number } => ({
         player: {
@@ -683,7 +657,7 @@ export async function getFettMattisLeaderboard(
   }));
 }
 
-function regularLeaderboardQuery(year: number | null): SQL {
+function regularLeaderboardQuery(year: number | null) {
   const yearFilter =
     typeof year === "number"
       ? sql`AND EXTRACT(YEAR FROM ${rounds.createdAt}) = ${year}`

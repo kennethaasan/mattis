@@ -1,27 +1,8 @@
-import { randomUUID } from "node:crypto";
-
-import { afterAll, beforeEach, expect, test, vi } from "vitest";
-
-import { createTestDatabase } from "../../utils/test-db";
-
-const testDatabase = await createTestDatabase();
-
-vi.mock("@/lib/db", () => ({
-  db: testDatabase.db,
-}));
-
-const { createPlayer, listPlayers } = await import("@/lib/db-client");
-
-beforeEach(async () => {
-  await testDatabase.reset();
-});
-
-afterAll(async () => {
-  await testDatabase.close();
-});
+import { expect, test } from "vitest";
+import { createPlayer, listPlayers } from "@/lib/db-client";
 
 test("T015: creating a player surfaces it in the list of players", async () => {
-  const created = await createPlayer({ id: randomUUID(), displayName: "Saga" });
+  const created = await createPlayer({ displayName: "Saga" });
 
   const players = await listPlayers();
   expect(players).toHaveLength(1);

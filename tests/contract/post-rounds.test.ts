@@ -2,6 +2,7 @@ import { beforeEach, expect, test, vi } from "vitest";
 import type { NextRequest } from "next/server";
 
 import { ProblemDetailsSchema } from "@/lib/api/schemas";
+import { env } from "@/env";
 
 const mocks = vi.hoisted(() => {
   class MockNotFoundError extends Error {}
@@ -22,12 +23,8 @@ vi.mock("@/lib/db-client", () => ({
 
 const { POST } = await import("@/app/api/rounds/route");
 
-const MOCK_USER_ID = "00000000-0000-7000-0000-000000000050";
-vi.stubEnv("DEV_USER_ID", MOCK_USER_ID);
-
 const createRequest = (body: unknown, headers?: HeadersInit) => {
   const requestHeaders = new Headers(headers);
-  requestHeaders.set("X-User-Id", MOCK_USER_ID);
 
   return {
     headers: requestHeaders,
@@ -103,7 +100,7 @@ test("T010: POST /api/rounds returns 201 with the created round", async () => {
       "00000000-0000-7000-0000-000000000062",
     ],
     loserId: "00000000-0000-7000-0000-000000000062",
-    createdBy: MOCK_USER_ID,
+    createdBy: env.BASIC_AUTH_USER_ID,
   });
 });
 

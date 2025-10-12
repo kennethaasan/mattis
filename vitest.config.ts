@@ -5,7 +5,7 @@ import react from "@vitejs/plugin-react";
 export default defineConfig({
   plugins: [tsconfigPaths(), react()],
   test: {
-    environment: "jsdom",
+    environment: "node",
     setupFiles: ["./tests/setup.ts"],
     include: [
       "src/**/*.test.ts",
@@ -16,6 +16,10 @@ export default defineConfig({
     ],
     clearMocks: true,
     testTimeout: 30000,
+    reporters: [
+      "verbose",
+      ["junit", { outputFile: "./reports/vitest.xunit.xml" }],
+    ],
     coverage: {
       enabled: true,
       include: ["src/**/*.{ts,tsx}", "infra/**/*.ts"],

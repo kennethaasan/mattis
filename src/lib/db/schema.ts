@@ -5,51 +5,54 @@ import {
   primaryKey,
   text,
   timestamp,
-  uuid,
 } from "drizzle-orm/pg-core";
+import { v7 } from "uuid";
+
+const getId = () =>
+  text()
+    .primaryKey()
+    .$defaultFn(() => v7());
+
+const getOptionalTimestamp = () => timestamp({ withTimezone: true });
+const getTimestamp = () => getOptionalTimestamp().notNull();
+
+const getTimestamps = () => ({
+  createdAt: getTimestamp().defaultNow(),
+  updatedAt: getTimestamp()
+    .defaultNow()
+    .$onUpdate(() => new Date()),
+});
 
 export const users = pgTable("users", {
-  id: uuid("id").primaryKey().defaultRandom(),
-  username: text("username").notNull().unique(),
-  createdAt: timestamp("created_at", { withTimezone: true })
-    .defaultNow()
-    .notNull(),
-  updatedAt: timestamp("updated_at", { withTimezone: true })
-    .defaultNow()
-    .notNull(),
+  id: getId(),
+  username: text().notNull().unique(),
+  ...getTimestamps(),
 });
 
 export const players = pgTable("players", {
-  id: uuid("id").primaryKey().defaultRandom(),
-  displayName: text("display_name").notNull().unique(),
-  userId: uuid("user_id").references(() => users.id),
-  active: boolean("active").default(true).notNull(),
-  createdAt: timestamp("created_at", { withTimezone: true })
-    .defaultNow()
-    .notNull(),
-  updatedAt: timestamp("updated_at", { withTimezone: true })
-    .defaultNow()
-    .notNull(),
+  id: getId(),
+  displayName: text().notNull().unique(),
+  userId: text().references(() => users.id),
+  active: boolean().default(true).notNull(),
+  ...getTimestamps(),
 });
 
 export const rounds = pgTable("rounds", {
-  id: uuid("id").primaryKey().defaultRandom(),
-  createdBy: uuid("created_by")
+  id: getId(),
+  createdBy: text()
     .references(() => users.id)
     .notNull(),
-  createdAt: timestamp("created_at", { withTimezone: true })
-    .defaultNow()
-    .notNull(),
-  deletedAt: timestamp("deleted_at", { withTimezone: true }),
+  createdAt: getTimestamp().defaultNow(),
+  deletedAt: getOptionalTimestamp(),
 });
 
 export const roundParticipants = pgTable(
   "round_participants",
   {
-    roundId: uuid("round_id")
+    roundId: text()
       .references(() => rounds.id)
       .notNull(),
-    playerId: uuid("player_id")
+    playerId: text()
       .references(() => players.id)
       .notNull(),
   },
@@ -62,28 +65,25 @@ export const roundParticipants = pgTable(
 );
 
 export const roundLoser = pgTable("round_loser", {
-  roundId: uuid("round_id")
+  roundId: text()
     .primaryKey()
     .references(() => rounds.id)
     .notNull(),
-  loserId: uuid("loser_id")
+  loserId: text()
     .references(() => players.id)
     .notNull(),
 });
 
 export const fettmattis = pgTable("fettmattis", {
-  id: uuid("id").primaryKey().defaultRandom(),
-  playerId: uuid("player_id")
+  id: getId(),
+  playerId: text()
     .references(() => players.id)
     .notNull(),
-  roundId: uuid("round_id").references(() => rounds.id),
-  createdBy: uuid("created_by")
+  createdBy: text()
     .references(() => users.id)
     .notNull(),
-  createdAt: timestamp("created_at", { withTimezone: true })
-    .defaultNow()
-    .notNull(),
-  revokedAt: timestamp("revoked_at", { withTimezone: true }),
+  createdAt: getTimestamp().defaultNow(),
+  revokedAt: getOptionalTimestamp(),
 });
 
 // Relations
@@ -139,10 +139,6 @@ export const fettmattisRelations = relations(fettmattis, ({ one }) => ({
   player: one(players, {
     fields: [fettmattis.playerId],
     references: [players.id],
-  }),
-  round: one(rounds, {
-    fields: [fettmattis.roundId],
-    references: [rounds.id],
   }),
 }));
 
