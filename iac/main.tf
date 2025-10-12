@@ -3,85 +3,119 @@
 ###########################
 
 resource "neon_project" "this" {
-  name       = var.neon_project_name
-  region_id  = var.neon_region
-  pg_version = var.neon_pg_version
+  name                      = var.neon_project_name
+  region_id                 = var.neon_region
+  pg_version                = var.neon_pg_version
+  org_id                    = var.neon_organization_id
+  history_retention_seconds = var.neon_retention_seconds
 
-  history_retention_seconds = var.neon_retention_days * 24 * 60 * 60
+  branch {
+    name          = "production"
+    database_name = var.app_name
+    role_name     = "app_role"
+  }
 }
 
-resource "neon_branch" "primary" {
+resource "neon_branch" "production" {
   project_id = neon_project.this.id
-  name       = "main"
+  name       = "production"
 }
 
-resource "random_password" "db" {
-  length  = 24
-  special = true
-}
-
-resource "neon_role" "app" {
+resource "neon_endpoint" "production" {
   project_id = neon_project.this.id
-  branch_id  = neon_branch.primary.id
+  branch_id  = neon_branch.production.id
+
+  autoscaling_limit_min_cu = 0.25
+  autoscaling_limit_max_cu = 1
+  suspend_timeout_seconds  = 10
+}
+
+resource "neon_role" "production_app" {
+  project_id = neon_project.this.id
+  branch_id  = neon_branch.production.id
   name       = "app_role"
-  password   = random_password.db.result
 }
 
-resource "neon_database" "app" {
+resource "neon_database" "production_database" {
   project_id = neon_project.this.id
-  branch_id  = neon_branch.primary.id
-  name       = "app_db"
-  owner_name = neon_role.app.name
-}
-
-data "neon_connection_uri" "app" {
-  project_id    = neon_project.this.id
-  branch_id     = neon_branch.primary.id
-  role_name     = neon_role.app.name
-  database_name = neon_database.app.name
-  sslmode       = "require"
+  branch_id  = neon_branch.production.id
+  name       = var.app_name
+  owner_name = neon_role.production_app.name
 }
 
 ###########################
 # AWS Infrastructure
 ###########################
 
-data "aws_route53_zone" "parent" {
+data "aws_route53_zone" "zone" {
   name         = var.parent_domain
   private_zone = false
+}
+
+resource "aws_acm_certificate" "ssl_certificate" {
+  provider          = aws.us_east_1
+  domain_name       = var.app_domain
+  validation_method = "DNS"
+
+  lifecycle {
+    create_before_destroy = true
+  }
+}
+
+resource "aws_route53_record" "ssl_certificate_validation" {
+  for_each = {
+    for dvo in aws_acm_certificate.ssl_certificate.domain_validation_options : dvo.domain_name => {
+      name   = dvo.resource_record_name
+      record = dvo.resource_record_value
+      type   = dvo.resource_record_type
+    }
+  }
+
+  allow_overwrite = true
+  name            = each.value.name
+  records         = [each.value.record]
+  ttl             = 60
+  type            = each.value.type
+  zone_id         = data.aws_route53_zone.zone.zone_id
+}
+
+resource "aws_acm_certificate_validation" "ssl_certificate" {
+  provider                = aws.us_east_1
+  certificate_arn         = aws_acm_certificate.ssl_certificate.arn
+  validation_record_fqdns = [for record in aws_route53_record.ssl_certificate_validation : record.fqdn]
 }
 
 module "opennext" {
   source  = "nhs-england-tools/opennext/aws"
   version = "~> 1.0.6"
 
-  providers = {
-    aws           = aws
-    aws.us_east_1 = aws.us_east_1
+  prefix              = var.app_name
+  opennext_build_path = var.opennext_build_path
+  region              = var.aws_region
+  hosted_zone_id      = data.aws_route53_zone.zone.zone_id
+
+  cloudfront = {
+    aliases             = [var.app_domain]
+    acm_certificate_arn = aws_acm_certificate_validation.ssl_certificate.certificate_arn
+    price_class         = var.cloudfront_price_class
   }
 
-  name                = var.app_name
-  environment         = var.environment
-  hosted_zone_id      = data.aws_route53_zone.parent.zone_id
-  domain_name         = var.app_domain
-  lambda_source_dir   = var.lambda_source_dir
-  lambda_runtime      = var.lambda_runtime
-  lambda_handler      = var.lambda_handler
-  lambda_memory_size  = var.lambda_memory_size
-  lambda_timeout      = var.lambda_timeout
-  lambda_layers       = var.lambda_layers
-  lambda_architecture = var.lambda_architecture
-  lambda_publish      = var.lambda_publish
-  lambda_description  = var.lambda_description
-  log_retention       = var.lambda_log_retention_days
-  cloudfront_comment  = var.cloudfront_comment
-  cloudfront_price_class = var.cloudfront_price_class
-  tags                   = local.default_tags
-
-  lambda_environment = merge(
-    var.lambda_environment,
-    {
-      DATABASE_URL = data.neon_connection_uri.app.uri
+  server_options = {
+    function = {
+      handler      = var.lambda_handler
+      runtime      = var.lambda_runtime
+      architecture = [var.lambda_architecture]
+      memory_size  = var.lambda_memory_size
+      timeout      = var.lambda_timeout
     }
-  )
+    environment_variables = merge(
+      var.lambda_environment,
+      {
+        DATABASE_URL = "postgresql://${neon_role.production_app.name}:${neon_role.production_app.password}@${neon_endpoint.production.host}/${neon_database.production_database.name}"
+      }
+    )
+    log_group = {
+      retention_in_days = var.lambda_log_retention_days
+    }
+  }
 }

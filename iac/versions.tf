@@ -19,10 +19,5 @@ terraform {
       source  = "kislerdm/neon"
       version = "~> 0.10"
     }
-
-    random = {
-      source  = "hashicorp/random"
-      version = "~> 3.7"
-    }
   }
 }

@@ -49,19 +49,24 @@ variable "neon_region" {
 variable "neon_pg_version" {
   description = "PostgreSQL version for Neon"
   type        = number
-  default     = 16
+  default     = 17
 }
 
-variable "neon_retention_days" {
-  description = "Point-in-time backup retention in days (free tier maximum is 7 days)"
+variable "neon_organization_id" {
+  description = "Neon organization ID"
+  type        = string
+}
+
+variable "neon_retention_seconds" {
+  description = "Point-in-time backup retention in seconds (free tier maximum is 6 hours (21600 seconds))"
   type        = number
-  default     = 7
+  default     = 21600
 }
 
-variable "lambda_source_dir" {
+variable "opennext_build_path" {
   description = "Path to the compiled OpenNext server function"
   type        = string
-  default     = "../.open-next/server-function"
+  default     = "../.open-next"
 }
 
 variable "lambda_runtime" {
@@ -88,28 +93,10 @@ variable "lambda_timeout" {
   default     = 30
 }
 
-variable "lambda_layers" {
-  description = "Additional Lambda layers to attach"
-  type        = list(string)
-  default     = []
-}
-
 variable "lambda_architecture" {
   description = "Lambda architecture"
   type        = string
   default     = "arm64"
-}
-
-variable "lambda_publish" {
-  description = "Whether to publish a new version on each deployment"
-  type        = bool
-  default     = true
-}
-
-variable "lambda_description" {
-  description = "Optional description for the Lambda function"
-  type        = string
-  default     = null
 }
 
 variable "lambda_log_retention_days" {
@@ -124,12 +111,6 @@ variable "lambda_environment" {
   default = {
     NODE_ENV = "production"
   }
-}
-
-variable "cloudfront_comment" {
-  description = "Optional comment for the CloudFront distribution"
-  type        = string
-  default     = null
 }
 
 variable "cloudfront_price_class" {
