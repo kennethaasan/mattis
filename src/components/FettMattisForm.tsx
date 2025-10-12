@@ -43,6 +43,12 @@ export function FettMattisForm({
     }
   }, [initialData?.player_id, initialData?.round_id]);
 
+  useEffect(() => {
+    if (playerId && !players.some((player) => player.id === playerId)) {
+      setPlayerId("");
+    }
+  }, [playerId, players]);
+
   const handleSubmit = async (event: React.FormEvent<HTMLFormElement>) => {
     event.preventDefault();
 

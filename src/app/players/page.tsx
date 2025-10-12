@@ -27,6 +27,8 @@ import {
   PLAYERS_QUERY_KEY,
   fetchPlayers,
   resolvePlayerError,
+  updatePlayer,
+  type PlayerUpdatePayload,
   type PlayersApiRecord,
 } from "@/lib/api/players-client";
 
@@ -34,6 +36,9 @@ export default function PlayersPage() {
   const queryClient = useQueryClient();
   const [message, setMessage] = useState<string | null>(null);
   const [formError, setFormError] = useState<string | null>(null);
+  const [rosterMessage, setRosterMessage] = useState<string | null>(null);
+  const [rosterError, setRosterError] = useState<string | null>(null);
+  const [updatingPlayerId, setUpdatingPlayerId] = useState<string | null>(null);
 
   const playersQuery = useQuery<PlayersApiRecord[]>({
     queryKey: PLAYERS_QUERY_KEY,
@@ -85,6 +90,47 @@ export default function PlayersPage() {
     await createPlayerMutation.mutateAsync(data);
   };
 
+  const updatePlayerMutation = useMutation<
+    PlayersApiRecord,
+    Error,
+    { playerId: string; payload: PlayerUpdatePayload }
+  >({
+    mutationFn: async ({ playerId, payload }) => {
+      return updatePlayer(playerId, payload);
+    },
+    onSuccess: async () => {
+      await queryClient.invalidateQueries({ queryKey: PLAYERS_QUERY_KEY });
+    },
+  });
+
+  const handlePlayerUpdate = async (
+    player: PlayersApiRecord,
+    payload: PlayerUpdatePayload,
+  ) => {
+    setRosterMessage(null);
+    setRosterError(null);
+    setUpdatingPlayerId(player.id);
+
+    try {
+      const updated = await updatePlayerMutation.mutateAsync({
+        playerId: player.id,
+        payload,
+      });
+
+      setRosterMessage(
+        `${updated.display_name} er nå ${updated.active ? "aktiv" : "inaktiv"}.`,
+      );
+    } catch (error) {
+      setRosterError(
+        error instanceof Error
+          ? error.message
+          : "Kunne ikke oppdatere spillerstatus.",
+      );
+    } finally {
+      setUpdatingPlayerId(null);
+    }
+  };
+
   let rosterContent: React.ReactNode;
   if (playersQuery.isLoading) {
     rosterContent = (
@@ -105,6 +151,9 @@ export default function PlayersPage() {
             <TableHead>Spiller</TableHead>
             <TableHead className="hidden sm:table-cell">Status</TableHead>
             <TableHead className="hidden text-right sm:table-cell">
+              Handling
+            </TableHead>
+            <TableHead className="hidden text-right sm:table-cell">
               ID
             </TableHead>
           </TableRow>
@@ -120,12 +169,40 @@ export default function PlayersPage() {
                   <span className="text-muted-foreground text-xs sm:hidden">
                     {player.active ? "Aktiv" : "Inaktiv"}
                   </span>
+                  <div className="mt-2 flex flex-wrap gap-2 sm:hidden">
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      onClick={() =>
+                        void handlePlayerUpdate(player, {
+                          active: !player.active,
+                        })
+                      }
+                      disabled={updatingPlayerId === player.id}
+                    >
+                      {player.active ? "Sett som inaktiv" : "Sett som aktiv"}
+                    </Button>
+                  </div>
                 </div>
               </TableCell>
               <TableCell className="hidden sm:table-cell">
                 <Badge variant={player.active ? "success" : "outline"}>
                   {player.active ? "Aktiv" : "Inaktiv"}
                 </Badge>
+              </TableCell>
+              <TableCell className="hidden text-right sm:table-cell">
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={() =>
+                    void handlePlayerUpdate(player, {
+                      active: !player.active,
+                    })
+                  }
+                  disabled={updatingPlayerId === player.id}
+                >
+                  {player.active ? "Sett som inaktiv" : "Sett som aktiv"}
+                </Button>
               </TableCell>
               <TableCell className="text-muted-foreground hidden text-right text-xs sm:table-cell">
                 {player.id.slice(0, 8)}…
@@ -200,7 +277,15 @@ export default function PlayersPage() {
               <RefreshCcw className="mr-2 h-4 w-4" /> Oppdater
             </Button>
           </CardHeader>
-          <CardContent>{rosterContent}</CardContent>
+          <CardContent className="space-y-4">
+            {rosterContent}
+            {rosterMessage ? (
+              <p className="text-primary text-sm">{rosterMessage}</p>
+            ) : null}
+            {rosterError ? (
+              <p className="text-destructive text-sm">{rosterError}</p>
+            ) : null}
+          </CardContent>
         </Card>
       </div>
     </div>

@@ -2,6 +2,7 @@ import type { NextRequest } from "next/server";
 import { NextResponse } from "next/server";
 import { badRequest, createProblemResponse } from "@/lib/api/problem-details";
 import { FettMattisCreateSchema } from "@/lib/api/schemas";
+import { toPlayerResponse } from "@/lib/api/response-helpers";
 import { authenticateHeaders } from "@/lib/auth/basic-auth";
 import {
   ConflictError,
@@ -80,17 +81,5 @@ function toFettMattisResponse(record: {
     id: record.id,
     player: toPlayerResponse(record.player),
     created_at: record.createdAt.toISOString(),
-  };
-}
-
-function toPlayerResponse(player: {
-  id: string;
-  displayName: string;
-  active: boolean;
-}) {
-  return {
-    id: player.id,
-    display_name: player.displayName,
-    active: player.active,
   };
 }

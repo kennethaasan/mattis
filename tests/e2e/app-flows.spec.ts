@@ -70,6 +70,14 @@ test("T037: recording a round confirms the success banner", async ({
     });
   });
 
+  await page.route("**/api/rounds/latest", async (route) => {
+    await route.fulfill({
+      status: 200,
+      contentType: "application/json",
+      body: "null",
+    });
+  });
+
   await page.route("**/api/rounds", async (route, request) => {
     expect(request.method()).toBe("POST");
     const body = (await request.postDataJSON()) as {
@@ -110,6 +118,58 @@ test("T037: recording a round confirms the success banner", async ({
   await expect(
     page.getByText("Runde lagret. Tabellene er oppdatert!"),
   ).toBeVisible();
+});
+
+test("T037: user can toggle player activity from the roster", async ({
+  page,
+}) => {
+  const players = [
+    {
+      id: "00000000-0000-7000-0000-000000000401",
+      display_name: "Signe",
+      active: true,
+    },
+  ];
+
+  await page.route("**/api/players", async (route, request) => {
+    if (request.method() === "GET") {
+      await route.fulfill({
+        status: 200,
+        contentType: "application/json",
+        body: JSON.stringify(players),
+      });
+      return;
+    }
+
+    await route.fallback();
+  });
+
+  await page.route("**/api/players/*", async (route, request) => {
+    expect(request.method()).toBe("PUT");
+    const body = (await request.postDataJSON()) as { active: boolean };
+    expect(body.active).toBe(false);
+
+    const player = players.at(0);
+    if (!player) {
+      throw new Error("No player available for toggle test.");
+    }
+    player.active = body.active;
+
+    await route.fulfill({
+      status: 200,
+      contentType: "application/json",
+      body: JSON.stringify({ ...player }),
+    });
+  });
+
+  await page.goto("/players", { waitUntil: "networkidle" });
+
+  await page.getByRole("button", { name: "Sett som inaktiv" }).click();
+
+  await expect(
+    page.getByText("Signe er nå inaktiv.", { exact: true }),
+  ).toBeVisible();
+  await expect(page.getByRole("cell", { name: "Inaktiv" })).toBeVisible();
 });
 
 test("T037: leaderboard view surfaces regular and FettMattis standings", async ({

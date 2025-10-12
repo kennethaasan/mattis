@@ -85,8 +85,6 @@ specs/001-build-an-application/
 ├── research.md          # Phase 0 output
 ├── data-model.md        # Phase 1 output
 ├── quickstart.md        # Phase 1 output
-├── contracts/           # Phase 1 output
-│   └── openapi.yaml
 └── tasks.md             # Phase 2 output (/tasks command - NOT created by /plan)
 ```
 
@@ -125,7 +123,7 @@ tests/
 **Output**:
 
 - [data-model.md](./data-model.md) defining the database schema.
-- [contracts/openapi.yaml](./contracts/openapi.yaml) for the API specification.
+- [openapi.yaml](../../openapi.yaml) for the API specification (now maintained at the repository root).
 - [quickstart.md](./quickstart.md) for local setup and validation.
 
 ## Phase 2: Task Planning Approach

@@ -21,6 +21,11 @@ import {
   fetchPlayers,
   type PlayersApiRecord,
 } from "@/lib/api/players-client";
+import {
+  LATEST_ROUND_QUERY_KEY,
+  fetchLatestRound,
+  type RoundApiRecord,
+} from "@/lib/api/rounds-client";
 
 interface ProblemDetailPayload {
   readonly detail?: unknown;
@@ -72,14 +77,54 @@ export default function RoundsPage() {
   const isPlayersLoading = playersQuery.isLoading;
   const isPlayersFetching = playersQuery.isFetching;
 
+  const latestRoundQuery = useQuery<RoundApiRecord | null>({
+    queryKey: LATEST_ROUND_QUERY_KEY,
+    queryFn: fetchLatestRound,
+  });
+
+  const activePlayers = useMemo(
+    () => players.filter((player) => player.active),
+    [players],
+  );
+
+  const latestRoundParticipants = latestRoundQuery.data?.participants ?? [];
+  const participantOrder = useMemo(
+    () =>
+      new Map(
+        latestRoundParticipants.map(
+          (participant, index) => [participant.id, index] as const,
+        ),
+      ),
+    [latestRoundParticipants],
+  );
+
   const hydratablePlayers = useMemo(
     () =>
-      players.map((player) => ({
-        id: player.id,
-        displayName: player.display_name,
-        active: player.active,
-      })),
-    [players],
+      activePlayers
+        .map((player) => ({
+          id: player.id,
+          displayName: player.display_name,
+          active: player.active,
+        }))
+        .sort((a, b) => {
+          const aOrder = participantOrder.get(a.id);
+          const bOrder = participantOrder.get(b.id);
+
+          if (aOrder !== undefined && bOrder !== undefined) {
+            return aOrder - bOrder;
+          }
+
+          if (aOrder !== undefined) {
+            return -1;
+          }
+
+          if (bOrder !== undefined) {
+            return 1;
+          }
+
+          return a.displayName.localeCompare(b.displayName);
+        }),
+    [activePlayers, participantOrder],
   );
 
   const roundMutation = useMutation<undefined, Error, RoundCreate>({
@@ -190,6 +235,11 @@ export default function RoundsPage() {
                 players={hydratablePlayers}
               />
             )}
+            {latestRoundQuery.error ? (
+              <p className="text-muted-foreground text-xs">
+                Kunne ikke hente forrige runde – alfabetisk rekkefølge brukes.
+              </p>
+            ) : null}
           </CardContent>
         </Card>
 

@@ -18,3 +18,4 @@ AGENT QUICK REFERENCE
 16. Never modify generated or ignored paths (dist/, reports/, migrations/, .next/). Commit messages follow Conventional Commits (feat|fix|docs|refactor|test|chore|build|ci|perf|revert).
 17. NEVER commit or stage changes without asking
 18. Use git mv when moving/renaming files to preserve git history
+19. The canonical API contract lives at /openapi.yaml — keep it in sync when backend behaviour changes.
