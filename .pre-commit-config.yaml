@@ -3,7 +3,7 @@ repos:
     rev: v5.0.0
     hooks:
       - id: check-merge-conflict
-      - id: end-of-file-fixer
+      - id: no-commit-to-branch
       - id: trailing-whitespace
       - id: check-yaml
       - id: check-toml
