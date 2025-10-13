@@ -111,7 +111,7 @@ module "opennext" {
     environment_variables = merge(
       var.lambda_environment,
       {
-        DATABASE_URL = "postgresql://${neon_role.production_app.name}:${neon_role.production_app.password}@${neon_endpoint.production.host}/${neon_database.production_database.name}"
+        DATABASE_URL = output.database_url.value
       }
     )
     log_group = {

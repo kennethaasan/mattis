@@ -33,6 +33,7 @@ export default defineConfig({
     ],
     coverage: {
       enabled: true,
+      reportOnFailure: true,
       include: ["src/**/*.{ts,tsx}"],
       thresholds: {
         global: {
