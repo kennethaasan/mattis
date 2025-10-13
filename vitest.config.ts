@@ -27,12 +27,11 @@ export default defineConfig({
     setupFiles: ["./tests/setup.ts"],
     clearMocks: true,
     testTimeout: 30000,
-    reporters: [
-      "verbose",
-      ["junit", { outputFile: "./reports/vitest.xunit.xml" }],
-    ],
+    reporters: ["verbose"],
     coverage: {
       enabled: true,
+      reportOnFailure: true,
+      reporter: ["text", "text-summary", "json-summary", "json"],
       include: ["src/**/*.{ts,tsx}"],
       thresholds: {
         global: {

@@ -1,3 +1,4 @@
+import { connection } from "next/server";
 import Link from "next/link";
 import { ArrowRight, CalendarRange, Trophy, Users2, Zap } from "lucide-react";
 
@@ -53,6 +54,8 @@ const workflowCards = [
 ];
 
 export default async function Home() {
+  await connection();
+
   const { totalRounds, fettMattisMoments, activePlayers } =
     await getOverviewStats();
   const formatter = new Intl.NumberFormat("nb-NO");

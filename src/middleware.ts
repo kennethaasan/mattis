@@ -1,6 +1,5 @@
 import type { NextRequest } from "next/server";
 import { NextResponse } from "next/server";
-
 import { enforceBasicAuth } from "@/lib/auth/basic-auth";
 
 const PROTECTED_METHODS = new Set(["POST", "PUT", "PATCH", "DELETE"]);

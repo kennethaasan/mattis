@@ -1,7 +1,7 @@
 import { Buffer } from "node:buffer";
 import type { NextRequest } from "next/server";
 import { NextResponse } from "next/server";
-import { env } from "@/env";
+import { env, config } from "@/env";
 
 export interface AuthSuccess {
   ok: true;
@@ -24,7 +24,7 @@ export function enforceBasicAuth(req: NextRequest): AuthResult {
 }
 
 export function authenticateHeaders(headers: Headers): AuthResult {
-  if (env.IS_DEVELOPMENT || env.IS_TEST) {
+  if (config.IS_DEVELOPMENT || config.IS_TEST) {
     return {
       ok: true,
       username: env.BASIC_AUTH_USERNAME,

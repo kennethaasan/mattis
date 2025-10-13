@@ -16,7 +16,13 @@ export default defineConfig({
   },
   reporter: [
     ["list"],
-    ["html", { outputFolder: "reports/playwright", open: "never" }],
+    [
+      "html",
+      {
+        outputFolder: "reports/playwright",
+        open: "never",
+      },
+    ],
   ],
   use: {
     baseURL,
