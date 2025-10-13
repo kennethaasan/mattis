@@ -43,6 +43,10 @@ resource "neon_database" "production_database" {
   owner_name = neon_role.production_app.name
 }
 
+locals {
+  database_url = "postgresql://${neon_role.production_app.name}:${neon_role.production_app.password}@${neon_endpoint.production.host}/${neon_database.production_database.name}"
+}
+
 ###########################
 # AWS Infrastructure
 ###########################
@@ -111,7 +115,7 @@ module "opennext" {
     environment_variables = merge(
       var.lambda_environment,
       {
-        DATABASE_URL = output.database_url.value
+        DATABASE_URL = local.database_url
       }
     )
     log_group = {
