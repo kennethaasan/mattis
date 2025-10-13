@@ -74,10 +74,6 @@ jobs:
         if: always()
         uses: davelosert/vitest-coverage-report-action@v2
 
-      - name: Dependency Review
-        if: github.event_name == 'pull_request'
-        uses: actions/dependency-review-action@v4
-
       - name: Setup Terraform
         uses: hashicorp/setup-terraform@v3
         with:
@@ -132,11 +128,15 @@ jobs:
 
       - name: Upload Playwright report
         uses: actions/upload-artifact@v4
-        if: ${{ !cancelled() }}
+        if: ${{ success() && !cancelled() }}
         with:
           name: playwright-report
           path: reports/playwright/
           retention-days: 30
+
+      - name: Dependency Review
+        if: github.event_name == 'pull_request'
+        uses: actions/dependency-review-action@v4
 
   build:
     name: Build
