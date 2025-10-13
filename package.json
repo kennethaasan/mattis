@@ -8,8 +8,8 @@
   "packageManager": "npm@10.9.3",
   "scripts": {
     "dev": "next dev --turbopack",
-    "build": "next build",
-    "build:open:next": "open-next build",
+    "build": "SKIP_ENV_VALIDATION=true next build",
+    "build:open:next": "SKIP_ENV_VALIDATION=true open-next build",
     "start": "next start",
     "typegen": "next typegen",
     "lint": "npm run typegen && eslint . --max-warnings 0",
