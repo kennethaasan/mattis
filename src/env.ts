@@ -8,7 +8,7 @@ export const env = createEnv({
     BASIC_AUTH_USERNAME: z.string(),
     BASIC_AUTH_PASSWORD: z.string(),
     BASIC_AUTH_USER_ID: z.uuid(),
-    NODE_ENV: z.string(),
+    NODE_ENV: z.string().optional(),
   },
   experimental__runtimeEnv: {},
   emptyStringAsUndefined: true,
