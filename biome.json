@@ -7,9 +7,31 @@
     "lineWidth": 80
   },
   "linter": {
-    "enabled": true
+    "enabled": true,
+    "rules": {
+      "suspicious": {
+        "noConsole": "error"
+      }
+    }
   },
   "organizeImports": {
     "enabled": true
-  }
+  },
+  "overrides": [
+    {
+      "include": ["**/*.test.ts", "**/*.test.tsx"],
+      "linter": {
+        "rules": {
+          "correctness": {
+            "noUnsafeArgument": "off",
+            "noUnsafeAssignment": "off",
+            "noUnsafeCall": "off",
+            "noUnsafeMemberAccess": "off",
+            "noUnsafeReturn": "off",
+            "noUnboundThis": "off"
+          }
+        }
+      }
+    }
+  ]
 }
