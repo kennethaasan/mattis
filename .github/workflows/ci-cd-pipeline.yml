@@ -179,6 +179,7 @@ jobs:
         uses: hashicorp/setup-terraform@v3
         with:
           terraform_version: 1.13.3
+          cli_config_credentials_token: ${{ secrets.TF_API_TOKEN }}
       - name: Download Build Artifacts
         uses: actions/download-artifact@v5
         with:
