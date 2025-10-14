@@ -161,6 +161,7 @@ jobs:
           path: .open-next
           if-no-files-found: error
           retention-days: 3
+          include-hidden-files: true
 
   deploy:
     name: Deploy
