@@ -161,6 +161,7 @@ jobs:
           path: .open-next
           if-no-files-found: error
           retention-days: 3
+          include-hidden-files: true
 
   deploy:
     name: Deploy
@@ -172,10 +173,13 @@ jobs:
     environment: production
     timeout-minutes: 30
     steps:
+      - name: Checkout repository
+        uses: actions/checkout@v5
       - name: Setup Terraform
         uses: hashicorp/setup-terraform@v3
         with:
           terraform_version: 1.13.3
+          cli_config_credentials_token: ${{ secrets.TF_API_TOKEN }}
       - name: Download Build Artifacts
         uses: actions/download-artifact@v5
         with:
@@ -183,10 +187,13 @@ jobs:
           path: .open-next
       - name: Terraform init
         working-directory: iac
-        run: terraform init
+        run: terraform init -input=false
+      - name: Terraform plan
+        working-directory: iac
+        run: terraform plan -out=tfplan -input=false
       - name: Terraform apply
         working-directory: iac
-        run: terraform apply -auto-approve
+        run: terraform apply -auto-approve -input=false tfplan
       - name: Capture Terraform outputs
         id: tf_outputs
         working-directory: iac
