@@ -1,3 +1,4 @@
+# Mirror of the historical .prettierignore entries to keep formatting exclusions in sync
 package.json
 reports/
 dist/
