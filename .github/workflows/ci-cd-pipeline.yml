@@ -173,6 +173,8 @@ jobs:
     environment: production
     timeout-minutes: 30
     steps:
+      - name: Checkout repository
+        uses: actions/checkout@v5
       - name: Setup Terraform
         uses: hashicorp/setup-terraform@v3
         with:
