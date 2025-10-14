@@ -187,10 +187,13 @@ jobs:
           path: .open-next
       - name: Terraform init
         working-directory: iac
-        run: terraform init
+        run: terraform init -input=false
+      - name: Terraform plan
+        working-directory: iac
+        run: terraform plan -out=tfplan -input=false
       - name: Terraform apply
         working-directory: iac
-        run: terraform apply -auto-approve
+        run: terraform apply -auto-approve -input=false tfplan
       - name: Capture Terraform outputs
         id: tf_outputs
         working-directory: iac
