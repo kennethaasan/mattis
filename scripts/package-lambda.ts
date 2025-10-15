@@ -1,6 +1,6 @@
+import { spawn } from "node:child_process";
 import { access, cp, mkdir, rm } from "node:fs/promises";
 import path from "node:path";
-import { spawn } from "node:child_process";
 
 const rootDir = process.cwd();
 const buildDir = path.join(rootDir, "build");
@@ -43,7 +43,9 @@ async function packageLambda(): Promise<void> {
   if (await pathExists(staticDir)) {
     const packageNextDir = path.join(packageDir, ".next");
     await mkdir(packageNextDir, { recursive: true });
-    await cp(staticDir, path.join(packageNextDir, "static"), { recursive: true });
+    await cp(staticDir, path.join(packageNextDir, "static"), {
+      recursive: true,
+    });
   }
 
   await rm(outputZip, { force: true });
@@ -57,15 +59,11 @@ async function packageLambda(): Promise<void> {
 
 function runZip(cwd: string, zipPath: string): Promise<void> {
   return new Promise<void>((resolve, reject) => {
-    const zipProcess = spawn(
-      resolveZipExecutable(),
-      ["-r", zipPath, "."],
-      {
-        cwd,
-        stdio: "inherit",
-        env: createSafeEnv(),
-      }
-    );
+    const zipProcess = spawn(resolveZipExecutable(), ["-r", zipPath, "."], {
+      cwd,
+      stdio: "inherit",
+      env: createSafeEnv(),
+    });
 
     zipProcess.on("error", (error) => reject(error));
     zipProcess.on("exit", (code) => {
