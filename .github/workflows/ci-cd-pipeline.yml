@@ -182,9 +182,9 @@ jobs:
         uses: actions/download-artifact@v5
         with:
           name: build
-          path: .open-next
+          path: iac/.open-next
       - name: Display structure of downloaded files
-        run: ls -R .open-next
+        run: ls -R iac/.open-next
       - name: Terraform init
         working-directory: iac
         run: terraform init -input=false
