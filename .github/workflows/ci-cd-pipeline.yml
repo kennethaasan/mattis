@@ -204,11 +204,6 @@ jobs:
         working-directory: iac
         run: |
           echo "database_url=$(terraform output -raw database_url)" >> "$GITHUB_OUTPUT"
-      - name: Prepare environment file
-        env:
-          DATABASE_URL: ${{ steps.tf_outputs.outputs.database_url }}
-        run: |
-          printf "DATABASE_URL=%s\n" "$DATABASE_URL" > .env
       - name: Run database migrations
         env:
           DATABASE_URL: ${{ steps.tf_outputs.outputs.database_url }}
