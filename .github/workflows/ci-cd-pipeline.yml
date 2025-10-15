@@ -154,6 +154,7 @@ jobs:
         run: npm run build:open:next
       # Upload build artifacts for deploy (only on push to main)
       - name: Upload build artifact
+        if: ${{ github.event_name == 'push' && github.ref_name == 'main' }}
         uses: actions/upload-artifact@v4
         with:
           name: build
@@ -168,6 +169,7 @@ jobs:
     needs:
       - test
       - build
+    if: ${{ github.event_name == 'push' && github.ref_name == 'main' }}
     environment: production
     timeout-minutes: 30
     steps:
@@ -183,23 +185,21 @@ jobs:
         with:
           name: build
           path: iac/.open-next
-      - name: Display structure of downloaded files
-        run: ls -R iac/.open-next
       - name: Terraform init
         working-directory: iac
         run: terraform init -input=false
       - name: Terraform plan
         working-directory: iac
         run: terraform plan -out=tfplan -input=false
-      - name: Terraform apply
-        working-directory: iac
-        run: terraform apply -auto-approve -input=false tfplan
-      - name: Capture Terraform outputs
-        id: tf_outputs
-        working-directory: iac
-        run: |
-          echo "database_url=$(terraform output -raw database_url)" >> "$GITHUB_OUTPUT"
-      - name: Run database migrations
-        env:
-          DATABASE_URL: ${{ steps.tf_outputs.outputs.database_url }}
-        run: npm run db:migrate
+      # - name: Terraform apply
+      #   working-directory: iac
+      #   run: terraform apply -auto-approve -input=false tfplan
+      # - name: Capture Terraform outputs
+      #   id: tf_outputs
+      #   working-directory: iac
+      #   run: |
+      #     echo "database_url=$(terraform output -raw database_url)" >> "$GITHUB_OUTPUT"
+      # - name: Run database migrations
+      #   env:
+      #     DATABASE_URL: ${{ steps.tf_outputs.outputs.database_url }}
+      #   run: npm run db:migrate
