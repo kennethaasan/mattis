@@ -121,5 +121,10 @@ module "opennext" {
     log_group = {
       retention_in_days = var.lambda_log_retention_days
     }
+
+    # https://github.com/nhs-england-tools/terraform-aws-opennext/pull/28
+    package = {
+      source_dir = "${var.opennext_build_path}/server-functions/"
+    }
   }
 }
