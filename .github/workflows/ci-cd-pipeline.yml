@@ -96,6 +96,12 @@ jobs:
           terraform init -backend=false
           terraform validate
 
+      - name: Terraform plan (pull requests)
+        if: github.event_name == 'pull_request'
+        working-directory: iac
+        run: |
+          terraform plan -input=false
+
       - name: Setup TFLint
         uses: terraform-linters/setup-tflint@v4
 
