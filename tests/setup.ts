@@ -6,8 +6,8 @@ vi.stubEnv("BASIC_AUTH_USERNAME", "admin");
 vi.stubEnv("BASIC_AUTH_PASSWORD", "admin");
 vi.stubEnv("BASIC_AUTH_USER_ID", "00000000-0000-7000-8000-000000000000");
 
-import { drizzle } from "drizzle-orm/pglite";
 import { PGlite } from "@electric-sql/pglite";
+import { drizzle } from "drizzle-orm/pglite";
 import * as schema from "@/lib/db/schema";
 
 // This is based on https://github.com/drizzle-team/drizzle-orm/issues/4205

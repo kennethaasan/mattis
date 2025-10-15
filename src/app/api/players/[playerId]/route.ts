@@ -1,11 +1,10 @@
 import { NextResponse } from "next/server";
-
-import { PlayerUpdateSchema, uuidSchema } from "@/lib/api/schemas";
 import { toPlayerResponse } from "@/lib/api/response-helpers";
+import { PlayerUpdateSchema, uuidSchema } from "@/lib/api/schemas";
 import {
   ConflictError,
-  NotFoundError,
   getPlayerById,
+  NotFoundError,
   updatePlayer,
 } from "@/lib/db-client";
 

@@ -1,7 +1,8 @@
-import { connection } from "next/server";
-import Link from "next/link";
 import { ArrowRight, CalendarRange, Trophy, Users2, Zap } from "lucide-react";
-
+import Link from "next/link";
+import { connection } from "next/server";
+import { Leaderboard } from "@/components/Leaderboard";
+import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import {
   Card,
@@ -10,8 +11,6 @@ import {
   CardHeader,
   CardTitle,
 } from "@/components/ui/card";
-import { Badge } from "@/components/ui/badge";
-import { Leaderboard } from "@/components/Leaderboard";
 import { getOverviewStats } from "@/lib/db-client";
 
 const featureCards = [

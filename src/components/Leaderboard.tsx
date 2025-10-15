@@ -1,9 +1,9 @@
 "use client";
 
-import { useMemo, useState } from "react";
-import { AlertTriangle, ChevronDown, Loader2 } from "lucide-react";
 import { useQuery } from "@tanstack/react-query";
-
+import { AlertTriangle, ChevronDown, Loader2 } from "lucide-react";
+import { useMemo, useState } from "react";
+import { Badge } from "@/components/ui/badge";
 import {
   Table,
   TableBody,
@@ -12,7 +12,6 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
-import { Badge } from "@/components/ui/badge";
 import {
   getFettmattisLeaderboard,
   getRegularLeaderboard,

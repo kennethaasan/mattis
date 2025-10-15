@@ -5,7 +5,7 @@ import { useEffect, useMemo, useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { PlayerCreateSchema, type PlayerCreate } from "@/lib/api/schemas";
+import { type PlayerCreate, PlayerCreateSchema } from "@/lib/api/schemas";
 
 interface PlayerFormProps {
   readonly onSubmit: (data: PlayerCreate) => void | Promise<void>;

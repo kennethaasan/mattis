@@ -5,8 +5,8 @@ import { useEffect, useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
 import {
-  FettMattisCreateSchema,
   type FettMattisCreate,
+  FettMattisCreateSchema,
 } from "@/lib/api/schemas";
 
 interface SimplePlayer {

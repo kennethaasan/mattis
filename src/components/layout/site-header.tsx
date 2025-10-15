@@ -1,14 +1,13 @@
 "use client";
 
-import * as React from "react";
+import { ArrowRight, Menu } from "lucide-react";
+import type { Route } from "next";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import type { Route } from "next";
-import { ArrowRight, Menu } from "lucide-react";
-
+import * as React from "react";
+import { ModeToggle } from "@/components/mode-toggle";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
-import { ModeToggle } from "@/components/mode-toggle";
 
 const navLinks = [
   { href: "/", label: "Oversikt" },
