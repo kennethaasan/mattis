@@ -32,6 +32,14 @@ import {
 } from "@/lib/api/players-client";
 import type { PlayerCreate } from "@/lib/api/schemas";
 
+const ROSTER_SKELETON_KEYS = [
+  "roster-row-1",
+  "roster-row-2",
+  "roster-row-3",
+  "roster-row-4",
+  "roster-row-5",
+] as const;
+
 export default function PlayersPage() {
   const queryClient = useQueryClient();
   const [message, setMessage] = useState<string | null>(null);
@@ -135,9 +143,9 @@ export default function PlayersPage() {
   if (playersQuery.isLoading) {
     rosterContent = (
       <div className="space-y-2">
-        {Array.from({ length: 5 }).map((_, index) => (
+        {ROSTER_SKELETON_KEYS.map((key) => (
           <div
-            key={index}
+            key={key}
             className="bg-muted/50 h-12 w-full animate-pulse rounded-2xl"
           />
         ))}

@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useId, useMemo, useState } from "react";
 
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -16,6 +16,9 @@ export function PlayerForm({ onSubmit, initialData }: PlayerFormProps) {
   const [value, setValue] = useState(initialData?.display_name ?? "");
   const [error, setError] = useState<string | null>(null);
   const trimmedValue = useMemo(() => value.trim(), [value]);
+  const formId = useId();
+  const inputId = `${formId}-display-name`;
+  const errorId = `${formId}-error`;
 
   useEffect(() => {
     if (typeof initialData?.display_name === "string") {
@@ -46,18 +49,18 @@ export function PlayerForm({ onSubmit, initialData }: PlayerFormProps) {
       className="flex flex-col gap-4"
     >
       <div className="space-y-2">
-        <Label htmlFor="player-display-name">Visningsnavn</Label>
+        <Label htmlFor={inputId}>Visningsnavn</Label>
         <Input
-          id="player-display-name"
+          id={inputId}
           value={value}
           onChange={(event) => setValue(event.target.value)}
           placeholder="Legg til en ny Mattis-legende"
           aria-invalid={error ? "true" : "false"}
-          aria-describedby={error ? "player-form-error" : undefined}
+          aria-describedby={error ? errorId : undefined}
         />
       </div>
       {error ? (
-        <p id="player-form-error" className="text-destructive text-sm">
+        <p id={errorId} className="text-destructive text-sm">
           {error}
         </p>
       ) : null}

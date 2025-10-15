@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useId, useState } from "react";
 
 import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
@@ -34,13 +34,17 @@ export function FettMattisForm({
   const [playerId, setPlayerId] = useState(initialData?.player_id ?? "");
   const [roundId, setRoundId] = useState(initialData?.round_id ?? "");
   const [error, setError] = useState<string | null>(null);
+  const formId = useId();
+  const playerSelectId = `${formId}-player`;
+  const errorId = `${formId}-error`;
 
   useEffect(() => {
-    if (initialData) {
-      setPlayerId(initialData.player_id);
-      setRoundId(initialData.round_id ?? "");
+    if (!initialData) {
+      return;
     }
-  }, [initialData?.player_id, initialData?.round_id]);
+    setPlayerId(initialData.player_id);
+    setRoundId(initialData.round_id ?? "");
+  }, [initialData]);
 
   useEffect(() => {
     if (playerId && !players.some((player) => player.id === playerId)) {
@@ -78,13 +82,15 @@ export function FettMattisForm({
       className="flex flex-col gap-6"
     >
       <div className="space-y-2">
-        <Label htmlFor="fettmattis-player">Spiller</Label>
+        <Label htmlFor={playerSelectId}>Spiller</Label>
         <div className="border-border/70 bg-background rounded-2xl border p-1">
           <select
-            id="fettmattis-player"
+            id={playerSelectId}
             value={playerId}
             onChange={(event) => setPlayerId(event.target.value)}
             className="bg-background focus-visible:ring-ring w-full rounded-2xl px-4 py-3 text-sm focus-visible:ring-2 focus-visible:outline-hidden"
+            aria-invalid={error ? "true" : "false"}
+            aria-describedby={error ? errorId : undefined}
           >
             <option value="" disabled>
               Velg spilleren som hedres
@@ -98,7 +104,11 @@ export function FettMattisForm({
         </div>
       </div>
 
-      {error ? <p className="text-destructive text-sm">{error}</p> : null}
+      {error ? (
+        <p id={errorId} className="text-destructive text-sm">
+          {error}
+        </p>
+      ) : null}
 
       <Button type="submit" disabled={isSubmitDisabled}>
         Tildel Fettmattis

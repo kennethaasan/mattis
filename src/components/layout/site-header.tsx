@@ -19,8 +19,12 @@ const navLinks = [
 export function SiteHeader() {
   const pathname = usePathname();
   const [isMenuOpen, setIsMenuOpen] = React.useState(false);
+  const mobileNavId = React.useId();
 
   React.useEffect(() => {
+    if (!pathname) {
+      return;
+    }
     setIsMenuOpen(false);
   }, [pathname]);
 
@@ -85,7 +89,7 @@ export function SiteHeader() {
             className="md:hidden"
             onClick={() => setIsMenuOpen((prev) => !prev)}
             aria-expanded={isMenuOpen}
-            aria-controls="mobile-nav"
+            aria-controls={mobileNavId}
             aria-label="Vis eller skjul meny"
           >
             <Menu className="h-5 w-5" />
@@ -93,7 +97,7 @@ export function SiteHeader() {
         </div>
       </div>
       <div
-        id="mobile-nav"
+        id={mobileNavId}
         className={cn(
           "md:hidden",
           isMenuOpen

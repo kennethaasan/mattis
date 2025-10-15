@@ -62,6 +62,19 @@ const extractErrorDetail = (body: unknown): string | undefined => {
   return undefined;
 };
 
+const ROUND_FORM_SKELETON_KEYS = [
+  "round-skeleton-1",
+  "round-skeleton-2",
+  "round-skeleton-3",
+  "round-skeleton-4",
+] as const;
+
+const FETTMATTIS_FORM_SKELETON_KEYS = [
+  "fettmattis-skeleton-1",
+  "fettmattis-skeleton-2",
+  "fettmattis-skeleton-3",
+] as const;
+
 export default function RoundsPage() {
   const queryClient = useQueryClient();
   const [status, setStatus] = useState<string | null>(null);
@@ -221,9 +234,9 @@ export default function RoundsPage() {
           <CardContent className="space-y-4">
             {isPlayersLoading ? (
               <div className="space-y-2">
-                {Array.from({ length: 4 }).map((_, index) => (
+                {ROUND_FORM_SKELETON_KEYS.map((key) => (
                   <div
-                    key={index}
+                    key={key}
                     className="bg-muted/50 h-12 w-full animate-pulse rounded-2xl"
                   />
                 ))}
@@ -255,9 +268,9 @@ export default function RoundsPage() {
           <CardContent>
             {isPlayersLoading ? (
               <div className="space-y-2">
-                {Array.from({ length: 3 }).map((_, index) => (
+                {FETTMATTIS_FORM_SKELETON_KEYS.map((key) => (
                   <div
-                    key={index}
+                    key={key}
                     className="bg-muted/50 h-11 w-full animate-pulse rounded-2xl"
                   />
                 ))}
