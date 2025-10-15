@@ -63,12 +63,6 @@ variable "neon_retention_seconds" {
   default     = 21600
 }
 
-variable "opennext_build_path" {
-  description = "Path to the compiled OpenNext server function"
-  type        = string
-  default     = ".open-next"
-}
-
 variable "lambda_runtime" {
   description = "Runtime for the Lambda function"
   type        = string
@@ -111,6 +105,18 @@ variable "lambda_environment" {
   default = {
     NODE_ENV = "production"
   }
+}
+
+variable "package_path" {
+  description = "Path to the packaged Lambda ZIP archive"
+  type        = string
+  default     = "../build/function.zip"
+}
+
+variable "lwa_layer_arn" {
+  description = "AWS Lambda Web Adapter Layer ARN"
+  type        = string
+  default     = "arn:aws:lambda:eu-north-1:753240598075:layer:LambdaAdapterLayerArm64:25"
 }
 
 variable "cloudfront_price_class" {

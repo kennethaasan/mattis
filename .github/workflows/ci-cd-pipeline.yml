@@ -146,18 +146,17 @@ jobs:
           node-version: 22
       - name: Install dependencies
         run: npm ci
-      - name: Build
-        run: npm run build:open:next
+      - name: Build and package Lambda function
+        run: npm run build:lambda
       # Upload build artifacts for deploy (only on push to main)
-      - name: Upload build artifact
+      - name: Upload Lambda artifact
         if: ${{ github.event_name == 'push' && github.ref_name == 'main' }}
         uses: actions/upload-artifact@v4
         with:
-          name: build
-          path: .open-next
+          name: lambda-function
+          path: build/function.zip
           if-no-files-found: error
           retention-days: 3
-          include-hidden-files: true
 
   deploy:
     name: Deploy
@@ -179,23 +178,30 @@ jobs:
       - name: Download Build Artifacts
         uses: actions/download-artifact@v5
         with:
-          name: build
-          path: iac/.open-next
+          name: lambda-function
+          path: build
+
       - name: Terraform init
         working-directory: iac
         run: terraform init -input=false
       - name: Terraform plan
         working-directory: iac
         run: terraform plan -out=tfplan -input=false
-      # - name: Terraform apply
-      #   working-directory: iac
-      #   run: terraform apply -auto-approve -input=false tfplan
-      # - name: Capture Terraform outputs
-      #   id: tf_outputs
-      #   working-directory: iac
-      #   run: |
-      #     echo "database_url=$(terraform output -raw database_url)" >> "$GITHUB_OUTPUT"
-      # - name: Run database migrations
-      #   env:
-      #     DATABASE_URL: ${{ steps.tf_outputs.outputs.database_url }}
-      #   run: npm run db:migrate
+      - name: Terraform apply
+        working-directory: iac
+        run: terraform apply -auto-approve -input=false tfplan
+      - name: Capture Terraform outputs
+        id: tf_outputs
+        working-directory: iac
+        run: |
+          echo "database_url=$(terraform output -raw database_url)" >> "$GITHUB_OUTPUT"
+      - name: Setup Node.js
+        uses: actions/setup-node@v5
+        with:
+          node-version: 22
+      - name: Install dependencies
+        run: npm ci
+      - name: Run database migrations
+        env:
+          DATABASE_URL: ${{ steps.tf_outputs.outputs.database_url }}
+        run: npm run db:migrate
