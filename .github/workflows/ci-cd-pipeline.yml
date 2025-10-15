@@ -85,16 +85,24 @@ jobs:
         uses: hashicorp/setup-terraform@v3
         with:
           terraform_version: ${{ env.TERRAFORM_VERSION }}
+          cli_config_credentials_token: ${{ secrets.TF_API_TOKEN }}
 
       - name: Check Terraform formatting
         working-directory: iac
         run: terraform fmt -check -recursive
 
+      - name: Terraform init
+        working-directory: iac
+        run: terraform init -input=false
+
       - name: Terraform validate
         working-directory: iac
-        run: |
-          terraform init -backend=false
-          terraform validate
+        run: terraform validate
+
+      - name: Terraform plan
+        if: github.event_name == 'pull_request'
+        working-directory: iac
+        run: terraform plan -input=false
 
       - name: Setup TFLint
         uses: terraform-linters/setup-tflint@v4
@@ -217,12 +225,9 @@ jobs:
       - name: Terraform init
         working-directory: iac
         run: terraform init -input=false
-      - name: Terraform plan
-        working-directory: iac
-        run: terraform plan -out=tfplan -input=false
       - name: Terraform apply
         working-directory: iac
-        run: terraform apply -auto-approve -input=false tfplan
+        run: terraform apply -auto-approve -input=false
       - name: Capture Terraform outputs
         id: tf_outputs
         working-directory: iac
