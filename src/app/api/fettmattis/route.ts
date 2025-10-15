@@ -1,13 +1,13 @@
 import type { NextRequest } from "next/server";
 import { NextResponse } from "next/server";
 import { badRequest, createProblemResponse } from "@/lib/api/problem-details";
-import { FettMattisCreateSchema } from "@/lib/api/schemas";
 import { toPlayerResponse } from "@/lib/api/response-helpers";
+import { FettMattisCreateSchema } from "@/lib/api/schemas";
 import { authenticateHeaders } from "@/lib/auth/basic-auth";
 import {
   ConflictError,
-  NotFoundError,
   createFettMattis,
+  NotFoundError,
 } from "@/lib/db-client";
 
 /**

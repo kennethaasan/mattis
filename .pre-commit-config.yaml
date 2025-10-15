@@ -9,17 +9,11 @@ repos:
       - id: check-toml
   - repo: local
     hooks:
-      - id: prettier-check
-        name: prettier (npm run prettier:check)
-        entry: npm run prettier:check
-        language: system
-        pass_filenames: false
-      - id: eslint
-        name: eslint
+      - id: biome-check
+        name: biome check
         entry: npm run lint
         language: system
         pass_filenames: false
-        files: "\\.(cjs|mjs|ts|tsx|js|jsx)$"
       - id: typecheck
         name: typescript --noEmit
         entry: npm run tsc

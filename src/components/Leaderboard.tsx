@@ -1,9 +1,10 @@
 "use client";
 
-import { useMemo, useState } from "react";
-import { AlertTriangle, ChevronDown, Loader2 } from "lucide-react";
 import { useQuery } from "@tanstack/react-query";
-
+import { AlertTriangle, ChevronDown, Loader2 } from "lucide-react";
+import type { ReactNode } from "react";
+import { useId, useMemo, useState } from "react";
+import { Badge } from "@/components/ui/badge";
 import {
   Table,
   TableBody,
@@ -12,7 +13,6 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
-import { Badge } from "@/components/ui/badge";
 import {
   getFettmattisLeaderboard,
   getRegularLeaderboard,
@@ -27,6 +27,7 @@ export function Leaderboard() {
   const [scope, setScope] = useState<LeaderboardScope>(
     new Date().getFullYear(),
   );
+  const yearSelectId = useId();
   const regularQuery = useQuery<RegularLeaderboard>({
     queryKey: ["leaderboard", "regular", scope],
     queryFn: () => getRegularLeaderboard(scope),
@@ -58,7 +59,7 @@ export function Leaderboard() {
     ];
   }, []);
 
-  let regularContent;
+  let regularContent: ReactNode;
   if (regularLoading) {
     regularContent = <TableSkeleton />;
   } else if (regular.length === 0) {
@@ -118,7 +119,7 @@ export function Leaderboard() {
     );
   }
 
-  let fettmattisContent;
+  let fettmattisContent: ReactNode;
   if (fettmattisLoading) {
     fettmattisContent = <TableSkeleton />;
   } else if (fettmattis.length === 0) {
@@ -176,13 +177,13 @@ export function Leaderboard() {
         <div className="flex items-center gap-3">
           <label
             className="text-muted-foreground text-sm font-medium"
-            htmlFor="leaderboard-year"
+            htmlFor={yearSelectId}
           >
             Sesong
           </label>
           <div className="relative">
             <select
-              id="leaderboard-year"
+              id={yearSelectId}
               className="border-border/60 bg-background focus-visible:ring-ring h-10 appearance-none rounded-full border px-5 pr-12 text-sm font-medium shadow-xs transition focus-visible:ring-2 focus-visible:outline-hidden"
               value={String(scope)}
               onChange={(event) => {
@@ -253,12 +254,14 @@ function EmptyState({ message }: EmptyStateProps) {
   );
 }
 
+const TABLE_SKELETON_KEYS = ["first", "second", "third", "fourth"] as const;
+
 function TableSkeleton() {
   return (
     <div className="space-y-2">
-      {Array.from({ length: 4 }).map((_, index) => (
+      {TABLE_SKELETON_KEYS.map((key) => (
         <div
-          key={index}
+          key={key}
           className="bg-muted/60 h-12 w-full animate-pulse rounded-2xl"
         />
       ))}

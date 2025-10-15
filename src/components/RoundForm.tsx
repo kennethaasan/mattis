@@ -1,12 +1,11 @@
 "use client";
 
-import { useEffect, useMemo, useState } from "react";
-
+import { useEffect, useId, useMemo, useState } from "react";
+import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
-import { Badge } from "@/components/ui/badge";
+import { type RoundCreate, RoundCreateSchema } from "@/lib/api/schemas";
 import { cn } from "@/lib/utils";
-import { RoundCreateSchema, type RoundCreate } from "@/lib/api/schemas";
 
 interface RoundFormPlayer {
   readonly id: string;
@@ -22,23 +21,27 @@ interface RoundFormProps {
 
 export function RoundForm({ onSubmit, players, initialData }: RoundFormProps) {
   const [participantIds, setParticipantIds] = useState<string[]>(
-    initialData?.participant_ids ?? [],
+    initialData?.participant_ids ?? []
   );
   const [loserId, setLoserId] = useState(initialData?.loser_id ?? "");
   const [error, setError] = useState<string | null>(null);
+  const formId = useId();
+  const loserSelectId = `${formId}-loser`;
+  const errorId = `${formId}-error`;
 
   useEffect(() => {
-    if (initialData) {
-      setParticipantIds(initialData.participant_ids);
-      setLoserId(initialData.loser_id);
+    if (!initialData) {
+      return;
     }
-  }, [initialData?.loser_id, initialData?.participant_ids]);
+    setParticipantIds(initialData.participant_ids);
+    setLoserId(initialData.loser_id);
+  }, [initialData]);
 
   useEffect(() => {
     const validPlayerIds = new Set(players.map((player) => player.id));
 
     setParticipantIds((current) =>
-      current.filter((participantId) => validPlayerIds.has(participantId)),
+      current.filter((participantId) => validPlayerIds.has(participantId))
     );
   }, [players]);
 
@@ -51,18 +54,18 @@ export function RoundForm({ onSubmit, players, initialData }: RoundFormProps) {
   const participantOptions = useMemo(
     () =>
       players.map((player) => ({ id: player.id, label: player.displayName })),
-    [players],
+    [players]
   );
 
   const loserOptions = participantOptions.filter((option) =>
-    participantIds.includes(option.id),
+    participantIds.includes(option.id)
   );
 
   const toggleParticipant = (playerId: string) => {
     setParticipantIds((current) =>
       current.includes(playerId)
         ? current.filter((id) => id !== playerId)
-        : [...current, playerId],
+        : [...current, playerId]
     );
   };
 
@@ -95,9 +98,9 @@ export function RoundForm({ onSubmit, players, initialData }: RoundFormProps) {
       className="flex flex-col gap-6"
     >
       <div className="space-y-3">
-        <Label className="text-muted-foreground text-sm tracking-wide uppercase">
+        <p className="text-muted-foreground text-sm tracking-wide uppercase">
           Deltakere
-        </Label>
+        </p>
         <div className="grid gap-2 sm:grid-cols-2">
           {participantOptions.map((option) => {
             const isChecked = participantIds.includes(option.id);
@@ -110,7 +113,7 @@ export function RoundForm({ onSubmit, players, initialData }: RoundFormProps) {
                   "hover:border-primary/40 flex items-center justify-between rounded-2xl border px-4 py-3 text-left text-sm transition",
                   isChecked
                     ? "border-primary/50 bg-primary/10 text-primary"
-                    : "border-border/70 text-muted-foreground",
+                    : "border-border/70 text-muted-foreground"
                 )}
               >
                 <span className="text-foreground font-medium">
@@ -129,14 +132,16 @@ export function RoundForm({ onSubmit, players, initialData }: RoundFormProps) {
       </div>
 
       <div className="space-y-2">
-        <Label htmlFor="round-loser">Taper</Label>
+        <Label htmlFor={loserSelectId}>Taper</Label>
         <div className="border-border/70 bg-background rounded-2xl border p-1">
           <select
-            id="round-loser"
+            id={loserSelectId}
             value={loserId}
             onChange={(event) => setLoserId(event.target.value)}
             className="bg-background focus-visible:ring-ring w-full rounded-2xl px-4 py-3 text-sm focus-visible:ring-2 focus-visible:outline-hidden"
             disabled={loserOptions.length === 0}
+            aria-invalid={error ? "true" : "false"}
+            aria-describedby={error ? errorId : undefined}
           >
             <option value="" disabled>
               {loserOptions.length === 0
@@ -152,7 +157,11 @@ export function RoundForm({ onSubmit, players, initialData }: RoundFormProps) {
         </div>
       </div>
 
-      {error ? <p className="text-destructive text-sm">{error}</p> : null}
+      {error ? (
+        <p id={errorId} className="text-destructive text-sm">
+          {error}
+        </p>
+      ) : null}
 
       <Button type="submit" disabled={isSubmitDisabled}>
         Lagre runde

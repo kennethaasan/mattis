@@ -1,10 +1,10 @@
 import type { NextRequest } from "next/server";
 import { NextResponse } from "next/server";
 import { badRequest, createProblemResponse } from "@/lib/api/problem-details";
-import { RoundCreateSchema } from "@/lib/api/schemas";
 import { toRoundResponse } from "@/lib/api/response-helpers";
+import { RoundCreateSchema } from "@/lib/api/schemas";
 import { authenticateHeaders } from "@/lib/auth/basic-auth";
-import { ConflictError, NotFoundError, createRound } from "@/lib/db-client";
+import { ConflictError, createRound, NotFoundError } from "@/lib/db-client";
 
 const getUserId = (req: NextRequest, fallbackUserId: string): string => {
   const headerUserId =

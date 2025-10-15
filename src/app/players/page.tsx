@@ -1,10 +1,11 @@
 "use client";
 
-import { useMemo, useState } from "react";
-import { RefreshCcw } from "lucide-react";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
+import { RefreshCcw } from "lucide-react";
+import { useMemo, useState } from "react";
 
 import { PlayerForm } from "@/components/PlayerForm";
+import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import {
   Card,
@@ -13,7 +14,6 @@ import {
   CardHeader,
   CardTitle,
 } from "@/components/ui/card";
-import { Badge } from "@/components/ui/badge";
 import {
   Table,
   TableBody,
@@ -22,15 +22,23 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
-import type { PlayerCreate } from "@/lib/api/schemas";
 import {
-  PLAYERS_QUERY_KEY,
   fetchPlayers,
+  PLAYERS_QUERY_KEY,
+  type PlayersApiRecord,
+  type PlayerUpdatePayload,
   resolvePlayerError,
   updatePlayer,
-  type PlayerUpdatePayload,
-  type PlayersApiRecord,
 } from "@/lib/api/players-client";
+import type { PlayerCreate } from "@/lib/api/schemas";
+
+const ROSTER_SKELETON_KEYS = [
+  "roster-row-1",
+  "roster-row-2",
+  "roster-row-3",
+  "roster-row-4",
+  "roster-row-5",
+] as const;
 
 export default function PlayersPage() {
   const queryClient = useQueryClient();
@@ -135,9 +143,9 @@ export default function PlayersPage() {
   if (playersQuery.isLoading) {
     rosterContent = (
       <div className="space-y-2">
-        {Array.from({ length: 5 }).map((_, index) => (
+        {ROSTER_SKELETON_KEYS.map((key) => (
           <div
-            key={index}
+            key={key}
             className="bg-muted/50 h-12 w-full animate-pulse rounded-2xl"
           />
         ))}

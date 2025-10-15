@@ -1,11 +1,11 @@
 "use client";
 
-import { useMemo, useState } from "react";
-import { CalendarCheck, Trophy } from "lucide-react";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
-
-import { RoundForm } from "@/components/RoundForm";
+import { CalendarCheck, Trophy } from "lucide-react";
+import { useMemo, useState } from "react";
 import { FettMattisForm } from "@/components/FettMattisForm";
+import { RoundForm } from "@/components/RoundForm";
+import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import {
   Card,
@@ -14,18 +14,17 @@ import {
   CardHeader,
   CardTitle,
 } from "@/components/ui/card";
-import { Badge } from "@/components/ui/badge";
-import type { FettMattisCreate, RoundCreate } from "@/lib/api/schemas";
 import {
-  PLAYERS_QUERY_KEY,
   fetchPlayers,
+  PLAYERS_QUERY_KEY,
   type PlayersApiRecord,
 } from "@/lib/api/players-client";
 import {
-  LATEST_ROUND_QUERY_KEY,
   fetchLatestRound,
+  LATEST_ROUND_QUERY_KEY,
   type RoundApiRecord,
 } from "@/lib/api/rounds-client";
+import type { FettMattisCreate, RoundCreate } from "@/lib/api/schemas";
 
 interface ProblemDetailPayload {
   readonly detail?: unknown;
@@ -62,6 +61,19 @@ const extractErrorDetail = (body: unknown): string | undefined => {
 
   return undefined;
 };
+
+const ROUND_FORM_SKELETON_KEYS = [
+  "round-skeleton-1",
+  "round-skeleton-2",
+  "round-skeleton-3",
+  "round-skeleton-4",
+] as const;
+
+const FETTMATTIS_FORM_SKELETON_KEYS = [
+  "fettmattis-skeleton-1",
+  "fettmattis-skeleton-2",
+  "fettmattis-skeleton-3",
+] as const;
 
 export default function RoundsPage() {
   const queryClient = useQueryClient();
@@ -222,9 +234,9 @@ export default function RoundsPage() {
           <CardContent className="space-y-4">
             {isPlayersLoading ? (
               <div className="space-y-2">
-                {Array.from({ length: 4 }).map((_, index) => (
+                {ROUND_FORM_SKELETON_KEYS.map((key) => (
                   <div
-                    key={index}
+                    key={key}
                     className="bg-muted/50 h-12 w-full animate-pulse rounded-2xl"
                   />
                 ))}
@@ -256,9 +268,9 @@ export default function RoundsPage() {
           <CardContent>
             {isPlayersLoading ? (
               <div className="space-y-2">
-                {Array.from({ length: 3 }).map((_, index) => (
+                {FETTMATTIS_FORM_SKELETON_KEYS.map((key) => (
                   <div
-                    key={index}
+                    key={key}
                     className="bg-muted/50 h-11 w-full animate-pulse rounded-2xl"
                   />
                 ))}
