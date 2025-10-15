@@ -1,8 +1,7 @@
-import { beforeEach, expect, test, vi } from "vitest";
 import type { NextRequest } from "next/server";
-
-import { ProblemDetailsSchema } from "@/lib/api/schemas";
+import { beforeEach, expect, test, vi } from "vitest";
 import { env } from "@/env";
+import { ProblemDetailsSchema } from "@/lib/api/schemas";
 
 const mocks = vi.hoisted(() => {
   class MockNotFoundError extends Error {}

@@ -1,5 +1,5 @@
-import { beforeEach, expect, test, vi } from "vitest";
 import type { NextRequest } from "next/server";
+import { beforeEach, expect, test, vi } from "vitest";
 
 import { PlayerSchema, ProblemDetailsSchema } from "@/lib/api/schemas";
 

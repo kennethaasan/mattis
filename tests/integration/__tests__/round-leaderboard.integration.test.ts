@@ -1,9 +1,9 @@
 import { eq } from "drizzle-orm";
 import { expect, test } from "vitest";
+import { env } from "@/env";
+import { db } from "@/lib/db/db";
 import { fettmattis as fettMattisTable, rounds } from "@/lib/db/schema";
 import { generateId } from "@/lib/utils/id";
-import { db } from "@/lib/db/db";
-import { env } from "@/env";
 
 const {
   createPlayer,

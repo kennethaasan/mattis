@@ -1,9 +1,9 @@
 import "dotenv/config";
 
-import type { Pool as MySqlPool, RowDataPacket } from "mysql2/promise";
-import { createPool } from "mysql2/promise";
 import type { NodePgDatabase } from "drizzle-orm/node-postgres";
 import { drizzle } from "drizzle-orm/node-postgres";
+import type { Pool as MySqlPool, RowDataPacket } from "mysql2/promise";
+import { createPool } from "mysql2/promise";
 import { Pool as PostgresPool } from "pg";
 import * as schema from "@/lib/db/schema";
 import { generateId } from "@/lib/utils/id";
