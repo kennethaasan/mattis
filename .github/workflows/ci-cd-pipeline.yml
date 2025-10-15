@@ -184,12 +184,7 @@ jobs:
         with:
           name: lambda-function
           path: build
-      - name: Setup Node.js
-        uses: actions/setup-node@v5
-        with:
-          node-version: 22
-      - name: Install dependencies
-        run: npm ci
+
       - name: Terraform init
         working-directory: iac
         run: terraform init -input=false
@@ -204,6 +199,12 @@ jobs:
         working-directory: iac
         run: |
           echo "database_url=$(terraform output -raw database_url)" >> "$GITHUB_OUTPUT"
+      - name: Setup Node.js
+        uses: actions/setup-node@v5
+        with:
+          node-version: 22
+      - name: Install dependencies
+        run: npm ci
       - name: Run database migrations
         env:
           DATABASE_URL: ${{ steps.tf_outputs.outputs.database_url }}
