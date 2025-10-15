@@ -19,11 +19,7 @@ permissions:
 
 env:
   NODE_VERSION: 22
-  DATABASE_URL: postgresql://user:password@127.0.0.1:5432/mattis_db
-  BASIC_AUTH_USERNAME: admin
-  BASIC_AUTH_PASSWORD: admin
-  BASIC_AUTH_USER_ID: 00000000-0000-7000-8000-000000000000
-  PLAYWRIGHT_BASE_URL: http://127.0.0.1:3000
+  TERRAFORM_VERSION: 1.13.3
 
 jobs:
   code-quality:
@@ -49,8 +45,6 @@ jobs:
         uses: actions/setup-node@v5
         with:
           node-version: ${{ env.NODE_VERSION }}
-          cache: npm
-          cache-dependency-path: package-lock.json
 
       - &install-dependencies
         name: Install dependencies
@@ -62,21 +56,7 @@ jobs:
   unit-tests:
     name: Tests
     runs-on: ubuntu-latest
-    timeout-minutes: 35
-    services:
-      postgres:
-        image: postgres:17
-        ports:
-          - 5432:5432
-        env:
-          POSTGRES_DB: mattis_db
-          POSTGRES_USER: user
-          POSTGRES_PASSWORD: password
-        options: >-
-          --health-cmd "pg_isready -U user -d mattis_db"
-          --health-interval 10s
-          --health-timeout 5s
-          --health-retries 5
+    timeout-minutes: 15
     steps:
       - name: Checkout repository
         uses: actions/checkout@v5
@@ -104,7 +84,7 @@ jobs:
       - name: Setup Terraform
         uses: hashicorp/setup-terraform@v3
         with:
-          terraform_version: 1.13.3
+          terraform_version: ${{ env.TERRAFORM_VERSION }}
 
       - name: Check Terraform formatting
         working-directory: iac
@@ -138,9 +118,7 @@ jobs:
   e2e:
     name: End-to-end tests
     runs-on: ubuntu-latest
-    timeout-minutes: 35
-    needs:
-      - unit-tests
+    timeout-minutes: 15
     services:
       postgres:
         image: postgres:17
@@ -155,6 +133,12 @@ jobs:
           --health-interval 10s
           --health-timeout 5s
           --health-retries 5
+    env:
+      DATABASE_URL: postgresql://user:password@127.0.0.1:5432/mattis_db
+      BASIC_AUTH_USERNAME: admin
+      BASIC_AUTH_PASSWORD: admin
+      BASIC_AUTH_USER_ID: 00000000-0000-7000-8000-000000000000
+      PLAYWRIGHT_BASE_URL: http://127.0.0.1:3000
     steps:
       - name: Checkout repository
         uses: actions/checkout@v5
@@ -162,15 +146,6 @@ jobs:
       - *setup-node
 
       - *install-dependencies
-
-      - name: Create environment file
-        run: |
-          cat <<EOF_ENV > .env
-          DATABASE_URL=${DATABASE_URL}
-          BASIC_AUTH_USERNAME=${BASIC_AUTH_USERNAME}
-          BASIC_AUTH_PASSWORD=${BASIC_AUTH_PASSWORD}
-          BASIC_AUTH_USER_ID=${BASIC_AUTH_USER_ID}
-          EOF_ENV
 
       - name: Seed database
         run: npm run seed
@@ -231,7 +206,7 @@ jobs:
       - name: Setup Terraform
         uses: hashicorp/setup-terraform@v3
         with:
-          terraform_version: 1.13.3
+          terraform_version: ${{ env.TERRAFORM_VERSION }}
           cli_config_credentials_token: ${{ secrets.TF_API_TOKEN }}
       - name: Download Build Artifacts
         uses: actions/download-artifact@v5
