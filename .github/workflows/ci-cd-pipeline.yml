@@ -224,12 +224,9 @@ jobs:
       - name: Terraform init
         working-directory: iac
         run: terraform init -input=false
-      - name: Terraform plan
-        working-directory: iac
-        run: terraform plan -out=tfplan -input=false
       - name: Terraform apply
         working-directory: iac
-        run: terraform apply -auto-approve -input=false tfplan
+        run: terraform apply -auto-approve -input=false
       - name: Capture Terraform outputs
         id: tf_outputs
         working-directory: iac
