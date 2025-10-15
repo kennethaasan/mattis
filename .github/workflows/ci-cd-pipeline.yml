@@ -17,8 +17,49 @@ permissions:
   # Required to put a comment into the pull-request
   pull-requests: write
 
+env:
+  NODE_VERSION: 22
+  DATABASE_URL: postgresql://user:password@127.0.0.1:5432/mattis_db
+  BASIC_AUTH_USERNAME: admin
+  BASIC_AUTH_PASSWORD: admin
+  BASIC_AUTH_USER_ID: 00000000-0000-7000-8000-000000000000
+  PLAYWRIGHT_BASE_URL: http://127.0.0.1:3000
+
 jobs:
-  test:
+  code-quality:
+    name: ${{ matrix.name }}
+    runs-on: ubuntu-latest
+    timeout-minutes: ${{ matrix.job-timeout }}
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - name: Type Check (TypeScript)
+            command: npm run tsc
+            job-timeout: 15
+          - name: Lint (Biome)
+            command: npm run lint
+            job-timeout: 15
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v5
+
+      - &setup-node
+        name: Setup Node.js
+        uses: actions/setup-node@v5
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+          cache: npm
+          cache-dependency-path: package-lock.json
+
+      - &install-dependencies
+        name: Install dependencies
+        run: npm ci
+
+      - name: Run ${{ matrix.name }}
+        run: ${{ matrix.command }}
+
+  unit-tests:
     name: Tests
     runs-on: ubuntu-latest
     timeout-minutes: 35
@@ -36,39 +77,29 @@ jobs:
           --health-interval 10s
           --health-timeout 5s
           --health-retries 5
-    env:
-      DATABASE_URL: postgresql://user:password@127.0.0.1:5432/mattis_db
-      BASIC_AUTH_USERNAME: admin
-      BASIC_AUTH_PASSWORD: admin
-      BASIC_AUTH_USER_ID: 00000000-0000-7000-8000-000000000000
-      PLAYWRIGHT_BASE_URL: http://127.0.0.1:3000
     steps:
       - name: Checkout repository
         uses: actions/checkout@v5
 
-      - name: Setup Node.js
-        uses: actions/setup-node@v5
-        with:
-          node-version: 22
+      - *setup-node
 
-      - name: Install dependencies
-        run: npm ci
-
-      - name: Type Check (TypeScript)
-        run: npm run tsc
-        timeout-minutes: 6
-
-      - name: Lint (Biome)
-        run: npm run lint
-        timeout-minutes: 6
+      - *install-dependencies
 
       - name: Tests
         run: npm test
-        timeout-minutes: 6
+        timeout-minutes: 10
 
       - name: "Report Vitest Coverage"
         if: always()
         uses: davelosert/vitest-coverage-report-action@v2
+
+  infra:
+    name: Infrastructure checks
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v5
 
       - name: Setup Terraform
         uses: hashicorp/setup-terraform@v3
@@ -103,6 +134,34 @@ jobs:
       #     ignore-unfixed: true
       #     severity: HIGH,CRITICAL
       #     skip-dirs: iac/.terraform
+
+  e2e:
+    name: End-to-end tests
+    runs-on: ubuntu-latest
+    timeout-minutes: 35
+    needs:
+      - unit-tests
+    services:
+      postgres:
+        image: postgres:17
+        ports:
+          - 5432:5432
+        env:
+          POSTGRES_DB: mattis_db
+          POSTGRES_USER: user
+          POSTGRES_PASSWORD: password
+        options: >-
+          --health-cmd "pg_isready -U user -d mattis_db"
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v5
+
+      - *setup-node
+
+      - *install-dependencies
 
       - name: Create environment file
         run: |
@@ -140,12 +199,8 @@ jobs:
     steps:
       - name: Checkout repository
         uses: actions/checkout@v5
-      - name: Setup Node.js
-        uses: actions/setup-node@v5
-        with:
-          node-version: 22
-      - name: Install dependencies
-        run: npm ci
+      - *setup-node
+      - *install-dependencies
       - name: Build and package Lambda function
         run: npm run build:lambda
       # Upload build artifacts for deploy (only on push to main)
@@ -162,7 +217,10 @@ jobs:
     name: Deploy
     runs-on: ubuntu-latest
     needs:
-      - test
+      - code-quality
+      - unit-tests
+      - infra
+      - e2e
       - build
     if: ${{ github.event_name == 'push' && github.ref_name == 'main' }}
     environment: production
@@ -195,12 +253,8 @@ jobs:
         working-directory: iac
         run: |
           echo "database_url=$(terraform output -raw database_url)" >> "$GITHUB_OUTPUT"
-      - name: Setup Node.js
-        uses: actions/setup-node@v5
-        with:
-          node-version: 22
-      - name: Install dependencies
-        run: npm ci
+      - *setup-node
+      - *install-dependencies
       - name: Run database migrations
         env:
           DATABASE_URL: ${{ steps.tf_outputs.outputs.database_url }}
