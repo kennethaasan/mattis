@@ -52,6 +52,7 @@ data "aws_route53_zone" "zone" {
 
 module "acm" {
   source    = "terraform-aws-modules/acm/aws"
+  version   = "6.1.0"
   providers = { aws = aws.us_east_1 }
 
   domain_name            = var.app_domain
@@ -63,7 +64,7 @@ module "acm" {
 
 module "fn" {
   source  = "terraform-aws-modules/lambda/aws"
-  version = "~> 7.0"
+  version = "8.1.0"
 
   function_name = local.stack_name
   description   = "Next.js on Lambda via AWS Lambda Web Adapter"
@@ -75,7 +76,7 @@ module "fn" {
   publish       = true
 
   local_existing_package = var.package_path
-  layers                  = compact([var.lwa_layer_arn])
+  layers                 = compact([var.lwa_layer_arn])
 
   environment_variables = merge(
     var.lambda_environment,
@@ -89,10 +90,10 @@ module "fn" {
     }
   )
 
-  create_function_url                = true
-  function_url_auth_type             = "AWS_IAM"
-  cloudwatch_logs_retention_in_days  = var.lambda_log_retention_days
-  tags                               = local.default_tags
+  create_lambda_function_url        = true
+  authorization_type                = "AWS_IAM"
+  cloudwatch_logs_retention_in_days = var.lambda_log_retention_days
+  tags                              = local.default_tags
 }
 
 locals {
@@ -101,7 +102,7 @@ locals {
 
 resource "aws_cloudfront_origin_access_control" "oac" {
   name                              = "${local.stack_name}-oac"
-  origin_access_control_origin_type = "lambda_function_url"
+  origin_access_control_origin_type = "lambda"
   signing_behavior                  = "always"
   signing_protocol                  = "sigv4"
 }
@@ -141,6 +142,8 @@ resource "aws_cloudfront_distribution" "cdn" {
     target_origin_id         = "lambda-url"
     viewer_protocol_policy   = "redirect-to-https"
     compress                 = true
+    allowed_methods          = ["GET", "HEAD", "OPTIONS", "PUT", "POST", "PATCH", "DELETE"]
+    cached_methods           = ["GET", "HEAD"]
     cache_policy_id          = data.aws_cloudfront_cache_policy.caching_disabled.id
     origin_request_policy_id = data.aws_cloudfront_origin_request_policy.all_viewer_except_host.id
   }
@@ -150,6 +153,8 @@ resource "aws_cloudfront_distribution" "cdn" {
     target_origin_id         = "lambda-url"
     viewer_protocol_policy   = "redirect-to-https"
     compress                 = true
+    allowed_methods          = ["GET", "HEAD", "OPTIONS"]
+    cached_methods           = ["GET", "HEAD"]
     cache_policy_id          = data.aws_cloudfront_cache_policy.caching_optimized.id
     origin_request_policy_id = data.aws_cloudfront_origin_request_policy.all_viewer_except_host.id
   }
