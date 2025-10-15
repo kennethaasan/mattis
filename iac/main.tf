@@ -8,12 +8,6 @@ resource "neon_project" "this" {
   pg_version                = var.neon_pg_version
   org_id                    = var.neon_organization_id
   history_retention_seconds = var.neon_retention_seconds
-
-  branch {
-    name          = "production"
-    database_name = var.app_name
-    role_name     = "app_role"
-  }
 }
 
 resource "neon_branch" "production" {
@@ -120,6 +114,11 @@ module "opennext" {
     )
     log_group = {
       retention_in_days = var.lambda_log_retention_days
+    }
+
+    # https://github.com/nhs-england-tools/terraform-aws-opennext/pull/28
+    package = {
+      source_dir = "${var.opennext_build_path}/server-functions/"
     }
   }
 }

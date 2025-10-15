@@ -66,7 +66,7 @@ variable "neon_retention_seconds" {
 variable "opennext_build_path" {
   description = "Path to the compiled OpenNext server function"
   type        = string
-  default     = "../.open-next"
+  default     = ".open-next"
 }
 
 variable "lambda_runtime" {
