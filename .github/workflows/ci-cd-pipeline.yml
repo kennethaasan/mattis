@@ -90,15 +90,18 @@ jobs:
         working-directory: iac
         run: terraform fmt -check -recursive
 
+      - name: Terraform init
+        working-directory: iac
+        run: terraform init -input=false
+
       - name: Terraform validate
         working-directory: iac
-        run: |
-          terraform init -backend=false
-          terraform validate
+        run: terraform validate
 
-          if [ "$GITHUB_EVENT_NAME" = "pull_request" ]; then
-            terraform plan -input=false
-          fi
+      - name: Terraform plan
+        if: github.event_name == 'pull_request'
+        working-directory: iac
+        run: terraform plan -input=false
 
       - name: Setup TFLint
         uses: terraform-linters/setup-tflint@v4
