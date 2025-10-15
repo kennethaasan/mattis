@@ -185,6 +185,8 @@ jobs:
         with:
           name: build
           path: .open-next
+      - name: Display structure of downloaded files
+        run: ls -R .open-next
       - name: Terraform init
         working-directory: iac
         run: terraform init -input=false
