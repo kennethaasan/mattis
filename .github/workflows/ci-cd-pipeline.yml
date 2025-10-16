@@ -99,11 +99,6 @@ jobs:
         working-directory: iac
         run: terraform validate
 
-      - name: Terraform plan
-        if: github.event_name == 'pull_request'
-        working-directory: iac
-        run: terraform plan -input=false
-
       - name: Setup TFLint
         uses: terraform-linters/setup-tflint@v4
 
@@ -187,10 +182,10 @@ jobs:
       - name: Build and package Lambda function
         run: npm run build:lambda
       - name: Zip Lambda function
-        run: zip -r build/function.zip build/*
+        working-directory: build
+        run: zip -qr function.zip .
       # Upload build artifacts for deploy (only on push to main)
       - name: Upload Lambda artifact
-        if: ${{ github.event_name == 'push' && github.ref_name == 'main' }}
         uses: actions/upload-artifact@v4
         with:
           name: lambda-function
@@ -207,7 +202,6 @@ jobs:
       - infra
       - e2e
       - build
-    if: ${{ github.event_name == 'push' && github.ref_name == 'main' }}
     environment: production
     timeout-minutes: 30
     steps:
@@ -227,10 +221,17 @@ jobs:
       - name: Terraform init
         working-directory: iac
         run: terraform init -input=false
+
+      - name: Terraform plan
+        if: github.event_name == 'pull_request'
+        working-directory: iac
+        run: terraform plan -input=false
       - name: Terraform apply
+        if: ${{ github.event_name == 'push' && github.ref_name == 'main' }}
         working-directory: iac
         run: terraform apply -auto-approve -input=false
       - name: Capture Terraform outputs
+        if: ${{ github.event_name == 'push' && github.ref_name == 'main' }}
         id: tf_outputs
         working-directory: iac
         run: |
@@ -238,6 +239,7 @@ jobs:
       - *setup-node
       - *install-dependencies
       - name: Run database migrations
+        if: ${{ github.event_name == 'push' && github.ref_name == 'main' }}
         env:
           DATABASE_URL: ${{ steps.tf_outputs.outputs.database_url }}
         run: npm run db:migrate
