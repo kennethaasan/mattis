@@ -110,7 +110,7 @@ variable "lambda_environment" {
 variable "package_path" {
   description = "Path to the packaged Lambda ZIP archive"
   type        = string
-  default     = "../build/function.zip"
+  default     = "./build/function.zip"
 }
 
 variable "lwa_layer_arn" {

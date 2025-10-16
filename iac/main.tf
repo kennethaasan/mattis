@@ -75,6 +75,8 @@ module "fn" {
   timeout       = var.lambda_timeout
   publish       = true
 
+  # use pre-built artifact supplied by CI
+  create_package         = false
   local_existing_package = var.package_path
   layers                 = compact([var.lwa_layer_arn])
 
