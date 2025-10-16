@@ -37,16 +37,17 @@ jobs:
             command: npm run lint
             job-timeout: 15
     steps:
-      - name: Checkout repository
+      - &node-checkout
+        name: Checkout repository
         uses: actions/checkout@v5
 
-      - &setup-node
+      - &node-setup
         name: Setup Node.js
         uses: actions/setup-node@v5
         with:
           node-version: ${{ env.NODE_VERSION }}
 
-      - &install-dependencies
+      - &node-install-dependencies
         name: Install dependencies
         run: npm ci
 
@@ -58,12 +59,9 @@ jobs:
     runs-on: ubuntu-latest
     timeout-minutes: 15
     steps:
-      - name: Checkout repository
-        uses: actions/checkout@v5
-
-      - *setup-node
-
-      - *install-dependencies
+      - *node-checkout
+      - *node-setup
+      - *node-install-dependencies
 
       - name: Tests
         run: npm test
@@ -78,10 +76,12 @@ jobs:
     runs-on: ubuntu-latest
     timeout-minutes: 20
     steps:
-      - name: Checkout repository
+      - &tf-checkout
+        name: Checkout repository
         uses: actions/checkout@v5
 
-      - name: Setup Terraform
+      - &tf-setup
+        name: Setup Terraform
         uses: hashicorp/setup-terraform@v3
         with:
           terraform_version: ${{ env.TERRAFORM_VERSION }}
@@ -91,7 +91,8 @@ jobs:
         working-directory: iac
         run: terraform fmt -check -recursive
 
-      - name: Terraform init
+      - &tf-init
+        name: Terraform init
         working-directory: iac
         run: terraform init -input=false
 
@@ -143,12 +144,9 @@ jobs:
       BASIC_AUTH_USER_ID: 00000000-0000-7000-8000-000000000000
       PLAYWRIGHT_BASE_URL: http://127.0.0.1:3000
     steps:
-      - name: Checkout repository
-        uses: actions/checkout@v5
-
-      - *setup-node
-
-      - *install-dependencies
+      - *node-checkout
+      - *node-setup
+      - *node-install-dependencies
 
       - name: Seed database
         run: npm run seed
@@ -175,10 +173,9 @@ jobs:
     runs-on: ubuntu-latest
     timeout-minutes: 15
     steps:
-      - name: Checkout repository
-        uses: actions/checkout@v5
-      - *setup-node
-      - *install-dependencies
+      - *node-checkout
+      - *node-setup
+      - *node-install-dependencies
       - name: Build and package Lambda function
         run: npm run build:lambda
       - name: Zip Lambda function
@@ -193,6 +190,27 @@ jobs:
           if-no-files-found: error
           retention-days: 3
 
+  plan:
+    name: Plan
+    runs-on: ubuntu-latest
+    needs:
+      - build
+    if: github.event_name == 'pull_request'
+    timeout-minutes: 30
+    steps:
+      - *tf-checkout
+      - *tf-setup
+      - &tf-download-artifact
+        name: Download Build Artifacts
+        uses: actions/download-artifact@v5
+        with:
+          name: lambda-function
+          path: iac/build
+      - *tf-init
+      - name: Terraform plan
+        working-directory: iac
+        run: terraform plan -input=false
+
   deploy:
     name: Deploy
     runs-on: ubuntu-latest
@@ -202,36 +220,18 @@ jobs:
       - infra
       - e2e
       - build
+    if: github.event_name == 'push' && github.ref == 'refs/heads/main'
     environment: production
     timeout-minutes: 30
     steps:
-      - name: Checkout repository
-        uses: actions/checkout@v5
-      - name: Setup Terraform
-        uses: hashicorp/setup-terraform@v3
-        with:
-          terraform_version: ${{ env.TERRAFORM_VERSION }}
-          cli_config_credentials_token: ${{ secrets.TF_API_TOKEN }}
-      - name: Download Build Artifacts
-        uses: actions/download-artifact@v5
-        with:
-          name: lambda-function
-          path: iac/build
-
-      - name: Terraform init
-        working-directory: iac
-        run: terraform init -input=false
-
-      - name: Terraform plan
-        if: github.event_name == 'pull_request'
-        working-directory: iac
-        run: terraform plan -input=false
+      - *tf-checkout
+      - *tf-setup
+      - *tf-download-artifact
+      - *tf-init
       - name: Terraform apply
-        if: ${{ github.event_name == 'push' && github.ref_name == 'main' }}
         working-directory: iac
         run: terraform apply -auto-approve -input=false
       - name: Capture Terraform outputs
-        if: ${{ github.event_name == 'push' && github.ref_name == 'main' }}
         id: tf_outputs
         working-directory: iac
         run: |
@@ -239,7 +239,6 @@ jobs:
       - *setup-node
       - *install-dependencies
       - name: Run database migrations
-        if: ${{ github.event_name == 'push' && github.ref_name == 'main' }}
         env:
           DATABASE_URL: ${{ steps.tf_outputs.outputs.database_url }}
         run: npm run db:migrate
