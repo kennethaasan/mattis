@@ -236,8 +236,8 @@ jobs:
         working-directory: iac
         run: |
           echo "database_url=$(terraform output -raw database_url)" >> "$GITHUB_OUTPUT"
-      - *setup-node
-      - *install-dependencies
+      - *node-setup
+      - *node-install-dependencies
       - name: Run database migrations
         env:
           DATABASE_URL: ${{ steps.tf_outputs.outputs.database_url }}
