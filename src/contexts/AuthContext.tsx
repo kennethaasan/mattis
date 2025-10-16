@@ -63,13 +63,17 @@ function normalizeSessionPayload(payload: unknown): SessionResponse | null {
   }
 
   const sessionCandidate = raw.session;
-  const sessionToken =
-    (typeof raw.token === "string" && raw.token) ||
-    (sessionCandidate &&
-      typeof sessionCandidate === "object" &&
-      typeof (sessionCandidate as { token?: unknown }).token === "string" &&
-      (sessionCandidate as { token: string }).token) ||
-    null;
+  let sessionToken: string | null = null;
+
+  if (typeof raw.token === "string" && raw.token) {
+    sessionToken = raw.token;
+  } else if (
+    sessionCandidate &&
+    typeof sessionCandidate === "object" &&
+    typeof (sessionCandidate as { token?: unknown }).token === "string"
+  ) {
+    sessionToken = (sessionCandidate as { token: string }).token;
+  }
 
   if (!sessionToken) {
     return null;
@@ -153,7 +157,7 @@ export function AuthProvider({ children }: AuthProviderProps) {
       setError(
         refreshError instanceof Error
           ? refreshError.message
-          : "Kunne ikke hente innloggingstatus.",
+          : "Kunne ikke hente innloggingstatus."
       );
     } finally {
       setLoading(false);
@@ -188,7 +192,10 @@ export function AuthProvider({ children }: AuthProviderProps) {
           }
 
           const message =
-            body && typeof body === "object" && body !== null && "message" in body
+            body &&
+            typeof body === "object" &&
+            body !== null &&
+            "message" in body
               ? (body as { message?: string }).message ??
                 "Feil e-post eller passord."
               : "Feil e-post eller passord.";
@@ -208,14 +215,14 @@ export function AuthProvider({ children }: AuthProviderProps) {
         setError(
           loginError instanceof Error
             ? loginError.message
-            : "Kunne ikke logge inn.",
+            : "Kunne ikke logge inn."
         );
         throw loginError;
       } finally {
         setLoading(false);
       }
     },
-    [applySession],
+    [applySession]
   );
 
   const logout = useCallback(async () => {
@@ -257,7 +264,7 @@ export function AuthProvider({ children }: AuthProviderProps) {
       refresh,
       getAuthHeader,
     }),
-    [error, getAuthHeader, loading, login, logout, refresh, token, user],
+    [error, getAuthHeader, loading, login, logout, refresh, token, user]
   );
 
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;
