@@ -12,7 +12,7 @@ info:
     - View leaderboards for regular play (loss percentage) and Fettmattis.
 
     **Authentication**:
-    - Write operations (`POST`, `PUT`, `DELETE`) require authentication. The exact scheme is TBD (Phase 1 uses a placeholder `X-User-Id` header).
+    - Write operations (`POST`, `PUT`, `DELETE`) require a bearer token issued by the authentication service.
     - Read operations (`GET`) are public.
 
     **Error Handling**:
@@ -20,12 +20,80 @@ info:
 servers:
   - url: /api
 paths:
+  /auth/get-session:
+    get:
+      summary: Get Current Session
+      description: Returns the active session when a valid session cookie is present.
+      operationId: getSession
+      tags:
+        - Authentication
+      security:
+        - sessionCookie: []
+      responses:
+        "200":
+          description: The current session details or null when no session is available.
+          content:
+            application/json:
+              schema:
+                oneOf:
+                  - $ref: "#/components/schemas/AuthSession"
+                  - type: "null"
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+
+  /auth/sign-in/email:
+    post:
+      summary: Sign In with Email
+      description: Authenticates a user using email and password credentials.
+      operationId: signInWithEmail
+      tags:
+        - Authentication
+      security: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/EmailPasswordSignInRequest"
+      responses:
+        "200":
+          description: Session token and user details for the authenticated user.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/EmailPasswordSignInResponse"
+        "400":
+          $ref: "#/components/responses/BadRequest"
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+        "403":
+          $ref: "#/components/responses/Forbidden"
+
+  /auth/sign-out:
+    post:
+      summary: Sign Out
+      description: Terminates the current session and clears the associated cookies.
+      operationId: signOut
+      tags:
+        - Authentication
+      security:
+        - sessionCookie: []
+      responses:
+        "200":
+          description: Confirmation that the session was terminated.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/SignOutResponse"
+        "400":
+          $ref: "#/components/responses/BadRequest"
   /players:
     get:
       summary: List Players
       operationId: listPlayers
       tags:
         - Players
+      security: []
       responses:
         "200":
           description: A list of players.
@@ -40,6 +108,8 @@ paths:
       operationId: createPlayer
       tags:
         - Players
+      security:
+        - bearerAuth: []
       requestBody:
         required: true
         content:
@@ -57,6 +127,8 @@ paths:
           $ref: "#/components/responses/BadRequest"
         "409":
           $ref: "#/components/responses/Conflict"
+        "401":
+          $ref: "#/components/responses/Unauthorized"
 
   /players/{playerId}:
     get:
@@ -64,6 +136,7 @@ paths:
       operationId: getPlayer
       tags:
         - Players
+      security: []
       parameters:
         - name: playerId
           in: path
@@ -86,6 +159,8 @@ paths:
       operationId: updatePlayer
       tags:
         - Players
+      security:
+        - bearerAuth: []
       parameters:
         - name: playerId
           in: path
@@ -111,6 +186,8 @@ paths:
           $ref: "#/components/responses/BadRequest"
         "404":
           $ref: "#/components/responses/NotFound"
+        "401":
+          $ref: "#/components/responses/Unauthorized"
 
   /rounds:
     post:
@@ -118,6 +195,8 @@ paths:
       operationId: createRound
       tags:
         - Rounds
+      security:
+        - bearerAuth: []
       requestBody:
         required: true
         content:
@@ -133,6 +212,8 @@ paths:
                 $ref: "#/components/schemas/Round"
         "400":
           $ref: "#/components/responses/BadRequest"
+        "401":
+          $ref: "#/components/responses/Unauthorized"
 
   /rounds/latest:
     get:
@@ -141,6 +222,7 @@ paths:
       operationId: getLatestRound
       tags:
         - Rounds
+      security: []
       responses:
         "200":
           description: The most recent round or null when no rounds exist.
@@ -157,6 +239,7 @@ paths:
       operationId: getRound
       tags:
         - Rounds
+      security: []
       parameters:
         - name: roundId
           in: path
@@ -181,6 +264,8 @@ paths:
       operationId: updateRound
       tags:
         - Rounds
+      security:
+        - bearerAuth: []
       parameters:
         - name: roundId
           in: path
@@ -208,11 +293,15 @@ paths:
           $ref: "#/components/responses/Forbidden"
         "404":
           $ref: "#/components/responses/NotFound"
+        "401":
+          $ref: "#/components/responses/Unauthorized"
     delete:
       summary: Soft Delete a Round (within 24h)
       operationId: deleteRound
       tags:
         - Rounds
+      security:
+        - bearerAuth: []
       parameters:
         - name: roundId
           in: path
@@ -228,6 +317,8 @@ paths:
           $ref: "#/components/responses/Forbidden"
         "404":
           $ref: "#/components/responses/NotFound"
+        "401":
+          $ref: "#/components/responses/Unauthorized"
 
   /fettmattis:
     post:
@@ -235,6 +326,8 @@ paths:
       operationId: createFettmattis
       tags:
         - FettMattis
+      security:
+        - bearerAuth: []
       requestBody:
         required: true
         content:
@@ -252,6 +345,8 @@ paths:
           $ref: "#/components/responses/BadRequest"
         "409":
           $ref: "#/components/responses/Conflict"
+        "401":
+          $ref: "#/components/responses/Unauthorized"
 
   /fettmattis/{fettmattisId}:
     delete:
@@ -259,6 +354,8 @@ paths:
       operationId: deleteFettmattis
       tags:
         - FettMattis
+      security:
+        - bearerAuth: []
       parameters:
         - name: fettmattisId
           in: path
@@ -274,6 +371,8 @@ paths:
           $ref: "#/components/responses/Forbidden"
         "404":
           $ref: "#/components/responses/NotFound"
+        "401":
+          $ref: "#/components/responses/Unauthorized"
 
   /leaderboard/regular:
     get:
@@ -281,6 +380,7 @@ paths:
       operationId: getRegularLeaderboard
       tags:
         - Leaderboards
+      security: []
       parameters:
         - name: year
           in: query
@@ -307,6 +407,7 @@ paths:
       operationId: getFettmattisLeaderboard
       tags:
         - Leaderboards
+      security: []
       parameters:
         - name: year
           in: query
@@ -329,6 +430,119 @@ paths:
 
 components:
   schemas:
+    AuthUser:
+      type: object
+      required:
+        - id
+        - email
+      properties:
+        id:
+          type: string
+          format: uuid
+          description: UUID v7, time-ordered identifier for the authenticated user.
+        email:
+          type: string
+          format: email
+        name:
+          type: string
+          nullable: true
+        image:
+          type: string
+          format: uri
+          nullable: true
+        emailVerified:
+          type: boolean
+          description: Indicates whether the email address has been verified.
+        createdAt:
+          type: string
+          format: date-time
+          description: Timestamp for when the user record was created.
+        updatedAt:
+          type: string
+          format: date-time
+          description: Timestamp for the last update to the user record.
+    AuthSessionData:
+      type: object
+      required:
+        - token
+      properties:
+        token:
+          type: string
+          description: Opaque bearer token for authenticated write operations.
+        expiresAt:
+          type: string
+          format: date-time
+          description: Expiration timestamp for the session.
+        id:
+          type: string
+          description: Identifier for the issued session.
+        createdAt:
+          type: string
+          format: date-time
+          description: Timestamp for when the session was created.
+        updatedAt:
+          type: string
+          format: date-time
+          description: Timestamp for the last update to the session.
+    AuthSession:
+      type: object
+      required:
+        - session
+        - user
+      properties:
+        session:
+          $ref: "#/components/schemas/AuthSessionData"
+        user:
+          $ref: "#/components/schemas/AuthUser"
+    EmailPasswordSignInRequest:
+      type: object
+      required:
+        - email
+        - password
+      properties:
+        email:
+          type: string
+          format: email
+          description: Email address used for the account.
+        password:
+          type: string
+          format: password
+          description: Password associated with the email account.
+        callbackURL:
+          type: string
+          format: uri
+          description: Optional URL to redirect to after sign-in completes.
+        rememberMe:
+          type: boolean
+          description: When false, the session expires when the browser is closed.
+    EmailPasswordSignInResponse:
+      type: object
+      required:
+        - redirect
+        - token
+        - user
+      properties:
+        redirect:
+          type: boolean
+          description: Indicates whether the client should perform a redirect.
+        token:
+          type: string
+          description: Session token that can be exchanged for authenticated requests.
+        url:
+          type: string
+          format: uri
+          nullable: true
+          description: Redirect destination when `redirect` is true.
+        user:
+          $ref: "#/components/schemas/AuthUser"
+    SignOutResponse:
+      type: object
+      required:
+        - success
+      properties:
+        success:
+          type: boolean
+          description: Indicates that the user session was terminated.
     Player:
       type: object
       required:
@@ -511,6 +725,12 @@ components:
         application/problem+json:
           schema:
             $ref: "#/components/schemas/Problem"
+    Unauthorized:
+      description: Authentication is required for this operation.
+      content:
+        application/problem+json:
+          schema:
+            $ref: "#/components/schemas/Problem"
     NotFound:
       description: The requested resource was not found.
       content:
@@ -535,3 +755,19 @@ components:
         application/problem+json:
           schema:
             $ref: "#/components/schemas/Problem"
+  securitySchemes:
+    bearerAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: Session
+      description: >-
+        Session token returned from the authentication endpoints. Present the
+        value in the `Authorization` header using the `Bearer` scheme for
+        protected write operations.
+    sessionCookie:
+      type: apiKey
+      in: cookie
+      name: better-auth.session_token
+      description: >-
+        Signed session cookie issued during authentication. In secure
+        environments the cookie is prefixed with `__Secure-`.
