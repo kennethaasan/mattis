@@ -8,37 +8,21 @@ resource "neon_project" "this" {
   pg_version                = var.neon_pg_version
   org_id                    = var.neon_organization_id
   history_retention_seconds = var.neon_retention_seconds
-}
 
-resource "neon_branch" "production" {
-  project_id = neon_project.this.id
-  name       = "production"
-}
+  default_endpoint_settings {
+    autoscaling_limit_min_cu = 0.25
+    autoscaling_limit_max_cu = 1
+  }
 
-resource "neon_endpoint" "production" {
-  project_id = neon_project.this.id
-  branch_id  = neon_branch.production.id
-
-  autoscaling_limit_min_cu = 0.25
-  autoscaling_limit_max_cu = 1
-  suspend_timeout_seconds  = 10
-}
-
-resource "neon_role" "production_app" {
-  project_id = neon_project.this.id
-  branch_id  = neon_branch.production.id
-  name       = "app_role"
-}
-
-resource "neon_database" "production_database" {
-  project_id = neon_project.this.id
-  branch_id  = neon_branch.production.id
-  name       = var.app_name
-  owner_name = neon_role.production_app.name
+  branch {
+    name          = "main"
+    database_name = var.app_name
+    role_name     = "app_role"
+  }
 }
 
 locals {
-  database_url = "postgresql://${neon_role.production_app.name}:${neon_role.production_app.password}@${neon_endpoint.production.host}/${neon_database.production_database.name}"
+  database_url = neon_project.this.connection_uri
 }
 
 ###########################
@@ -75,6 +59,8 @@ module "fn" {
   timeout       = var.lambda_timeout
   publish       = true
 
+  # use pre-built artifact supplied by CI
+  create_package         = false
   local_existing_package = var.package_path
   layers                 = compact([var.lwa_layer_arn])
 
@@ -83,8 +69,8 @@ module "fn" {
     {
       AWS_LAMBDA_EXEC_WRAPPER      = "/opt/bootstrap"
       AWS_LWA_ASYNC_INIT           = "true"
+      AWS_LWA_ENABLE_COMPRESSION   = "true"
       AWS_LWA_AUTHORIZATION_SOURCE = "x-forwarded-authorization"
-      AWS_LWA_PORT                 = "3000"
       NODE_ENV                     = "production"
       PORT                         = "3000"
       DATABASE_URL                 = local.database_url
