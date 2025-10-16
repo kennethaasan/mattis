@@ -15,7 +15,6 @@ const BASIC_PROVIDER_ID = "credential";
 export async function ensureBasicAuthUser(client: DbExecutor): Promise<void> {
   const userId = env.BASIC_AUTH_USER_ID;
   const email = env.BASIC_AUTH_USERNAME.toLowerCase();
-  const displayName = env.BASIC_AUTH_USERNAME;
   const passwordHash = await hashPassword(env.BASIC_AUTH_PASSWORD);
 
   await client
@@ -24,18 +23,14 @@ export async function ensureBasicAuthUser(client: DbExecutor): Promise<void> {
       id: userId,
       email,
       emailVerified: true,
-      name: displayName,
-      image: null,
-      username: displayName,
+      name: email,
     })
     .onConflictDoUpdate({
       target: schema.users.id,
       set: {
         email,
         emailVerified: true,
-        name: displayName,
-        image: null,
-        username: displayName,
+        name: email,
         updatedAt: sql<Date>`now()`,
       },
     });

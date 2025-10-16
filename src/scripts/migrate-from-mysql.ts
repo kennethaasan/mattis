@@ -65,6 +65,20 @@ interface MigrationOptions {
   readonly migrationUsername: string;
 }
 
+function toEmail(username: string): string {
+  const trimmed = username.trim().toLowerCase();
+
+  if (trimmed.length === 0) {
+    return "unknown@mattis.local";
+  }
+
+  if (trimmed.includes("@")) {
+    return trimmed;
+  }
+
+  return `${trimmed}@mattis.local`;
+}
+
 const INFO_PREFIX = "[migrate]";
 const WARN_PREFIX = "[migrate:warn]";
 const ERROR_PREFIX = "[migrate:error]";
@@ -237,9 +251,12 @@ async function ensureMigrationUser(
   options: MigrationOptions,
 ): Promise<void> {
   const now = new Date();
+  const email = toEmail(options.migrationUsername);
   const migrationUser: UserInsertRow = {
     id: options.migrationUserId,
-    username: options.migrationUsername,
+    email,
+    emailVerified: true,
+    name: email,
     createdAt: now,
     updatedAt: now,
   };
@@ -255,12 +272,17 @@ async function migrateLegacyUsers(
     return;
   }
 
-  const userValues: UserInsertRow[] = users.map((row) => ({
-    id: generateId(),
-    username: row.username,
-    createdAt: toDate(row.created_at),
-    updatedAt: toDate(row.updated_at ?? row.created_at),
-  }));
+  const userValues: UserInsertRow[] = users.map((row) => {
+    const email = toEmail(row.username);
+    return {
+      id: generateId(),
+      email,
+      emailVerified: true,
+      name: email,
+      createdAt: toDate(row.created_at),
+      updatedAt: toDate(row.updated_at ?? row.created_at),
+    } satisfies UserInsertRow;
+  });
 
   await tx.insert(schema.users).values(userValues).onConflictDoNothing();
 }

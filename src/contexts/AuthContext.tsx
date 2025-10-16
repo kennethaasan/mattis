@@ -60,7 +60,7 @@ export function AuthProvider({ children }: AuthProviderProps) {
     setUser({
       id: payload.user.id,
       email: payload.user.email,
-      name: payload.user.name,
+      name: payload.user.name ?? payload.user.email,
     });
     setToken(payload.session.token);
   }, []);
@@ -124,8 +124,8 @@ export function AuthProvider({ children }: AuthProviderProps) {
           const message =
             body && typeof body === "object" && body !== null && "message" in body
               ? (body as { message?: string }).message ??
-                "Feil brukernavn eller passord."
-              : "Feil brukernavn eller passord.";
+                "Feil e-post eller passord."
+              : "Feil e-post eller passord.";
           throw new Error(message);
         }
 
