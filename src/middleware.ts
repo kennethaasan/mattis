@@ -19,6 +19,8 @@ const ALLOWED_METHODS = [
   "OPTIONS",
 ].join(", ");
 
+const UNPROTECTED_PATHS = [/^\/api\/auth(?:\/|$)/];
+
 export async function middleware(request: NextRequest) {
   const responseHeaders = new Headers();
   const trustedOrigins = getTrustedOrigins(request);
@@ -35,6 +37,19 @@ export async function middleware(request: NextRequest) {
 
   if (request.method.toUpperCase() === "OPTIONS") {
     return new NextResponse(null, { status: 204, headers: responseHeaders });
+  }
+
+  const pathname = request.nextUrl.pathname;
+  const isUnprotectedPath = UNPROTECTED_PATHS.some((pattern) =>
+    pattern.test(pathname)
+  );
+
+  if (isUnprotectedPath) {
+    const response = NextResponse.next();
+    responseHeaders.forEach((value, key) => {
+      response.headers.set(key, value);
+    });
+    return response;
   }
 
   if (!PROTECTED_METHODS.has(request.method.toUpperCase())) {

@@ -30,11 +30,77 @@ interface AuthContextType {
 interface SessionResponse {
   readonly session: {
     token: string;
+    expiresAt?: string;
+    id?: string;
   };
   readonly user: {
     id: string;
     email: string;
     name: string | null;
+  };
+}
+
+function normalizeSessionPayload(payload: unknown): SessionResponse | null {
+  if (!payload || typeof payload !== "object") {
+    return null;
+  }
+
+  const raw = payload as Record<string, unknown>;
+  const userCandidate = raw.user;
+
+  if (!userCandidate || typeof userCandidate !== "object") {
+    return null;
+  }
+
+  const user = userCandidate as {
+    id?: unknown;
+    email?: unknown;
+    name?: unknown;
+  };
+
+  if (typeof user.id !== "string" || typeof user.email !== "string") {
+    return null;
+  }
+
+  const sessionCandidate = raw.session;
+  const sessionToken =
+    (typeof raw.token === "string" && raw.token) ||
+    (sessionCandidate &&
+      typeof sessionCandidate === "object" &&
+      typeof (sessionCandidate as { token?: unknown }).token === "string" &&
+      (sessionCandidate as { token: string }).token) ||
+    null;
+
+  if (!sessionToken) {
+    return null;
+  }
+
+  const session =
+    sessionCandidate && typeof sessionCandidate === "object"
+      ? {
+          token: sessionToken,
+          expiresAt:
+            typeof (sessionCandidate as { expiresAt?: unknown }).expiresAt ===
+            "string"
+              ? (sessionCandidate as { expiresAt: string }).expiresAt
+              : undefined,
+          id:
+            typeof (sessionCandidate as { id?: unknown }).id === "string"
+              ? (sessionCandidate as { id: string }).id
+              : undefined,
+        }
+      : { token: sessionToken };
+
+  return {
+    session,
+    user: {
+      id: user.id,
+      email: user.email,
+      name:
+        typeof user.name === "string" && user.name.length > 0
+          ? user.name
+          : null,
+    },
   };
 }
 
@@ -80,8 +146,8 @@ export function AuthProvider({ children }: AuthProviderProps) {
         return;
       }
 
-      const data = (await response.json()) as SessionResponse | null;
-      applySession(data);
+      const data = await response.json();
+      applySession(normalizeSessionPayload(data));
     } catch (refreshError) {
       applySession(null);
       setError(
@@ -129,8 +195,14 @@ export function AuthProvider({ children }: AuthProviderProps) {
           throw new Error(message);
         }
 
-        const data = (await response.json()) as SessionResponse;
-        applySession(data);
+        const data = await response.json();
+        const sessionPayload = normalizeSessionPayload(data);
+
+        if (!sessionPayload) {
+          throw new Error("Feil e-post eller passord.");
+        }
+
+        applySession(sessionPayload);
       } catch (loginError) {
         applySession(null);
         setError(
