@@ -21,7 +21,6 @@ resource "neon_endpoint" "production" {
 
   autoscaling_limit_min_cu = 0.25
   autoscaling_limit_max_cu = 1
-  suspend_timeout_seconds  = 10
 }
 
 resource "neon_role" "production_app" {
