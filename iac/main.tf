@@ -21,11 +21,6 @@ resource "neon_project" "this" {
   }
 }
 
-resource "neon_endpoint" "this" {
-  project_id = neon_project.this.id
-  branch_id  = neon_project.this.default_branch_id
-}
-
 locals {
   database_url = neon_project.this.connection_uri
 }
