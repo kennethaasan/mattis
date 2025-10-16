@@ -1,10 +1,12 @@
 import { vi } from "vitest";
+import type { SeedDb } from "@/scripts/utils/ensure-basic-user";
 
 // Set baseline environment variables for tests before modules import.
 vi.stubEnv("DATABASE_URL", "postgresql://mattis:mattis@localhost:5432/mattis");
-vi.stubEnv("BASIC_AUTH_USERNAME", "admin");
+vi.stubEnv("BASIC_AUTH_USERNAME", "admin@example.com");
 vi.stubEnv("BASIC_AUTH_PASSWORD", "admin");
 vi.stubEnv("BASIC_AUTH_USER_ID", "00000000-0000-7000-8000-000000000000");
+vi.stubEnv("BETTER_AUTH_SECRET", "test-secret-test-secret-test-secret-123");
 
 import { PGlite } from "@electric-sql/pglite";
 import { drizzle } from "drizzle-orm/pglite";
@@ -33,14 +35,12 @@ vi.mock("@/lib/db/db", async () => {
   await apply();
 
   // now we can seed some data
-  const { env } = await import("@/env");
+  const { ensureBasicAuthUser } =
+    (await import("@/scripts/utils/ensure-basic-user")) as typeof import(
+      "@/scripts/utils/ensure-basic-user"
+    );
 
-  await db.insert(schema.users).values([
-    {
-      id: env.BASIC_AUTH_USER_ID,
-      username: env.BASIC_AUTH_USERNAME,
-    },
-  ]);
+  await ensureBasicAuthUser(db as unknown as SeedDb);
 
   return {
     db,

@@ -130,3 +130,9 @@ variable "tags" {
   type        = map(string)
   default     = {}
 }
+
+variable "better_auth_secret" {
+  description = "BetterAuth secret used for authentication"
+  type        = string
+  sensitive   = true
+}

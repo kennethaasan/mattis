@@ -5,9 +5,9 @@ import { z } from "zod";
 export const env = createEnv({
   server: {
     DATABASE_URL: z.url(),
-    BASIC_AUTH_USERNAME: z.string(),
-    BASIC_AUTH_PASSWORD: z.string(),
-    BASIC_AUTH_USER_ID: z.uuid(),
+    BETTER_AUTH_SECRET: z
+      .string()
+      .min(32, "BETTER_AUTH_SECRET must be at least 32 characters long."),
     NODE_ENV: z.string().optional(),
   },
   experimental__runtimeEnv: {},

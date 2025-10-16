@@ -3,10 +3,11 @@
 import { ArrowRight, Menu } from "lucide-react";
 import type { Route } from "next";
 import Link from "next/link";
-import { usePathname } from "next/navigation";
+import { usePathname, useRouter } from "next/navigation";
 import * as React from "react";
 import { ModeToggle } from "@/components/mode-toggle";
 import { Button } from "@/components/ui/button";
+import { useAuth } from "@/contexts/AuthContext";
 import { cn } from "@/lib/utils";
 
 const navLinks = [
@@ -18,8 +19,10 @@ const navLinks = [
 
 export function SiteHeader() {
   const pathname = usePathname();
+  const router = useRouter();
   const [isMenuOpen, setIsMenuOpen] = React.useState(false);
   const mobileNavId = React.useId();
+  const { user, logout, loading } = useAuth();
 
   React.useEffect(() => {
     if (!pathname) {
@@ -27,6 +30,11 @@ export function SiteHeader() {
     }
     setIsMenuOpen(false);
   }, [pathname]);
+
+  const handleLogout = React.useCallback(async () => {
+    await logout();
+    router.push("/login");
+  }, [logout, router]);
 
   return (
     <header className="border-border/60 bg-background/75 sticky top-0 z-50 border-b backdrop-blur-xl">
@@ -67,6 +75,23 @@ export function SiteHeader() {
           </nav>
         </div>
         <div className="flex items-center gap-2">
+          {user ? (
+            <Button
+              variant="ghost"
+              size="sm"
+              onClick={() => {
+                void handleLogout();
+              }}
+              disabled={loading}
+              className="hidden sm:inline-flex"
+            >
+              Logg ut
+            </Button>
+          ) : (
+            <Button variant="default" size="sm" asChild className="hidden sm:inline-flex">
+              <Link href="/login">Logg inn</Link>
+            </Button>
+          )}
           <ModeToggle />
           <Button
             variant="outline"
@@ -127,6 +152,22 @@ export function SiteHeader() {
               </Link>
             );
           })}
+          {user ? (
+            <Button
+              variant="outline"
+              className="w-full"
+              onClick={() => {
+                void handleLogout();
+              }}
+              disabled={loading}
+            >
+              Logg ut
+            </Button>
+          ) : (
+            <Button variant="outline" className="w-full" asChild>
+              <Link href="/login">Logg inn</Link>
+            </Button>
+          )}
           <Button variant="outline" className="w-full" asChild>
             <Link
               href="https://mattis.vanvikil.no/"

@@ -7,6 +7,7 @@ import { createPool } from "mysql2/promise";
 import { Pool as PostgresPool } from "pg";
 import * as schema from "@/lib/db/schema";
 import { generateId } from "@/lib/utils/id";
+import { ensureBasicAuthUser } from "@/scripts/utils/ensure-basic-user";
 
 type TargetDatabase = NodePgDatabase<typeof schema>;
 type UserInsertRow = typeof schema.users.$inferInsert;
@@ -62,6 +63,20 @@ interface SourceData {
 interface MigrationOptions {
   readonly migrationUserId: string;
   readonly migrationUsername: string;
+}
+
+function toEmail(username: string): string {
+  const trimmed = username.trim().toLowerCase();
+
+  if (trimmed.length === 0) {
+    return "unknown@mattis.local";
+  }
+
+  if (trimmed.includes("@")) {
+    return trimmed;
+  }
+
+  return `${trimmed}@mattis.local`;
 }
 
 const INFO_PREFIX = "[migrate]";
@@ -168,6 +183,9 @@ async function ensureTargetIsEmpty(db: TargetDatabase): Promise<void> {
       .select({ id: schema.roundLoser.roundId })
       .from(schema.roundLoser)
       .limit(1),
+    db.select({ id: schema.sessions.id }).from(schema.sessions).limit(1),
+    db.select({ id: schema.verifications.id }).from(schema.verifications).limit(1),
+    db.select({ id: schema.accounts.id }).from(schema.accounts).limit(1),
     db.select({ id: schema.fettmattis.id }).from(schema.fettmattis).limit(1),
   ]);
 
@@ -193,6 +211,7 @@ async function migrateData(
 
   await db.transaction(async (tx) => {
     await ensureMigrationUser(tx, options);
+    await ensureBasicAuthUser(tx);
     await migrateLegacyUsers(tx, sourceData.users);
     const playerWarnings = await migrateLegacyPlayers(
       tx,
@@ -232,9 +251,12 @@ async function ensureMigrationUser(
   options: MigrationOptions,
 ): Promise<void> {
   const now = new Date();
+  const email = toEmail(options.migrationUsername);
   const migrationUser: UserInsertRow = {
     id: options.migrationUserId,
-    username: options.migrationUsername,
+    email,
+    emailVerified: true,
+    name: email,
     createdAt: now,
     updatedAt: now,
   };
@@ -250,12 +272,17 @@ async function migrateLegacyUsers(
     return;
   }
 
-  const userValues: UserInsertRow[] = users.map((row) => ({
-    id: generateId(),
-    username: row.username,
-    createdAt: toDate(row.created_at),
-    updatedAt: toDate(row.updated_at ?? row.created_at),
-  }));
+  const userValues: UserInsertRow[] = users.map((row) => {
+    const email = toEmail(row.username);
+    return {
+      id: generateId(),
+      email,
+      emailVerified: true,
+      name: email,
+      createdAt: toDate(row.created_at),
+      updatedAt: toDate(row.updated_at ?? row.created_at),
+    } satisfies UserInsertRow;
+  });
 
   await tx.insert(schema.users).values(userValues).onConflictDoNothing();
 }

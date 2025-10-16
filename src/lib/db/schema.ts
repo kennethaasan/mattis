@@ -34,7 +34,46 @@ const getTimestamps = () => ({
 
 export const users = pgTable("users", {
   id: getId(),
-  username: text().notNull().unique(),
+  email: text().notNull().unique(),
+  emailVerified: boolean("email_verified").default(false).notNull(),
+  name: text().notNull(),
+  ...getTimestamps(),
+});
+
+export const sessions = pgTable("sessions", {
+  id: getId(),
+  userId: text("user_id")
+    .references(() => users.id, { onDelete: "cascade" })
+    .notNull(),
+  expiresAt: getTimestamp("expires_at"),
+  token: text().notNull().unique(),
+  ipAddress: text("ip_address"),
+  userAgent: text("user_agent"),
+  ...getTimestamps(),
+});
+
+export const accounts = pgTable("accounts", {
+  id: getId(),
+  providerId: text("provider_id").notNull(),
+  accountId: text("account_id").notNull(),
+  userId: text("user_id")
+    .references(() => users.id, { onDelete: "cascade" })
+    .notNull(),
+  accessToken: text("access_token"),
+  refreshToken: text("refresh_token"),
+  idToken: text("id_token"),
+  accessTokenExpiresAt: getOptionalTimestamp("access_token_expires_at"),
+  refreshTokenExpiresAt: getOptionalTimestamp("refresh_token_expires_at"),
+  scope: text(),
+  password: text(),
+  ...getTimestamps(),
+});
+
+export const verifications = pgTable("verifications", {
+  id: getId(),
+  identifier: text().notNull(),
+  value: text().notNull(),
+  expiresAt: getTimestamp("expires_at"),
   ...getTimestamps(),
 });
 
@@ -70,7 +109,7 @@ export const roundParticipants = pgTable(
       columns: [table.roundId, table.playerId],
       name: "round_participants_pk",
     }),
-  ],
+  ]
 );
 
 export const roundLoser = pgTable("round_loser", {
@@ -130,7 +169,7 @@ export const roundParticipantsRelations = relations(
       fields: [roundParticipants.playerId],
       references: [players.id],
     }),
-  }),
+  })
 );
 
 export const roundLoserRelations = relations(roundLoser, ({ one }) => ({
@@ -155,3 +194,6 @@ export type User = typeof users.$inferSelect;
 export type Player = typeof players.$inferSelect;
 export type Round = typeof rounds.$inferSelect;
 export type FettMattis = typeof fettmattis.$inferSelect;
+export type Account = typeof accounts.$inferSelect;
+export type Session = typeof sessions.$inferSelect;
+export type Verification = typeof verifications.$inferSelect;

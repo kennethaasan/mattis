@@ -1,6 +1,5 @@
 import type { NextRequest } from "next/server";
 import { beforeEach, expect, test, vi } from "vitest";
-import { env } from "@/env";
 import { ProblemDetailsSchema } from "@/lib/api/schemas";
 
 const mocks = vi.hoisted(() => {
@@ -99,7 +98,7 @@ test("T010: POST /api/rounds returns 201 with the created round", async () => {
       "00000000-0000-7000-0000-000000000062",
     ],
     loserId: "00000000-0000-7000-0000-000000000062",
-    createdBy: env.BASIC_AUTH_USER_ID,
+    createdBy: process.env.BASIC_AUTH_USER_ID,
   });
 });
 
@@ -118,7 +117,7 @@ test("T010: POST /api/rounds returns 400 when validation fails", async () => {
 
 test("T010: POST /api/rounds returns 404 when a participant is missing", async () => {
   mocks.createRound.mockRejectedValueOnce(
-    new mocks.MockNotFoundError("Missing participant"),
+    new mocks.MockNotFoundError("Missing participant")
   );
 
   const request = createRequest({
@@ -138,7 +137,7 @@ test("T010: POST /api/rounds returns 404 when a participant is missing", async (
 
 test("T010: POST /api/rounds returns 409 when there is a conflict", async () => {
   mocks.createRound.mockRejectedValueOnce(
-    new mocks.MockConflictError("Conflict"),
+    new mocks.MockConflictError("Conflict")
   );
 
   const request = createRequest({

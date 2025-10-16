@@ -3,27 +3,22 @@ import { NextResponse } from "next/server";
 import { badRequest, createProblemResponse } from "@/lib/api/problem-details";
 import { toRoundResponse } from "@/lib/api/response-helpers";
 import { RoundCreateSchema } from "@/lib/api/schemas";
-import { authenticateHeaders } from "@/lib/auth/basic-auth";
+import { resolveRequestUserId } from "@/lib/auth/request-user";
 import { ConflictError, createRound, NotFoundError } from "@/lib/db-client";
-
-const getUserId = (req: NextRequest, fallbackUserId: string): string => {
-  const headerUserId =
-    req.headers.get("x-authenticated-user-id") ?? req.headers.get("x-user-id");
-
-  return headerUserId ?? fallbackUserId;
-};
 
 /**
  * POST /api/rounds
  * Creates a new round.
  */
 export async function POST(req: NextRequest) {
-  const authResult = authenticateHeaders(req.headers);
-  if (!authResult.ok) {
-    return authResult.response;
+  const userId = await resolveRequestUserId(req.headers);
+  if (!userId) {
+    return createProblemResponse({
+      status: 401,
+      title: "Unauthorized",
+      detail: "Authentication required.",
+    });
   }
-
-  const userId = getUserId(req, authResult.userId);
 
   try {
     let body: unknown;
