@@ -1,6 +1,5 @@
 import { eq } from "drizzle-orm";
 import { expect, test } from "vitest";
-import { env } from "@/env";
 import { db } from "@/lib/db/db";
 import { fettmattis as fettMattisTable, rounds } from "@/lib/db/schema";
 import { generateId } from "@/lib/utils/id";
@@ -14,7 +13,7 @@ const {
 } = await import("@/lib/db-client");
 
 test("T016: recording a round updates the regular and FettMattis leaderboards", async () => {
-  const userId = env.BASIC_AUTH_USER_ID;
+  const userId = process.env.BASIC_AUTH_USER_ID as never;
 
   const [ola, kari] = await Promise.all([
     createPlayer({ id: generateId(), displayName: "Ola" }),
@@ -28,7 +27,7 @@ test("T016: recording a round updates the regular and FettMattis leaderboards", 
   });
 
   const regularLeaderboard = await getRegularLeaderboard(
-    new Date().getFullYear(),
+    new Date().getFullYear()
   );
 
   expect(regularLeaderboard).toHaveLength(2);
@@ -49,7 +48,7 @@ test("T016: recording a round updates the regular and FettMattis leaderboards", 
   });
 
   const fettMattisLeaderboard = await getFettMattisLeaderboard(
-    new Date().getFullYear(),
+    new Date().getFullYear()
   );
 
   expect(fettMattisLeaderboard).toHaveLength(1);
@@ -72,13 +71,13 @@ test("T068: all-time leaderboards aggregate results across seasons", async () =>
   await createRound({
     participantIds: [ada.id, ben.id],
     loserId: ada.id,
-    createdBy: env.BASIC_AUTH_USER_ID,
+    createdBy: process.env.BASIC_AUTH_USER_ID as never,
   });
 
   const pastRound = await createRound({
     participantIds: [ada.id, ben.id],
     loserId: ada.id,
-    createdBy: env.BASIC_AUTH_USER_ID,
+    createdBy: process.env.BASIC_AUTH_USER_ID as never,
   });
 
   await db
@@ -88,12 +87,12 @@ test("T068: all-time leaderboards aggregate results across seasons", async () =>
 
   await createFettMattis({
     playerId: ada.id,
-    createdBy: env.BASIC_AUTH_USER_ID,
+    createdBy: process.env.BASIC_AUTH_USER_ID as never,
   });
 
   const historicalFettMattis = await createFettMattis({
     playerId: ada.id,
-    createdBy: env.BASIC_AUTH_USER_ID,
+    createdBy: process.env.BASIC_AUTH_USER_ID as never,
   });
 
   await db
@@ -105,18 +104,18 @@ test("T068: all-time leaderboards aggregate results across seasons", async () =>
 
   expect(currentRegularLeaderboard).toHaveLength(4);
   const adaCurrent = currentRegularLeaderboard.find(
-    (entry) => entry.player.displayName === "Ada",
+    (entry) => entry.player.displayName === "Ada"
   );
   const benCurrent = currentRegularLeaderboard.find(
-    (entry) => entry.player.displayName === "Ben",
+    (entry) => entry.player.displayName === "Ben"
   );
   const adaCurrentEntry = expectDefined(
     adaCurrent,
-    "Expected Ada to appear in the current year leaderboard.",
+    "Expected Ada to appear in the current year leaderboard."
   );
   const benCurrentEntry = expectDefined(
     benCurrent,
-    "Expected Ben to appear in the current year leaderboard.",
+    "Expected Ben to appear in the current year leaderboard."
   );
 
   expect(adaCurrentEntry).toMatchObject({
@@ -135,7 +134,7 @@ test("T068: all-time leaderboards aggregate results across seasons", async () =>
 
   const topAllTimeEntry = expectDefined(
     allTimeRegularLeaderboard[0],
-    "Expected an entry in the all-time regular leaderboard.",
+    "Expected an entry in the all-time regular leaderboard."
   );
 
   expect(topAllTimeEntry).toMatchObject({
@@ -145,13 +144,14 @@ test("T068: all-time leaderboards aggregate results across seasons", async () =>
   });
   expect(topAllTimeEntry.lossPercentage).toBeCloseTo(100);
 
-  const currentFettMattisLeaderboard =
-    await getFettMattisLeaderboard(currentYear);
+  const currentFettMattisLeaderboard = await getFettMattisLeaderboard(
+    currentYear
+  );
   expect(currentFettMattisLeaderboard).toHaveLength(2);
 
   const currentFettMattisLeader = expectDefined(
     currentFettMattisLeaderboard[0],
-    "Expected Ada to lead the current year FettMattis leaderboard.",
+    "Expected Ada to lead the current year FettMattis leaderboard."
   );
 
   expect(currentFettMattisLeader).toMatchObject({
@@ -165,7 +165,7 @@ test("T068: all-time leaderboards aggregate results across seasons", async () =>
 
   const allTimeFettMattisLeader = expectDefined(
     allTimeFettMattisLeaderboard[0],
-    "Expected Ada to lead the all-time FettMattis leaderboard.",
+    "Expected Ada to lead the all-time FettMattis leaderboard."
   );
 
   expect(allTimeFettMattisLeader).toMatchObject({

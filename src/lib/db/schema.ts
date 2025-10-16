@@ -5,7 +5,6 @@ import {
   primaryKey,
   text,
   timestamp,
-  uniqueIndex,
 } from "drizzle-orm/pg-core";
 import { v7 } from "uuid";
 
@@ -41,45 +40,32 @@ export const users = pgTable("users", {
   ...getTimestamps(),
 });
 
-export const accounts = pgTable(
-  "accounts",
-  {
-    id: getId(),
-    providerId: text("provider_id").notNull(),
-    accountId: text("account_id").notNull(),
-    userId: text("user_id")
-      .references(() => users.id)
-      .notNull(),
-    accessToken: text("access_token"),
-    refreshToken: text("refresh_token"),
-    idToken: text("id_token"),
-    accessTokenExpiresAt: getOptionalTimestamp("access_token_expires_at"),
-    refreshTokenExpiresAt: getOptionalTimestamp("refresh_token_expires_at"),
-    scope: text(),
-    password: text(),
-    ...getTimestamps(),
-  },
-  (table) => ({
-    providerAccount: uniqueIndex("accounts_provider_account_idx").on(
-      table.providerId,
-      table.accountId,
-    ),
-    userProvider: uniqueIndex("accounts_user_provider_idx").on(
-      table.userId,
-      table.providerId,
-    ),
-  }),
-);
-
 export const sessions = pgTable("sessions", {
   id: getId(),
   userId: text("user_id")
-    .references(() => users.id)
+    .references(() => users.id, { onDelete: "cascade" })
     .notNull(),
   expiresAt: getTimestamp("expires_at"),
   token: text().notNull().unique(),
   ipAddress: text("ip_address"),
   userAgent: text("user_agent"),
+  ...getTimestamps(),
+});
+
+export const accounts = pgTable("accounts", {
+  id: getId(),
+  providerId: text("provider_id").notNull(),
+  accountId: text("account_id").notNull(),
+  userId: text("user_id")
+    .references(() => users.id, { onDelete: "cascade" })
+    .notNull(),
+  accessToken: text("access_token"),
+  refreshToken: text("refresh_token"),
+  idToken: text("id_token"),
+  accessTokenExpiresAt: getOptionalTimestamp("access_token_expires_at"),
+  refreshTokenExpiresAt: getOptionalTimestamp("refresh_token_expires_at"),
+  scope: text(),
+  password: text(),
   ...getTimestamps(),
 });
 
@@ -123,7 +109,7 @@ export const roundParticipants = pgTable(
       columns: [table.roundId, table.playerId],
       name: "round_participants_pk",
     }),
-  ],
+  ]
 );
 
 export const roundLoser = pgTable("round_loser", {
@@ -183,7 +169,7 @@ export const roundParticipantsRelations = relations(
       fields: [roundParticipants.playerId],
       references: [players.id],
     }),
-  }),
+  })
 );
 
 export const roundLoserRelations = relations(roundLoser, ({ one }) => ({

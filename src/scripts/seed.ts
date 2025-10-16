@@ -1,9 +1,11 @@
 import "dotenv/config";
 import { drizzle } from "drizzle-orm/node-postgres";
 import { Pool } from "pg";
-import { env } from "@/env";
 import * as schema from "@/lib/db/schema";
-import { type DbExecutor, ensureBasicAuthUser } from "@/scripts/utils/ensure-basic-user";
+import {
+  type DbExecutor,
+  ensureBasicAuthUser,
+} from "@/scripts/utils/ensure-basic-user";
 
 interface PlayerSeed {
   key: string;
@@ -53,7 +55,7 @@ const formatError = (error: unknown): string => {
 };
 
 const currentYear = new Date().getUTCFullYear();
-const devUserId = env.BASIC_AUTH_USER_ID;
+const devUserId = process.env.BASIC_AUTH_USER_ID as never;
 
 const playerSeeds: PlayerSeed[] = [
   {
@@ -165,7 +167,7 @@ async function seed(): Promise<void> {
       await ensureBasicAuthUser(tx);
       writeLine(
         process.stdout,
-        `Ensured basic auth user ${env.BASIC_AUTH_USERNAME.toLowerCase()}.`,
+        `Ensured basic auth user ${process.env.BASIC_AUTH_USERNAME}.`
       );
       const players = await insertPlayers(tx);
       const rounds = await insertRounds(tx, players);
@@ -195,7 +197,7 @@ async function resetTables(client: DbExecutor): Promise<void> {
 }
 
 async function insertPlayers(
-  client: DbExecutor,
+  client: DbExecutor
 ): Promise<Map<string, PlayerRecord>> {
   writeLine(process.stdout, "Inserting players...");
   const playerMap = new Map<string, PlayerRecord>();
@@ -231,7 +233,7 @@ async function insertPlayers(
 
 async function insertRounds(
   client: DbExecutor,
-  players: Map<string, PlayerRecord>,
+  players: Map<string, PlayerRecord>
 ): Promise<Map<string, RoundRecord>> {
   writeLine(process.stdout, "Recording rounds...");
   const roundsMap = new Map<string, RoundRecord>();
@@ -241,7 +243,7 @@ async function insertRounds(
       const record = players.get(key);
       if (!record) {
         throw new Error(
-          `Participant ${key} not found while seeding round ${round.key}.`,
+          `Participant ${key} not found while seeding round ${round.key}.`
         );
       }
       return record.id;
@@ -250,7 +252,7 @@ async function insertRounds(
     const loser = players.get(round.loser);
     if (!loser) {
       throw new Error(
-        `Loser ${round.loser} not found while seeding round ${round.key}.`,
+        `Loser ${round.loser} not found while seeding round ${round.key}.`
       );
     }
 
@@ -265,7 +267,7 @@ async function insertRounds(
       participantIds.map((participantId) => ({
         roundId: round.id,
         playerId: participantId,
-      })),
+      }))
     );
 
     await client.insert(schema.roundLoser).values({
@@ -283,7 +285,7 @@ async function insertRounds(
 async function insertFettMattis(
   client: DbExecutor,
   players: Map<string, PlayerRecord>,
-  rounds: Map<string, RoundRecord>,
+  rounds: Map<string, RoundRecord>
 ): Promise<void> {
   writeLine(process.stdout, "Awarding Fettmattis records...");
 

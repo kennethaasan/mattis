@@ -1,5 +1,4 @@
 import { beforeEach, expect, test, vi } from "vitest";
-
 import { PlayerSchema, ProblemDetailsSchema } from "@/lib/api/schemas";
 
 const mocks = vi.hoisted(() => {
@@ -16,7 +15,6 @@ vi.mock("@/lib/db-client", () => ({
   ConflictError: mocks.MockConflictError,
 }));
 
-const { env } = await import("@/env");
 const { POST } = await import("@/app/api/players/route");
 
 beforeEach(() => {
@@ -45,7 +43,7 @@ test("T008: POST /api/players returns 201 with the created player", async () => 
   expect(() => PlayerSchema.parse(payload)).not.toThrow();
   expect(mocks.createPlayer).toHaveBeenCalledWith({
     displayName: "Nova",
-    userId: env.BASIC_AUTH_USER_ID,
+    userId: process.env.BASIC_AUTH_USER_ID,
   });
 });
 
@@ -66,7 +64,7 @@ test("T008: POST /api/players returns 400 when validation fails", async () => {
 
 test("T008: POST /api/players returns 409 on duplicate display name", async () => {
   mocks.createPlayer.mockRejectedValueOnce(
-    new mocks.MockConflictError("Duplicate"),
+    new mocks.MockConflictError("Duplicate")
   );
 
   const request = new Request("http://localhost/api/players", {

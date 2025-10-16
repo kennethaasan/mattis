@@ -1,7 +1,5 @@
 import type { NextRequest } from "next/server";
 import { NextResponse } from "next/server";
-
-import { env } from "@/env";
 import { badRequest, createProblemResponse } from "@/lib/api/problem-details";
 import { uuidSchema } from "@/lib/api/schemas";
 import {
@@ -11,15 +9,15 @@ import {
 } from "@/lib/db-client";
 
 // Placeholder for authentication/user context
-const getUserId = (req: NextRequest): string => {
+const getUserId = (req: NextRequest): string | undefined => {
   // In a real app, this would come from a session or token.
   // For development, we use a placeholder from the environment.
-  return req.headers.get("X-User-Id") ?? env.BASIC_AUTH_USER_ID;
+  return req.headers.get("X-User-Id") || undefined;
 };
 
 export async function DELETE(
   req: NextRequest,
-  context: { params: Promise<{ fettmattisId: string }> },
+  context: { params: Promise<{ fettmattisId: string }> }
 ) {
   const userId = getUserId(req);
   if (!userId) {
@@ -32,7 +30,7 @@ export async function DELETE(
   if (!validation.success) {
     return NextResponse.json(
       { error: validation.error.issues },
-      { status: 400 },
+      { status: 400 }
     );
   }
 

@@ -1,21 +1,22 @@
 import { hashPassword } from "better-auth/crypto";
-import { sql } from "drizzle-orm";
 import type { NodePgDatabase } from "drizzle-orm/node-postgres";
-
-import { env } from "@/env";
 import * as schema from "@/lib/db/schema";
 
 export type SeedSchema = typeof schema;
 export type SeedDb = NodePgDatabase<SeedSchema>;
-export type TransactionClient = Parameters<Parameters<SeedDb["transaction"]>[0]>[0];
+export type TransactionClient = Parameters<
+  Parameters<SeedDb["transaction"]>[0]
+>[0];
 export type DbExecutor = SeedDb | TransactionClient;
 
 const BASIC_PROVIDER_ID = "credential";
 
 export async function ensureBasicAuthUser(client: DbExecutor): Promise<void> {
-  const userId = env.BASIC_AUTH_USER_ID;
-  const email = env.BASIC_AUTH_USERNAME.toLowerCase();
-  const passwordHash = await hashPassword(env.BASIC_AUTH_PASSWORD);
+  const userId = process.env.BASIC_AUTH_USER_ID as never;
+  const email = process.env.BASIC_AUTH_USERNAME as never;
+  const passwordHash = await hashPassword(
+    process.env.BASIC_AUTH_PASSWORD as never
+  );
 
   await client
     .insert(schema.users)
@@ -31,7 +32,6 @@ export async function ensureBasicAuthUser(client: DbExecutor): Promise<void> {
         email,
         emailVerified: true,
         name: email,
-        updatedAt: sql<Date>`now()`,
       },
     });
 
@@ -45,10 +45,12 @@ export async function ensureBasicAuthUser(client: DbExecutor): Promise<void> {
       password: passwordHash,
     })
     .onConflictDoUpdate({
-      target: [schema.accounts.userId, schema.accounts.providerId],
+      target: schema.accounts.id,
       set: {
+        providerId: BASIC_PROVIDER_ID,
+        accountId: userId,
+        userId,
         password: passwordHash,
-        updatedAt: sql<Date>`now()`,
       },
     });
 }
