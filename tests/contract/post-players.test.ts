@@ -16,6 +16,7 @@ vi.mock("@/lib/db-client", () => ({
   ConflictError: mocks.MockConflictError,
 }));
 
+const { env } = await import("@/env");
 const { POST } = await import("@/app/api/players/route");
 
 beforeEach(() => {
@@ -42,7 +43,10 @@ test("T008: POST /api/players returns 201 with the created player", async () => 
   expect(response.status).toBe(201);
   const payload = await response.json();
   expect(() => PlayerSchema.parse(payload)).not.toThrow();
-  expect(mocks.createPlayer).toHaveBeenCalledWith({ displayName: "Nova" });
+  expect(mocks.createPlayer).toHaveBeenCalledWith({
+    displayName: "Nova",
+    userId: env.BASIC_AUTH_USER_ID,
+  });
 });
 
 test("T008: POST /api/players returns 400 when validation fails", async () => {

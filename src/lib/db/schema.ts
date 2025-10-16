@@ -5,6 +5,7 @@ import {
   primaryKey,
   text,
   timestamp,
+  uniqueIndex,
 } from "drizzle-orm/pg-core";
 import { v7 } from "uuid";
 
@@ -34,7 +35,61 @@ const getTimestamps = () => ({
 
 export const users = pgTable("users", {
   id: getId(),
+  email: text().notNull().unique(),
+  emailVerified: boolean("email_verified").default(false).notNull(),
+  name: text().notNull(),
+  image: text(),
   username: text().notNull().unique(),
+  ...getTimestamps(),
+});
+
+export const accounts = pgTable(
+  "accounts",
+  {
+    id: getId(),
+    providerId: text("provider_id").notNull(),
+    accountId: text("account_id").notNull(),
+    userId: text("user_id")
+      .references(() => users.id)
+      .notNull(),
+    accessToken: text("access_token"),
+    refreshToken: text("refresh_token"),
+    idToken: text("id_token"),
+    accessTokenExpiresAt: getOptionalTimestamp("access_token_expires_at"),
+    refreshTokenExpiresAt: getOptionalTimestamp("refresh_token_expires_at"),
+    scope: text(),
+    password: text(),
+    ...getTimestamps(),
+  },
+  (table) => ({
+    providerAccount: uniqueIndex("accounts_provider_account_idx").on(
+      table.providerId,
+      table.accountId,
+    ),
+    userProvider: uniqueIndex("accounts_user_provider_idx").on(
+      table.userId,
+      table.providerId,
+    ),
+  }),
+);
+
+export const sessions = pgTable("sessions", {
+  id: getId(),
+  userId: text("user_id")
+    .references(() => users.id)
+    .notNull(),
+  expiresAt: getTimestamp("expires_at"),
+  token: text().notNull().unique(),
+  ipAddress: text("ip_address"),
+  userAgent: text("user_agent"),
+  ...getTimestamps(),
+});
+
+export const verifications = pgTable("verifications", {
+  id: getId(),
+  identifier: text().notNull(),
+  value: text().notNull(),
+  expiresAt: getTimestamp("expires_at"),
   ...getTimestamps(),
 });
 
@@ -155,3 +210,6 @@ export type User = typeof users.$inferSelect;
 export type Player = typeof players.$inferSelect;
 export type Round = typeof rounds.$inferSelect;
 export type FettMattis = typeof fettmattis.$inferSelect;
+export type Account = typeof accounts.$inferSelect;
+export type Session = typeof sessions.$inferSelect;
+export type Verification = typeof verifications.$inferSelect;

@@ -3,11 +3,11 @@ import { NextResponse } from "next/server";
 import { createProblemResponse } from "@/lib/api/problem-details";
 import { toPlayerResponse } from "@/lib/api/response-helpers";
 import { PlayerCreateSchema } from "@/lib/api/schemas";
-import { authenticateHeaders } from "@/lib/auth/basic-auth";
+import { authenticateRequest } from "@/lib/auth/authorize";
 import { ConflictError, createPlayer, listPlayers } from "@/lib/db-client";
 
 export async function POST(req: Request) {
-  const authResult = authenticateHeaders(req.headers);
+  const authResult = await authenticateRequest(req.headers);
   if (!authResult.ok) {
     return authResult.response;
   }
@@ -25,7 +25,10 @@ export async function POST(req: Request) {
 
     const { display_name } = validation.data;
 
-    const newPlayer = await createPlayer({ displayName: display_name });
+    const newPlayer = await createPlayer({
+      displayName: display_name,
+      userId: authResult.value.user.id,
+    });
 
     return NextResponse.json(toPlayerResponse(newPlayer), { status: 201 });
   } catch (error) {

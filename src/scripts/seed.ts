@@ -1,10 +1,9 @@
 import "dotenv/config";
-import { sql } from "drizzle-orm";
-import type { NodePgDatabase } from "drizzle-orm/node-postgres";
 import { drizzle } from "drizzle-orm/node-postgres";
 import { Pool } from "pg";
 import { env } from "@/env";
 import * as schema from "@/lib/db/schema";
+import { type DbExecutor, ensureBasicAuthUser } from "@/scripts/utils/ensure-basic-user";
 
 interface PlayerSeed {
   key: string;
@@ -31,11 +30,6 @@ interface FettMattisSeed {
   createdAt: Date;
   createdBy: string;
 }
-
-type Schema = typeof schema;
-type SeedDb = NodePgDatabase<Schema>;
-type TransactionClient = Parameters<Parameters<SeedDb["transaction"]>[0]>[0];
-type DbExecutor = SeedDb | TransactionClient;
 
 interface PlayerRecord {
   id: string;
@@ -168,7 +162,11 @@ async function seed(): Promise<void> {
   try {
     await db.transaction(async (tx) => {
       await resetTables(tx);
-      await ensureDevUser(tx);
+      await ensureBasicAuthUser(tx);
+      writeLine(
+        process.stdout,
+        `Ensured basic auth user ${env.BASIC_AUTH_USERNAME.toLowerCase()}.`,
+      );
       const players = await insertPlayers(tx);
       const rounds = await insertRounds(tx, players);
       await insertFettMattis(tx, players, rounds);
@@ -190,21 +188,10 @@ async function resetTables(client: DbExecutor): Promise<void> {
   await client.delete(schema.roundParticipants);
   await client.delete(schema.rounds);
   await client.delete(schema.players);
+  await client.delete(schema.sessions);
+  await client.delete(schema.verifications);
+  await client.delete(schema.accounts);
   await client.delete(schema.users);
-}
-
-async function ensureDevUser(client: DbExecutor): Promise<void> {
-  const username = `dev-${devUserId.slice(0, 8)}`;
-
-  await client
-    .insert(schema.users)
-    .values({ id: devUserId, username })
-    .onConflictDoUpdate({
-      target: schema.users.id,
-      set: { username, updatedAt: sql`now()` },
-    });
-
-  writeLine(process.stdout, `Ensured developer user ${username}.`);
 }
 
 async function insertPlayers(

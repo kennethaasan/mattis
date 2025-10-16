@@ -7,6 +7,7 @@ import { createPool } from "mysql2/promise";
 import { Pool as PostgresPool } from "pg";
 import * as schema from "@/lib/db/schema";
 import { generateId } from "@/lib/utils/id";
+import { ensureBasicAuthUser } from "@/scripts/utils/ensure-basic-user";
 
 type TargetDatabase = NodePgDatabase<typeof schema>;
 type UserInsertRow = typeof schema.users.$inferInsert;
@@ -168,6 +169,9 @@ async function ensureTargetIsEmpty(db: TargetDatabase): Promise<void> {
       .select({ id: schema.roundLoser.roundId })
       .from(schema.roundLoser)
       .limit(1),
+    db.select({ id: schema.sessions.id }).from(schema.sessions).limit(1),
+    db.select({ id: schema.verifications.id }).from(schema.verifications).limit(1),
+    db.select({ id: schema.accounts.id }).from(schema.accounts).limit(1),
     db.select({ id: schema.fettmattis.id }).from(schema.fettmattis).limit(1),
   ]);
 
@@ -193,6 +197,7 @@ async function migrateData(
 
   await db.transaction(async (tx) => {
     await ensureMigrationUser(tx, options);
+    await ensureBasicAuthUser(tx);
     await migrateLegacyUsers(tx, sourceData.users);
     const playerWarnings = await migrateLegacyPlayers(
       tx,

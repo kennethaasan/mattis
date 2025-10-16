@@ -3,7 +3,7 @@ import { NextResponse } from "next/server";
 import { badRequest, createProblemResponse } from "@/lib/api/problem-details";
 import { toPlayerResponse } from "@/lib/api/response-helpers";
 import { FettMattisCreateSchema } from "@/lib/api/schemas";
-import { authenticateHeaders } from "@/lib/auth/basic-auth";
+import { authenticateRequest } from "@/lib/auth/authorize";
 import {
   ConflictError,
   createFettMattis,
@@ -15,12 +15,12 @@ import {
  * Creates a new fettmattis.
  */
 export async function POST(req: NextRequest) {
-  const authResult = authenticateHeaders(req.headers);
+  const authResult = await authenticateRequest(req.headers);
   if (!authResult.ok) {
     return authResult.response;
   }
 
-  const userId = authResult.userId;
+  const userId = authResult.value.user.id;
 
   try {
     let body: unknown;

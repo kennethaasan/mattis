@@ -60,11 +60,13 @@ export const resolvePlayerError = (payload: unknown): string | undefined => {
 export async function updatePlayer(
   playerId: string,
   payload: PlayerUpdatePayload,
+  authHeader?: Record<string, string> | null,
 ): Promise<PlayersApiRecord> {
   const response = await fetch(`/api/players/${playerId}`, {
     method: "PUT",
     headers: {
       "Content-Type": "application/json",
+      ...(authHeader ?? {}),
     },
     body: JSON.stringify(payload),
   });

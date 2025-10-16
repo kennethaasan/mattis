@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 import { toPlayerResponse } from "@/lib/api/response-helpers";
 import { PlayerUpdateSchema, uuidSchema } from "@/lib/api/schemas";
+import { authenticateRequest } from "@/lib/auth/authorize";
 import {
   ConflictError,
   getPlayerById,
@@ -57,6 +58,11 @@ export async function PUT(
       { error: validation.error.issues },
       { status: 400 },
     );
+  }
+
+  const authResult = await authenticateRequest(req.headers);
+  if (!authResult.ok) {
+    return authResult.response;
   }
 
   try {

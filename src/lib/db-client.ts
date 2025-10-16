@@ -129,16 +129,9 @@ async function ensureUser(client: DbExecutor, userId: string): Promise<void> {
     where: eq(users.id, userId),
   });
 
-  if (existing) {
-    return;
+  if (!existing) {
+    throw new ForbiddenError("Authenticated user is not registered.");
   }
-
-  const username = `dev-${userId.slice(0, 8)}`;
-
-  await client
-    .insert(users)
-    .values({ id: userId, username })
-    .onConflictDoNothing();
 }
 
 async function loadRound(

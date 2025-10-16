@@ -83,6 +83,7 @@ module "fn" {
     {
       AWS_LAMBDA_EXEC_WRAPPER = "/opt/bootstrap"
       AWS_LWA_ASYNC_INIT      = "true"
+      AWS_LWA_AUTHORIZATION_SOURCE = "x-forwarded-authorization"
       AWS_LWA_PORT            = "3000"
       DATABASE_URL            = local.database_url
       NODE_ENV                = "production"

@@ -14,7 +14,7 @@ const {
 } = await import("@/lib/db-client");
 
 test("T016: recording a round updates the regular and FettMattis leaderboards", async () => {
-  const userId = "00000000-0000-7000-0000-000000000099";
+  const userId = env.BASIC_AUTH_USER_ID;
 
   const [ola, kari] = await Promise.all([
     createPlayer({ id: generateId(), displayName: "Ola" }),
