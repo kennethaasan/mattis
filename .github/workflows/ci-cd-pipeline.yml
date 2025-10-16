@@ -125,7 +125,6 @@ jobs:
     timeout-minutes: 15
     container:
       image: mcr.microsoft.com/playwright:v1.47.2-jammy
-      options: --user pwuser
     services:
       postgres:
         image: postgres:17
