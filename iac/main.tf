@@ -8,36 +8,21 @@ resource "neon_project" "this" {
   pg_version                = var.neon_pg_version
   org_id                    = var.neon_organization_id
   history_retention_seconds = var.neon_retention_seconds
-}
 
-resource "neon_branch" "production" {
-  project_id = neon_project.this.id
-  name       = "production"
-}
+  default_endpoint_settings {
+    autoscaling_limit_min_cu = 0.25
+    autoscaling_limit_max_cu = 1
+  }
 
-resource "neon_endpoint" "production" {
-  project_id = neon_project.this.id
-  branch_id  = neon_branch.production.id
-
-  autoscaling_limit_min_cu = 0.25
-  autoscaling_limit_max_cu = 1
-}
-
-resource "neon_role" "production_app" {
-  project_id = neon_project.this.id
-  branch_id  = neon_branch.production.id
-  name       = "app_role"
-}
-
-resource "neon_database" "production_database" {
-  project_id = neon_project.this.id
-  branch_id  = neon_branch.production.id
-  name       = var.app_name
-  owner_name = neon_role.production_app.name
+  branch {
+    name          = "main"
+    database_name = var.app_name
+    role_name     = "app_role"
+  }
 }
 
 locals {
-  database_url = "postgresql://${neon_role.production_app.name}:${neon_role.production_app.password}@${neon_endpoint.production.host}/${neon_database.production_database.name}?sslmode=verify-full"
+  database_url = neon_project.this.connection_uri
 }
 
 ###########################
