@@ -123,6 +123,9 @@ jobs:
     name: End-to-end tests
     runs-on: ubuntu-latest
     timeout-minutes: 15
+    container:
+      image: mcr.microsoft.com/playwright:v1.47.2-jammy
+      options: --user pwuser
     services:
       postgres:
         image: postgres:17
@@ -150,9 +153,6 @@ jobs:
 
       - name: Seed database
         run: npm run seed
-
-      - name: Install Playwright Browsers
-        run: npx playwright install --with-deps chromium
 
       - name: Run Playwright tests
         run: npm run test:e2e
