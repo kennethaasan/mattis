@@ -72,7 +72,7 @@ variable "lambda_runtime" {
 variable "lambda_handler" {
   description = "Handler for the Lambda function"
   type        = string
-  default     = "index.handler"
+  default     = "run.sh"
 }
 
 variable "lambda_memory_size" {
