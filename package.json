@@ -9,7 +9,7 @@
   "scripts": {
     "dev": "next dev --turbopack",
     "build": "SKIP_ENV_VALIDATION=true next build",
-    "package:lambda": "tsx ./scripts/package-lambda.ts",
+    "package:lambda": "./scripts/package-lambda.sh",
     "build:lambda": "npm run build && npm run package:lambda",
     "start": "next start",
     "typegen": "next typegen",
