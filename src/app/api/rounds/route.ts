@@ -3,7 +3,7 @@ import { NextResponse } from "next/server";
 import { badRequest, createProblemResponse } from "@/lib/api/problem-details";
 import { toRoundResponse } from "@/lib/api/response-helpers";
 import { RoundCreateSchema } from "@/lib/api/schemas";
-import { authenticateRequest } from "@/lib/auth/authorize";
+import { resolveRequestUserId } from "@/lib/auth/request-user";
 import { ConflictError, createRound, NotFoundError } from "@/lib/db-client";
 
 /**
@@ -11,12 +11,14 @@ import { ConflictError, createRound, NotFoundError } from "@/lib/db-client";
  * Creates a new round.
  */
 export async function POST(req: NextRequest) {
-  const authResult = await authenticateRequest(req.headers);
-  if (!authResult.ok) {
-    return authResult.response;
+  const userId = await resolveRequestUserId(req.headers);
+  if (!userId) {
+    return createProblemResponse({
+      status: 401,
+      title: "Unauthorized",
+      detail: "Authentication required.",
+    });
   }
-
-  const userId = authResult.value.user.id;
 
   try {
     let body: unknown;

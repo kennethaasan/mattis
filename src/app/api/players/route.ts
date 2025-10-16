@@ -3,13 +3,17 @@ import { NextResponse } from "next/server";
 import { createProblemResponse } from "@/lib/api/problem-details";
 import { toPlayerResponse } from "@/lib/api/response-helpers";
 import { PlayerCreateSchema } from "@/lib/api/schemas";
-import { authenticateRequest } from "@/lib/auth/authorize";
+import { resolveRequestUserId } from "@/lib/auth/request-user";
 import { ConflictError, createPlayer, listPlayers } from "@/lib/db-client";
 
 export async function POST(req: Request) {
-  const authResult = await authenticateRequest(req.headers);
-  if (!authResult.ok) {
-    return authResult.response;
+  const userId = await resolveRequestUserId(req.headers);
+  if (!userId) {
+    return createProblemResponse({
+      status: 401,
+      title: "Unauthorized",
+      detail: "Authentication required.",
+    });
   }
 
   try {
@@ -27,7 +31,7 @@ export async function POST(req: Request) {
 
     const newPlayer = await createPlayer({
       displayName: display_name,
-      userId: authResult.value.user.id,
+      userId,
     });
 
     return NextResponse.json(toPlayerResponse(newPlayer), { status: 201 });

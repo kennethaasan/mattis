@@ -3,6 +3,7 @@ import { NextResponse } from "next/server";
 import { badRequest, createProblemResponse } from "@/lib/api/problem-details";
 import { toRoundResponse } from "@/lib/api/response-helpers";
 import { RoundUpdateSchema, uuidSchema } from "@/lib/api/schemas";
+import { resolveRequestUserId } from "@/lib/auth/request-user";
 import {
   ConflictError,
   deleteRound,
@@ -11,13 +12,6 @@ import {
   NotFoundError,
   updateRound,
 } from "@/lib/db-client";
-
-// Placeholder for authentication/user context
-const getUserId = (req: NextRequest): string | undefined => {
-  // In a real app, this would come from a session or token.
-  // For development, we use a placeholder from the environment.
-  return req.headers.get("X-User-Id") || undefined;
-};
 
 export async function GET(
   _req: Request,
@@ -57,9 +51,13 @@ export async function PUT(
   req: NextRequest,
   context: { params: Promise<{ roundId: string }> }
 ) {
-  const userId = getUserId(req);
+  const userId = await resolveRequestUserId(req.headers);
   if (!userId) {
-    return badRequest("Authentication required.");
+    return createProblemResponse({
+      status: 401,
+      title: "Unauthorized",
+      detail: "Authentication required.",
+    });
   }
 
   const { roundId } = await context.params;
@@ -128,9 +126,13 @@ export async function DELETE(
   req: NextRequest,
   context: { params: Promise<{ roundId: string }> }
 ) {
-  const userId = getUserId(req);
+  const userId = await resolveRequestUserId(req.headers);
   if (!userId) {
-    return badRequest("Authentication required.");
+    return createProblemResponse({
+      status: 401,
+      title: "Unauthorized",
+      detail: "Authentication required.",
+    });
   }
 
   const { roundId } = await context.params;

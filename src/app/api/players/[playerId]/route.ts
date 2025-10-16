@@ -1,7 +1,7 @@
 import { NextResponse } from "next/server";
 import { toPlayerResponse } from "@/lib/api/response-helpers";
 import { PlayerUpdateSchema, uuidSchema } from "@/lib/api/schemas";
-import { authenticateRequest } from "@/lib/auth/authorize";
+import { resolveRequestUserId } from "@/lib/auth/request-user";
 import {
   ConflictError,
   getPlayerById,
@@ -60,9 +60,17 @@ export async function PUT(
     );
   }
 
-  const authResult = await authenticateRequest(req.headers);
-  if (!authResult.ok) {
-    return authResult.response;
+  const userId = await resolveRequestUserId(req.headers);
+  if (!userId) {
+    return NextResponse.json(
+      {
+        type: "about:blank",
+        title: "Unauthorized",
+        status: 401,
+        detail: "Authentication required.",
+      },
+      { status: 401 },
+    );
   }
 
   try {
