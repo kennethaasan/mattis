@@ -14,6 +14,11 @@ info:
     **Authentication**:
     - Write operations (`POST`, `PUT`, `DELETE`) require a bearer token issued by the authentication service.
     - Read operations (`GET`) are public.
+    - The contract defines both a bearer token scheme for API clients and a cookie-based scheme
+      for browser sessions. Use the `bearerAuth` security requirement when automating requests
+      or calling protected resources from non-browser clients, and the `sessionCookie` requirement
+      when an endpoint expects the signed session cookie provided by BetterAuth during interactive
+      login flows.
 
     **Error Handling**:
     - The API uses RFC 9457 for problem details in error responses.
@@ -763,11 +768,14 @@ components:
       description: >-
         Session token returned from the authentication endpoints. Present the
         value in the `Authorization` header using the `Bearer` scheme for
-        protected write operations.
+        protected write operations or when automating calls from services that
+        cannot store cookies.
     sessionCookie:
       type: apiKey
       in: cookie
       name: better-auth.session_token
       description: >-
-        Signed session cookie issued during authentication. In secure
-        environments the cookie is prefixed with `__Secure-`.
+        Signed session cookie issued during authentication. Present this cookie
+        when invoking interactive session endpoints (e.g., inspect or sign out)
+        from user agents that manage browser storage. In secure environments the
+        cookie is prefixed with `__Secure-`.
