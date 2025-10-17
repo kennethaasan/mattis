@@ -5,15 +5,6 @@ import { z } from "zod";
 export const env = createEnv({
   server: {
     DATABASE_URL: z.url(),
-    BASIC_AUTH_USERNAME: z
-      .string()
-      .email("BASIC_AUTH_USERNAME must be a valid email address."),
-    BASIC_AUTH_PASSWORD: z
-      .string()
-      .min(1, "BASIC_AUTH_PASSWORD must not be empty."),
-    BASIC_AUTH_USER_ID: z
-      .string()
-      .uuid("BASIC_AUTH_USER_ID must be a valid UUID."),
     BETTER_AUTH_SECRET: z
       .string()
       .min(32, "BETTER_AUTH_SECRET must be at least 32 characters long."),
