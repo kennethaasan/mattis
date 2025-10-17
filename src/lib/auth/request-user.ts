@@ -1,4 +1,5 @@
 import { authenticateRequest } from "@/lib/auth/authorize";
+import { basicAuthUser } from "@/lib/auth/basic-auth-config";
 
 const AUTHENTICATED_USER_HEADER = "x-authenticated-user-id";
 
@@ -21,8 +22,8 @@ export async function resolveRequestUserId(
     return authResult.value.user.id;
   }
 
-  const fallback = process.env.BASIC_AUTH_USER_ID;
-  if (fallback && fallback.trim().length > 0) {
+  const fallback = basicAuthUser.id;
+  if (fallback.trim().length > 0) {
     return fallback.trim();
   }
 

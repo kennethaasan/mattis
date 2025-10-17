@@ -1,6 +1,7 @@
 import "dotenv/config";
 import { drizzle } from "drizzle-orm/node-postgres";
 import { Pool } from "pg";
+import { basicAuthUser } from "@/lib/auth/basic-auth-config";
 import * as schema from "@/lib/db/schema";
 import {
   type DbExecutor,
@@ -55,7 +56,7 @@ const formatError = (error: unknown): string => {
 };
 
 const currentYear = new Date().getUTCFullYear();
-const devUserId = process.env.BASIC_AUTH_USER_ID as never;
+const devUserId = basicAuthUser.id;
 
 const playerSeeds: PlayerSeed[] = [
   {
@@ -167,7 +168,7 @@ async function seed(): Promise<void> {
       await ensureBasicAuthUser(tx);
       writeLine(
         process.stdout,
-        `Ensured basic auth user ${process.env.BASIC_AUTH_USERNAME}.`
+        `Ensured basic auth user ${basicAuthUser.email}.`
       );
       const players = await insertPlayers(tx);
       const rounds = await insertRounds(tx, players);

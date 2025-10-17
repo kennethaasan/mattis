@@ -1,4 +1,6 @@
+import { APIError } from "better-auth";
 import { NextResponse } from "next/server";
+
 import { auth } from "@/lib/auth/auth";
 
 const AUTHORIZATION_PREFIX = "Bearer ";
@@ -24,19 +26,27 @@ export interface AuthFailure {
 
 export type AuthResult = AuthSuccess | AuthFailure;
 
+function createAuthorizationHeaders(token: string): Headers {
+  return new Headers({
+    authorization: `${AUTHORIZATION_PREFIX}${token}`,
+  });
+}
+
 async function getSessionForToken(token: string) {
-  const context = await auth.$context;
-  const session = await context.internalAdapter.findSession(token);
-  if (!session) {
-    return null;
-  }
+  try {
+    return await auth.api.getSession({
+      headers: createAuthorizationHeaders(token),
+      query: {
+        disableRefresh: true,
+      },
+    });
+  } catch (error) {
+    if (error instanceof APIError) {
+      return null;
+    }
 
-  if (session.session.expiresAt.valueOf() <= Date.now()) {
-    await context.internalAdapter.deleteSession(session.session.token);
-    return null;
+    throw error;
   }
-
-  return session;
 }
 
 function unauthorizedResponse(): NextResponse {
