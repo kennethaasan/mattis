@@ -1,6 +1,6 @@
 import { NextResponse } from "next/server";
 
-import { createProblemResponse } from "@/lib/api/problem-details";
+import { badRequest, createProblemResponse } from "@/lib/api/problem-details";
 import { toPlayerResponse } from "@/lib/api/response-helpers";
 import { PlayerCreateSchema } from "@/lib/api/schemas";
 import { resolveRequestUserId } from "@/lib/auth/request-user";
@@ -21,10 +21,10 @@ export async function POST(req: Request) {
     const validation = PlayerCreateSchema.safeParse(body);
 
     if (!validation.success) {
-      return NextResponse.json(
-        { error: validation.error.issues },
-        { status: 400 },
-      );
+      const detail =
+        validation.error.issues.at(0)?.message ??
+        "Request body validation failed.";
+      return badRequest(detail);
     }
 
     const { display_name } = validation.data;
@@ -37,15 +37,11 @@ export async function POST(req: Request) {
     return NextResponse.json(toPlayerResponse(newPlayer), { status: 201 });
   } catch (error) {
     if (error instanceof ConflictError) {
-      return NextResponse.json(
-        {
-          type: "about:blank",
-          title: "Conflict",
-          status: 409,
-          detail: error.message,
-        },
-        { status: 409 },
-      );
+      return createProblemResponse({
+        status: 409,
+        title: "Conflict",
+        detail: error.message,
+      });
     }
 
     return createProblemResponse({

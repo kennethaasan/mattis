@@ -4,22 +4,15 @@ import type {
   RoundRecord,
 } from "@/lib/db-client";
 
+import type { Player, Round } from "./schemas";
+
 export type PlayerResponseInput =
   | Pick<PlayerRecord, "id" | "displayName" | "active">
   | RoundParticipantRecord;
 
-export interface PlayerResponse {
-  id: string;
-  display_name: string;
-  active: boolean;
-}
+export type PlayerResponse = Player;
 
-export interface RoundResponse {
-  id: string;
-  created_at: string;
-  participants: PlayerResponse[];
-  loser: PlayerResponse;
-}
+export type RoundResponse = Round;
 
 export function toPlayerResponse(player: PlayerResponseInput): PlayerResponse {
   return {

@@ -35,10 +35,10 @@ export async function POST(req: NextRequest) {
     const validatedData = FettMattisCreateSchema.safeParse(body);
 
     if (!validatedData.success) {
-      return NextResponse.json(
-        { error: validatedData.error.issues },
-        { status: 400 },
-      );
+      const detail =
+        validatedData.error.issues.at(0)?.message ??
+        "Request body validation failed.";
+      return badRequest(detail);
     }
 
     const { player_id: playerId } = validatedData.data;

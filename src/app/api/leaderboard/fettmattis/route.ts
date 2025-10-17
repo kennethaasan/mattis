@@ -1,6 +1,6 @@
 import { NextResponse } from "next/server";
 
-import { createProblemResponse } from "@/lib/api/problem-details";
+import { badRequest, createProblemResponse } from "@/lib/api/problem-details";
 import { LeaderboardQuerySchema } from "@/lib/api/schemas";
 import { getFettMattisLeaderboard } from "@/lib/db-client";
 
@@ -11,10 +11,9 @@ export async function GET(req: Request) {
   const validation = LeaderboardQuerySchema.safeParse(query);
 
   if (!validation.success) {
-    return NextResponse.json(
-      { error: validation.error.issues },
-      { status: 400 },
-    );
+    const detail =
+      validation.error.issues.at(0)?.message ?? "Invalid leaderboard query.";
+    return badRequest(detail);
   }
 
   const requestedYear = validation.data.year;

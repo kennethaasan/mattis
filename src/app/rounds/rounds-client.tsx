@@ -18,49 +18,25 @@ import { useAuth } from "@/contexts/AuthContext";
 import {
   fetchPlayers,
   PLAYERS_QUERY_KEY,
-  type PlayersApiRecord,
+  type Player,
 } from "@/lib/api/players-client";
 import {
   fetchLatestRound,
   LATEST_ROUND_QUERY_KEY,
-  type RoundApiRecord,
+  type Round,
 } from "@/lib/api/rounds-client";
-import type { FettMattisCreate, RoundCreate } from "@/lib/api/schemas";
+import {
+  type FettMattisCreate,
+  ProblemDetailsSchema,
+  type RoundCreate,
+} from "@/lib/api/schemas";
 
-interface ProblemDetailPayload {
-  readonly detail?: unknown;
-  readonly error?: unknown;
-}
-
-const isMessageRecord = (value: unknown): value is { message: string } => {
-  if (typeof value !== "object" || value === null) {
-    return false;
-  }
-
-  return typeof (value as { message?: unknown }).message === "string";
-};
-
-const extractErrorDetail = (body: unknown): string | undefined => {
-  if (typeof body !== "object" || body === null) {
+const resolveProblemDetail = (body: unknown): string | undefined => {
+  const parsed = ProblemDetailsSchema.safeParse(body);
+  if (!parsed.success) {
     return undefined;
   }
-
-  const candidate = body as ProblemDetailPayload;
-
-  if (typeof candidate.detail === "string") {
-    return candidate.detail;
-  }
-
-  if (Array.isArray(candidate.error)) {
-    const errors = candidate.error as unknown[];
-    for (const entry of errors) {
-      if (isMessageRecord(entry)) {
-        return entry.message;
-      }
-    }
-  }
-
-  return undefined;
+  return parsed.data.detail;
 };
 
 const ROUND_FORM_SKELETON_KEYS = [
@@ -83,16 +59,16 @@ export default function RoundsClientPage() {
   const { getAuthHeader } = useAuth();
   const authHeader = getAuthHeader();
 
-  const playersQuery = useQuery<PlayersApiRecord[]>({
+  const playersQuery = useQuery<Player[]>({
     queryKey: PLAYERS_QUERY_KEY,
     queryFn: fetchPlayers,
   });
 
-  const players: PlayersApiRecord[] = playersQuery.data ?? [];
+  const players: Player[] = playersQuery.data ?? [];
   const isPlayersLoading = playersQuery.isLoading;
   const isPlayersFetching = playersQuery.isFetching;
 
-  const latestRoundQuery = useQuery<RoundApiRecord | null>({
+  const latestRoundQuery = useQuery<Round | null>({
     queryKey: LATEST_ROUND_QUERY_KEY,
     queryFn: fetchLatestRound,
   });
@@ -158,7 +134,7 @@ export default function RoundsClientPage() {
 
       if (!response.ok) {
         const body: unknown = await response.json();
-        const detail = extractErrorDetail(body);
+        const detail = resolveProblemDetail(body);
         throw new Error(detail ?? "Kunne ikke lagre runden.");
       }
     },
@@ -189,7 +165,7 @@ export default function RoundsClientPage() {
 
       if (!response.ok) {
         const body: unknown = await response.json();
-        const detail = extractErrorDetail(body);
+        const detail = resolveProblemDetail(body);
         throw new Error(detail ?? "Kunne ikke tildele en Fettmattis.");
       }
     },

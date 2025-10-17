@@ -26,12 +26,12 @@ import { useAuth } from "@/contexts/AuthContext";
 import {
   fetchPlayers,
   PLAYERS_QUERY_KEY,
-  type PlayersApiRecord,
-  type PlayerUpdatePayload,
+  type Player,
+  type PlayerUpdate,
   resolvePlayerError,
   updatePlayer,
 } from "@/lib/api/players-client";
-import type { PlayerCreate } from "@/lib/api/schemas";
+import { type PlayerCreate, PlayerSchema } from "@/lib/api/schemas";
 
 const ROSTER_SKELETON_KEYS = [
   "roster-row-1",
@@ -51,18 +51,14 @@ export default function PlayersClientPage() {
   const { getAuthHeader } = useAuth();
   const authHeader = getAuthHeader();
 
-  const playersQuery = useQuery<PlayersApiRecord[]>({
+  const playersQuery = useQuery<Player[]>({
     queryKey: PLAYERS_QUERY_KEY,
     queryFn: fetchPlayers,
   });
 
-  const players: PlayersApiRecord[] = playersQuery.data ?? [];
+  const players: Player[] = playersQuery.data ?? [];
 
-  const createPlayerMutation = useMutation<
-    PlayersApiRecord,
-    Error,
-    PlayerCreate
-  >({
+  const createPlayerMutation = useMutation<Player, Error, PlayerCreate>({
     mutationFn: async (payload) => {
       if (!authHeader) {
         throw new Error("Innlogging kreves for å opprette en spiller.");
@@ -81,7 +77,14 @@ export default function PlayersClientPage() {
         throw new Error(detail ?? "Kunne ikke opprette spiller");
       }
 
-      return (await response.json()) as PlayersApiRecord;
+      const responseBody = (await response.json()) as unknown;
+      const parsed = PlayerSchema.safeParse(responseBody);
+
+      if (!parsed.success) {
+        throw new Error("Kunne ikke bekrefte den nye spilleren.");
+      }
+
+      return parsed.data;
     },
     onSuccess: async () => {
       setMessage("Spiller lagt til i troppen. Velkommen!");
@@ -106,9 +109,9 @@ export default function PlayersClientPage() {
   };
 
   const updatePlayerMutation = useMutation<
-    PlayersApiRecord,
+    Player,
     Error,
-    { playerId: string; payload: PlayerUpdatePayload }
+    { playerId: string; payload: PlayerUpdate }
   >({
     mutationFn: async ({ playerId, payload }) => {
       if (!authHeader) {
@@ -122,10 +125,7 @@ export default function PlayersClientPage() {
     },
   });
 
-  const handlePlayerUpdate = async (
-    player: PlayersApiRecord,
-    payload: PlayerUpdatePayload,
-  ) => {
+  const handlePlayerUpdate = async (player: Player, payload: PlayerUpdate) => {
     setRosterMessage(null);
     setRosterError(null);
     setUpdatingPlayerId(player.id);

@@ -31,10 +31,10 @@ export async function POST(req: NextRequest) {
     const validatedData = RoundCreateSchema.safeParse(body);
 
     if (!validatedData.success) {
-      return NextResponse.json(
-        { error: validatedData.error.issues },
-        { status: 400 },
-      );
+      const detail =
+        validatedData.error.issues.at(0)?.message ??
+        "Request body validation failed.";
+      return badRequest(detail);
     }
 
     const { participant_ids, loser_id } = validatedData.data;
