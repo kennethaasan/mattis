@@ -1,30 +1,12 @@
+import {
+  FettmattisLeaderboardResponseSchema,
+  RegularLeaderboardResponseSchema,
+} from "@/lib/api/schemas";
 import type {
   FettmattisLeaderboard,
   LeaderboardScope,
   RegularLeaderboard,
 } from "@/lib/leaderboard-types";
-
-interface RegularLeaderboardResponse {
-  rank?: number | null;
-  loss_percentage: number;
-  participation_count: number;
-  loss_count: number;
-  player: {
-    id: string;
-    display_name: string;
-    active: boolean;
-  };
-}
-
-interface FettMattisLeaderboardResponse {
-  rank?: number | null;
-  fettmattis_count: number;
-  player: {
-    id: string;
-    display_name: string;
-    active: boolean;
-  };
-}
 
 function createQuery(scope: LeaderboardScope) {
   const params = new URLSearchParams();
@@ -49,9 +31,14 @@ export async function getRegularLeaderboard(
     throw new Error("Failed to load regular leaderboard.");
   }
 
-  const data = (await response.json()) as RegularLeaderboardResponse[];
+  const payload = (await response.json()) as unknown;
+  const parsed = RegularLeaderboardResponseSchema.safeParse(payload);
 
-  return data.map((entry, index) => ({
+  if (!parsed.success) {
+    throw new Error("Received an invalid response when loading the leaderboard.");
+  }
+
+  return parsed.data.map((entry, index) => ({
     playerId: entry.player.id,
     playerName: entry.player.display_name,
     roundsPlayed: entry.participation_count,
@@ -77,9 +64,14 @@ export async function getFettmattisLeaderboard(
     throw new Error("Failed to load Fettmattis leaderboard.");
   }
 
-  const data = (await response.json()) as FettMattisLeaderboardResponse[];
+  const payload = (await response.json()) as unknown;
+  const parsed = FettmattisLeaderboardResponseSchema.safeParse(payload);
 
-  return data.map((entry, index) => ({
+  if (!parsed.success) {
+    throw new Error("Received an invalid response when loading the leaderboard.");
+  }
+
+  return parsed.data.map((entry, index) => ({
     playerId: entry.player.id,
     playerName: entry.player.display_name,
     fettmattisCount: entry.fettmattis_count,

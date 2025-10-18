@@ -1,19 +1,17 @@
 import type { QueryKey } from "@tanstack/react-query";
 
-export interface PlayersApiRecord {
-  id: string;
-  display_name: string;
-  active: boolean;
-}
-
-export interface PlayerUpdatePayload {
-  display_name?: string;
-  active?: boolean;
-}
+import {
+  type Player,
+  PlayerSchema,
+  PlayersResponseSchema,
+  type PlayerUpdate,
+  PlayerUpdateSchema,
+  ProblemDetailsSchema,
+} from "./schemas";
 
 export const PLAYERS_QUERY_KEY = ["players"] as const satisfies QueryKey;
 
-export async function fetchPlayers(): Promise<PlayersApiRecord[]> {
+export async function fetchPlayers(): Promise<Player[]> {
   const response = await fetch("/api/players", {
     cache: "no-store",
   });
@@ -24,51 +22,41 @@ export async function fetchPlayers(): Promise<PlayersApiRecord[]> {
     );
   }
 
-  return (await response.json()) as PlayersApiRecord[];
+  const payload = (await response.json()) as unknown;
+  const parsed = PlayersResponseSchema.safeParse(payload);
+
+  if (!parsed.success) {
+    throw new Error("Received an invalid response when loading players.");
+  }
+
+  return parsed.data;
 }
 
 export const resolvePlayerError = (payload: unknown): string | undefined => {
-  if (typeof payload !== "object" || payload === null) {
-    return undefined;
-  }
+  const parsedProblem = ProblemDetailsSchema.safeParse(payload);
 
-  const candidate = payload as {
-    error?: unknown;
-    detail?: unknown;
-  };
-
-  if (Array.isArray(candidate.error)) {
-    for (const issue of candidate.error) {
-      if (
-        typeof issue === "object" &&
-        issue !== null &&
-        "message" in issue &&
-        typeof (issue as { message?: unknown }).message === "string"
-      ) {
-        return (issue as { message?: string }).message;
-      }
-    }
-  }
-
-  if (typeof candidate.detail === "string") {
-    return candidate.detail;
+  if (parsedProblem.success) {
+    return parsedProblem.data.detail;
   }
 
   return undefined;
 };
 
+export type { Player, PlayerUpdate } from "./schemas";
+
 export async function updatePlayer(
   playerId: string,
-  payload: PlayerUpdatePayload,
+  update: PlayerUpdate,
   authHeader?: Record<string, string> | null,
-): Promise<PlayersApiRecord> {
+): Promise<Player> {
+  const parsedPayload = PlayerUpdateSchema.parse(update);
   const response = await fetch(`/api/players/${playerId}`, {
     method: "PUT",
     headers: {
       "Content-Type": "application/json",
       ...(authHeader ?? {}),
     },
-    body: JSON.stringify(payload),
+    body: JSON.stringify(parsedPayload),
   });
 
   if (!response.ok) {
@@ -82,5 +70,12 @@ export async function updatePlayer(
     throw new Error(detail ?? "We couldn't update the player right now.");
   }
 
-  return (await response.json()) as PlayersApiRecord;
+  const responseBody = (await response.json()) as unknown;
+  const parsed = PlayerSchema.safeParse(responseBody);
+
+  if (!parsed.success) {
+    throw new Error("Received an invalid response when updating the player.");
+  }
+
+  return parsed.data;
 }

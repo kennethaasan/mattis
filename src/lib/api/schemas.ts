@@ -11,6 +11,58 @@ export const uuidSchema = z.string().refine(
   { message: "Must be a valid UUID." },
 );
 
+const isoDateTimeSchema = z.string().datetime({ offset: true });
+
+// --- Authentication Schemas ---
+
+export const AuthUserSchema = z.object({
+  id: uuidSchema,
+  email: z.string().email(),
+  name: z.string().nullable().optional(),
+  image: z.string().url().nullable().optional(),
+  emailVerified: z.boolean().optional(),
+  createdAt: isoDateTimeSchema.optional(),
+  updatedAt: isoDateTimeSchema.optional(),
+});
+
+export const AuthSessionDataSchema = z.object({
+  token: z.string(),
+  expiresAt: isoDateTimeSchema.optional(),
+  id: z.string().optional(),
+  createdAt: isoDateTimeSchema.optional(),
+  updatedAt: isoDateTimeSchema.optional(),
+});
+
+export const AuthSessionSchema = z.object({
+  session: AuthSessionDataSchema,
+  user: AuthUserSchema,
+});
+
+export const AuthSessionResponseSchema = z.union([
+  AuthSessionSchema,
+  z.null(),
+]);
+
+export const EmailPasswordSignInRequestSchema = z.object({
+  email: z.string().email(),
+  password: z.string(),
+  callbackURL: z.string().url().optional(),
+  rememberMe: z.boolean().optional(),
+});
+
+export const EmailPasswordSignInResponseSchema = z.object({
+  redirect: z.boolean(),
+  token: z.string(),
+  url: z.string().url().nullable().optional(),
+  user: AuthUserSchema,
+});
+
+export const SignOutResponseSchema = z.object({
+  success: z.boolean(),
+});
+
+// --- Player Schemas ---
+
 export const PlayerSchema = z.object({
   id: uuidSchema,
   display_name: z.string().min(1, "Display name cannot be empty."),
@@ -26,7 +78,16 @@ export const PlayerUpdateSchema = z.object({
   active: z.boolean().optional(),
 });
 
+export const PlayersResponseSchema = PlayerSchema.array();
+
 // --- Round Schemas ---
+
+export const RoundSchema = z.object({
+  id: uuidSchema,
+  created_at: isoDateTimeSchema,
+  participants: PlayerSchema.array(),
+  loser: PlayerSchema,
+});
 
 export const RoundCreateSchema = z
   .object({
@@ -61,12 +122,24 @@ export const RoundUpdateSchema = z
     },
   );
 
+export const RoundListResponseSchema = RoundSchema.array();
+export const LatestRoundResponseSchema = RoundSchema.nullable();
+
 // --- FettMattis Schemas ---
+
+export const FettMattisSchema = z.object({
+  id: uuidSchema,
+  player: PlayerSchema,
+  round_id: uuidSchema.nullish(),
+  created_at: isoDateTimeSchema,
+});
 
 export const FettMattisCreateSchema = z.object({
   player_id: uuidSchema,
   round_id: uuidSchema.optional(),
 });
+
+export const FettMattisListResponseSchema = FettMattisSchema.array();
 
 // --- Leaderboard Schemas ---
 
@@ -81,21 +154,59 @@ export const LeaderboardQuerySchema = z.object({
     .optional(),
 });
 
+export const RegularLeaderboardItemSchema = z.object({
+  player: PlayerSchema,
+  rank: z.number().int(),
+  loss_percentage: z.number(),
+  participation_count: z.number().int(),
+  loss_count: z.number().int(),
+});
+
+export const FettmattisLeaderboardItemSchema = z.object({
+  player: PlayerSchema,
+  rank: z.number().int(),
+  fettmattis_count: z.number().int(),
+});
+
+export const RegularLeaderboardResponseSchema =
+  RegularLeaderboardItemSchema.array();
+export const FettmattisLeaderboardResponseSchema =
+  FettmattisLeaderboardItemSchema.array();
+
 // --- Utility Schemas ---
 
 export const ProblemDetailsSchema = z.object({
-  type: z.url().default("about:blank"),
+  type: z.string().url().or(z.literal("about:blank")),
   title: z.string(),
   status: z.number().int().min(400).max(599),
   detail: z.string().optional(),
-  instance: z.url().optional(),
+  instance: z.string().url().optional(),
 });
 
-// Export types
+// --- Exported Types ---
+
+export type AuthUser = z.infer<typeof AuthUserSchema>;
+export type AuthSessionData = z.infer<typeof AuthSessionDataSchema>;
+export type AuthSession = z.infer<typeof AuthSessionSchema>;
+export type EmailPasswordSignInRequest = z.infer<
+  typeof EmailPasswordSignInRequestSchema
+>;
+export type EmailPasswordSignInResponse = z.infer<
+  typeof EmailPasswordSignInResponseSchema
+>;
+export type SignOutResponse = z.infer<typeof SignOutResponseSchema>;
 export type Player = z.infer<typeof PlayerSchema>;
 export type PlayerCreate = z.infer<typeof PlayerCreateSchema>;
 export type PlayerUpdate = z.infer<typeof PlayerUpdateSchema>;
+export type Round = z.infer<typeof RoundSchema>;
 export type RoundCreate = z.infer<typeof RoundCreateSchema>;
 export type RoundUpdate = z.infer<typeof RoundUpdateSchema>;
+export type FettMattis = z.infer<typeof FettMattisSchema>;
 export type FettMattisCreate = z.infer<typeof FettMattisCreateSchema>;
-export type LeaderboardQuery = z.infer<typeof LeaderboardQuerySchema>;
+export type RegularLeaderboardItem = z.infer<
+  typeof RegularLeaderboardItemSchema
+>;
+export type FettmattisLeaderboardItem = z.infer<
+  typeof FettmattisLeaderboardItemSchema
+>;
+export type ProblemDetails = z.infer<typeof ProblemDetailsSchema>;

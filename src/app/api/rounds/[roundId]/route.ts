@@ -21,10 +21,9 @@ export async function GET(
 
   const validation = uuidSchema.safeParse(roundId);
   if (!validation.success) {
-    return NextResponse.json(
-      { error: validation.error.issues },
-      { status: 400 }
-    );
+    const detail =
+      validation.error.issues.at(0)?.message ?? "Round id is invalid.";
+    return badRequest(detail);
   }
 
   try {
@@ -64,10 +63,9 @@ export async function PUT(
 
   const validation = uuidSchema.safeParse(roundId);
   if (!validation.success) {
-    return NextResponse.json(
-      { error: validation.error.issues },
-      { status: 400 }
-    );
+    const detail =
+      validation.error.issues.at(0)?.message ?? "Round id is invalid.";
+    return badRequest(detail);
   }
 
   let body: unknown;
@@ -79,10 +77,10 @@ export async function PUT(
 
   const parsedBody = RoundUpdateSchema.safeParse(body);
   if (!parsedBody.success) {
-    return NextResponse.json(
-      { error: parsedBody.error.issues },
-      { status: 400 }
-    );
+    const detail =
+      parsedBody.error.issues.at(0)?.message ??
+      "Request body validation failed.";
+    return badRequest(detail);
   }
 
   try {
@@ -139,10 +137,9 @@ export async function DELETE(
 
   const validation = uuidSchema.safeParse(roundId);
   if (!validation.success) {
-    return NextResponse.json(
-      { error: validation.error.issues },
-      { status: 400 }
-    );
+    const detail =
+      validation.error.issues.at(0)?.message ?? "Round id is invalid.";
+    return badRequest(detail);
   }
 
   try {

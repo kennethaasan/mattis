@@ -10,6 +10,13 @@ import {
   useState,
 } from "react";
 
+import {
+  type AuthSession,
+  AuthSessionResponseSchema,
+  EmailPasswordSignInResponseSchema,
+  ProblemDetailsSchema,
+} from "@/lib/api/schemas";
+
 interface AuthUser {
   id: string;
   email: string;
@@ -27,87 +34,6 @@ interface AuthContextType {
   getAuthHeader: () => Record<string, string> | null;
 }
 
-interface SessionResponse {
-  readonly session: {
-    token: string;
-    expiresAt?: string;
-    id?: string;
-  };
-  readonly user: {
-    id: string;
-    email: string;
-    name: string | null;
-  };
-}
-
-function normalizeSessionPayload(payload: unknown): SessionResponse | null {
-  if (!payload || typeof payload !== "object") {
-    return null;
-  }
-
-  const raw = payload as Record<string, unknown>;
-  const userCandidate = raw.user;
-
-  if (!userCandidate || typeof userCandidate !== "object") {
-    return null;
-  }
-
-  const user = userCandidate as {
-    id?: unknown;
-    email?: unknown;
-    name?: unknown;
-  };
-
-  if (typeof user.id !== "string" || typeof user.email !== "string") {
-    return null;
-  }
-
-  const sessionCandidate = raw.session;
-  let sessionToken: string | null = null;
-
-  if (typeof raw.token === "string" && raw.token) {
-    sessionToken = raw.token;
-  } else if (
-    sessionCandidate &&
-    typeof sessionCandidate === "object" &&
-    typeof (sessionCandidate as { token?: unknown }).token === "string"
-  ) {
-    sessionToken = (sessionCandidate as { token: string }).token;
-  }
-
-  if (!sessionToken) {
-    return null;
-  }
-
-  const session =
-    sessionCandidate && typeof sessionCandidate === "object"
-      ? {
-          token: sessionToken,
-          expiresAt:
-            typeof (sessionCandidate as { expiresAt?: unknown }).expiresAt ===
-            "string"
-              ? (sessionCandidate as { expiresAt: string }).expiresAt
-              : undefined,
-          id:
-            typeof (sessionCandidate as { id?: unknown }).id === "string"
-              ? (sessionCandidate as { id: string }).id
-              : undefined,
-        }
-      : { token: sessionToken };
-
-  return {
-    session,
-    user: {
-      id: user.id,
-      email: user.email,
-      name:
-        typeof user.name === "string" && user.name.length > 0
-          ? user.name
-          : null,
-    },
-  };
-}
-
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
 interface AuthProviderProps {
@@ -120,7 +46,7 @@ export function AuthProvider({ children }: AuthProviderProps) {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
-  const applySession = useCallback((payload: SessionResponse | null) => {
+  const applySession = useCallback((payload: AuthSession | null) => {
     if (!payload) {
       setUser(null);
       setToken(null);
@@ -151,7 +77,8 @@ export function AuthProvider({ children }: AuthProviderProps) {
       }
 
       const data = await response.json();
-      applySession(normalizeSessionPayload(data));
+      const parsed = AuthSessionResponseSchema.safeParse(data);
+      applySession(parsed.success ? parsed.data : null);
     } catch (refreshError) {
       applySession(null);
       setError(
@@ -191,25 +118,24 @@ export function AuthProvider({ children }: AuthProviderProps) {
             body = null;
           }
 
+          const problem = ProblemDetailsSchema.safeParse(body);
           const message =
-            body &&
-            typeof body === "object" &&
-            body !== null &&
-            "message" in body
-              ? (body as { message?: string }).message ??
-                "Feil e-post eller passord."
-              : "Feil e-post eller passord.";
+            (problem.success && problem.data.detail) ||
+            "Feil e-post eller passord.";
           throw new Error(message);
         }
 
         const data = await response.json();
-        const sessionPayload = normalizeSessionPayload(data);
+        const parsed = EmailPasswordSignInResponseSchema.safeParse(data);
 
-        if (!sessionPayload) {
+        if (!parsed.success) {
           throw new Error("Feil e-post eller passord.");
         }
 
-        applySession(sessionPayload);
+        applySession({
+          session: { token: parsed.data.token },
+          user: parsed.data.user,
+        });
       } catch (loginError) {
         applySession(null);
         setError(

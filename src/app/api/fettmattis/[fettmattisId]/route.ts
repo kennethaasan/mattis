@@ -1,6 +1,5 @@
 import type { NextRequest } from "next/server";
-import { NextResponse } from "next/server";
-import { createProblemResponse } from "@/lib/api/problem-details";
+import { badRequest, createProblemResponse } from "@/lib/api/problem-details";
 import { uuidSchema } from "@/lib/api/schemas";
 import { resolveRequestUserId } from "@/lib/auth/request-user";
 import {
@@ -26,10 +25,9 @@ export async function DELETE(
 
   const validation = uuidSchema.safeParse(fettmattisId);
   if (!validation.success) {
-    return NextResponse.json(
-      { error: validation.error.issues },
-      { status: 400 }
-    );
+    const detail =
+      validation.error.issues.at(0)?.message ?? "Fettmattis id is invalid.";
+    return badRequest(detail);
   }
 
   try {

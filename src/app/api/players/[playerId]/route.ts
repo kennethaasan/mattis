@@ -1,4 +1,5 @@
 import { NextResponse } from "next/server";
+import { badRequest, createProblemResponse } from "@/lib/api/problem-details";
 import { toPlayerResponse } from "@/lib/api/response-helpers";
 import { PlayerUpdateSchema, uuidSchema } from "@/lib/api/schemas";
 import { resolveRequestUserId } from "@/lib/auth/request-user";
@@ -17,10 +18,9 @@ export async function GET(
 
   const validation = uuidSchema.safeParse(playerId);
   if (!validation.success) {
-    return NextResponse.json(
-      { error: validation.error.issues },
-      { status: 400 },
-    );
+    const detail =
+      validation.error.issues.at(0)?.message ?? "Player id is invalid.";
+    return badRequest(detail);
   }
 
   try {
@@ -29,20 +29,17 @@ export async function GET(
     return NextResponse.json(toPlayerResponse(player));
   } catch (error) {
     if (error instanceof NotFoundError) {
-      return NextResponse.json(
-        {
-          type: "about:blank",
-          title: "Not Found",
-          status: 404,
-          detail: error.message,
-        },
-        { status: 404 },
-      );
+      return createProblemResponse({
+        status: 404,
+        title: "Not Found",
+        detail: error.message,
+      });
     }
-    return NextResponse.json(
-      { type: "about:blank", title: "Internal Server Error", status: 500 },
-      { status: 500 },
-    );
+    return createProblemResponse({
+      status: 500,
+      title: "Internal Server Error",
+      detail: "Internal Server Error",
+    });
   }
 }
 
@@ -54,23 +51,18 @@ export async function PUT(
 
   const validation = uuidSchema.safeParse(playerId);
   if (!validation.success) {
-    return NextResponse.json(
-      { error: validation.error.issues },
-      { status: 400 },
-    );
+    const detail =
+      validation.error.issues.at(0)?.message ?? "Player id is invalid.";
+    return badRequest(detail);
   }
 
   const userId = await resolveRequestUserId(req.headers);
   if (!userId) {
-    return NextResponse.json(
-      {
-        type: "about:blank",
-        title: "Unauthorized",
-        status: 401,
-        detail: "Authentication required.",
-      },
-      { status: 401 },
-    );
+    return createProblemResponse({
+      status: 401,
+      title: "Unauthorized",
+      detail: "Authentication required.",
+    });
   }
 
   try {
@@ -78,10 +70,10 @@ export async function PUT(
     const bodyValidation = PlayerUpdateSchema.safeParse(body);
 
     if (!bodyValidation.success) {
-      return NextResponse.json(
-        { error: bodyValidation.error.issues },
-        { status: 400 },
-      );
+      const detail =
+        bodyValidation.error.issues.at(0)?.message ??
+        "Request body validation failed.";
+      return badRequest(detail);
     }
 
     const { display_name, active } = bodyValidation.data;
@@ -94,30 +86,23 @@ export async function PUT(
     return NextResponse.json(toPlayerResponse(updatedPlayer));
   } catch (error) {
     if (error instanceof NotFoundError) {
-      return NextResponse.json(
-        {
-          type: "about:blank",
-          title: "Not Found",
-          status: 404,
-          detail: error.message,
-        },
-        { status: 404 },
-      );
+      return createProblemResponse({
+        status: 404,
+        title: "Not Found",
+        detail: error.message,
+      });
     }
     if (error instanceof ConflictError) {
-      return NextResponse.json(
-        {
-          type: "about:blank",
-          title: "Conflict",
-          status: 409,
-          detail: error.message,
-        },
-        { status: 409 },
-      );
+      return createProblemResponse({
+        status: 409,
+        title: "Conflict",
+        detail: error.message,
+      });
     }
-    return NextResponse.json(
-      { type: "about:blank", title: "Internal Server Error", status: 500 },
-      { status: 500 },
-    );
+    return createProblemResponse({
+      status: 500,
+      title: "Internal Server Error",
+      detail: "Internal Server Error",
+    });
   }
 }
