@@ -172,12 +172,12 @@ jobs:
     name: Build
     runs-on: ubuntu-latest
     timeout-minutes: 15
-    env:
-      BETTER_AUTH_SECRET: replace-with-a-strong-secret
     steps:
       - *node-checkout
       - *node-setup
       - *node-install-dependencies
+      - name: Copy .env.example to .env
+        run: cp .env.example .env
       - name: Build and package Lambda function
         run: npm run build:lambda
       - name: Zip Lambda function
