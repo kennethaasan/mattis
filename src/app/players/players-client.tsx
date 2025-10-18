@@ -4,6 +4,7 @@ import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { RefreshCcw } from "lucide-react";
 import { useMemo, useState } from "react";
 
+import { PageShell } from "@/components/layout/page-shell";
 import { PlayerForm } from "@/components/PlayerForm";
 import { SectionHeader } from "@/components/section-header";
 import { Badge } from "@/components/ui/badge";
@@ -233,7 +234,7 @@ export default function PlayersClientPage() {
   }
 
   return (
-    <div className="container space-y-10 pt-12 pb-16">
+    <PageShell className="gap-10">
       <SectionHeader
         badge={
           <Badge variant="outline" className="border-primary/40 text-primary">
@@ -296,6 +297,6 @@ export default function PlayersClientPage() {
           </CardContent>
         </Card>
       </div>
-    </div>
+    </PageShell>
   );
 }

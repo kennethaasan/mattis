@@ -4,6 +4,7 @@ import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { CalendarCheck, Trophy } from "lucide-react";
 import { useMemo, useState } from "react";
 import { FettMattisForm } from "@/components/FettMattisForm";
+import { PageShell } from "@/components/layout/page-shell";
 import { RoundForm } from "@/components/RoundForm";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -180,7 +181,7 @@ export default function RoundsClientPage() {
   };
 
   return (
-    <div className="container space-y-10 pt-12 pb-16">
+    <PageShell className="gap-10">
       <div className="flex flex-col gap-2 text-left">
         <Badge
           variant="outline"
@@ -284,6 +285,6 @@ export default function RoundsClientPage() {
           Oppdater spillerliste
         </Button>
       </div>
-    </div>
+    </PageShell>
   );
 }

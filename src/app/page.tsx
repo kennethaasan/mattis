@@ -80,8 +80,8 @@ export default async function Home() {
 
   return (
     <div className="flex flex-col">
-      <section className="border-border/60 bg-muted/40 border-b py-12">
-        <div className="container space-y-8 pb-16">
+      <section className="border-border/60 bg-muted/40 border-b py-16">
+        <div className="container flex flex-col gap-10">
           <SectionHeader
             badge={
               <Badge
@@ -100,8 +100,8 @@ export default async function Home() {
         </div>
       </section>
 
-      <section className="relative overflow-hidden">
-        <div className="relative container flex flex-col items-center gap-8 pt-24 pb-20 text-center md:pt-28">
+      <section className="relative overflow-hidden py-16 md:py-24">
+        <div className="relative container flex flex-col items-center gap-8 text-center">
           <SectionHeader
             badge={
               <Badge className="bg-primary/10 text-primary shadow-primary/20 rounded-full shadow-xs">
@@ -133,51 +133,55 @@ export default async function Home() {
         <div className="from-primary/15 absolute inset-x-0 top-1/2 -z-10 h-[480px] bg-linear-to-b via-transparent to-transparent blur-3xl" />
       </section>
 
-      <section className="container grid gap-6 pb-16 md:grid-cols-3">
-        {featureCards.map(({ Icon, title, description }) => (
-          <Card key={title} className="h-full">
-            <CardHeader className="pb-6">
-              <div className="bg-primary/10 text-primary flex h-12 w-12 items-center justify-center rounded-2xl">
-                <Icon className="h-6 w-6" />
-              </div>
-              <CardTitle>{title}</CardTitle>
-              <CardDescription>{description}</CardDescription>
-            </CardHeader>
-          </Card>
-        ))}
-      </section>
-
-      <section className="container grid gap-6 pb-16 lg:grid-cols-[1.1fr_0.9fr]">
-        <div className="grid gap-4">
-          {workflowCards.map((card) => (
-            <Card key={card.title} className="border-border/70 border-dashed">
+      <section className="py-16">
+        <div className="container grid gap-6 md:grid-cols-3">
+          {featureCards.map(({ Icon, title, description }) => (
+            <Card key={title} className="h-full">
               <CardHeader className="pb-6">
-                <CardTitle className="text-lg">{card.title}</CardTitle>
-                <CardDescription>{card.description}</CardDescription>
+                <div className="bg-primary/10 text-primary flex h-12 w-12 items-center justify-center rounded-2xl">
+                  <Icon className="h-6 w-6" />
+                </div>
+                <CardTitle>{title}</CardTitle>
+                <CardDescription>{description}</CardDescription>
               </CardHeader>
             </Card>
           ))}
         </div>
-        <Card className="from-primary/10 via-background to-background bg-linear-to-br">
-          <CardHeader className="pb-4">
-            <CardTitle className="flex items-center gap-2 text-lg">
-              <Zap className="text-primary h-5 w-5" />
-              Klar for å registrere neste runde?
-            </CardTitle>
-            <CardDescription>
-              Gå direkte til rundeoversikten, eller finjuster spillerlisten før
-              neste kamp.
-            </CardDescription>
-          </CardHeader>
-          <CardContent className="flex flex-col gap-3 p-6 pt-4 pb-6 sm:flex-row">
-            <Button asChild className="flex-1">
-              <Link href="/rounds">Registrer en runde</Link>
-            </Button>
-            <Button variant="outline" asChild className="flex-1">
-              <Link href="/players">Administrer spillere</Link>
-            </Button>
-          </CardContent>
-        </Card>
+      </section>
+
+      <section className="py-16">
+        <div className="container grid gap-6 lg:grid-cols-[1.1fr_0.9fr]">
+          <div className="grid gap-4">
+            {workflowCards.map((card) => (
+              <Card key={card.title} className="border-border/70 border-dashed">
+                <CardHeader className="pb-6">
+                  <CardTitle className="text-lg">{card.title}</CardTitle>
+                  <CardDescription>{card.description}</CardDescription>
+                </CardHeader>
+              </Card>
+            ))}
+          </div>
+          <Card className="from-primary/10 via-background to-background bg-linear-to-br">
+            <CardHeader className="pb-4">
+              <CardTitle className="flex items-center gap-2 text-lg">
+                <Zap className="text-primary h-5 w-5" />
+                Klar for å registrere neste runde?
+              </CardTitle>
+              <CardDescription>
+                Gå direkte til rundeoversikten, eller finjuster spillerlisten før
+                neste kamp.
+              </CardDescription>
+            </CardHeader>
+            <CardContent className="flex flex-col gap-3 p-6 pt-4 pb-6 sm:flex-row">
+              <Button asChild className="flex-1">
+                <Link href="/rounds">Registrer en runde</Link>
+              </Button>
+              <Button variant="outline" asChild className="flex-1">
+                <Link href="/players">Administrer spillere</Link>
+              </Button>
+            </CardContent>
+          </Card>
+        </div>
       </section>
 
       <section className="border-border/60 bg-muted/40 relative overflow-hidden border-t py-16">

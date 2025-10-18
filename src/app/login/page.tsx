@@ -47,7 +47,7 @@ export default function LoginPage() {
   const submitDisabled = loading || isSubmitting || email.length === 0 || password.length === 0;
 
   return (
-    <div className="flex min-h-[60vh] items-center justify-center px-4">
+    <div className="container flex min-h-[60vh] items-center justify-center py-16">
       <div className="w-full max-w-md space-y-6 rounded-3xl border border-border/60 bg-background/60 p-8 shadow-lg backdrop-blur">
         <div className="space-y-2 text-center">
           <h1 className="text-2xl font-semibold">Logg inn</h1>
