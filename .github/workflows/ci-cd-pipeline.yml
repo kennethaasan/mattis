@@ -180,6 +180,9 @@ jobs:
         run: cp .env.example .env
       - name: Build and package Lambda function
         run: npm run build:lambda
+      - name: Clean up build-time env
+        working-directory: build
+        run: rm -f .env
       - name: Zip Lambda function
         working-directory: build
         run: zip -qr function.zip .
