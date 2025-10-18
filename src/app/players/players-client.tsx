@@ -5,6 +5,7 @@ import { RefreshCcw } from "lucide-react";
 import { useMemo, useState } from "react";
 
 import { PlayerForm } from "@/components/PlayerForm";
+import { SectionHeader } from "@/components/section-header";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import {
@@ -154,72 +155,74 @@ export default function PlayersClientPage() {
     );
   } else if (players.length > 0) {
     rosterContent = (
-      <Table>
-        <TableHeader>
-          <TableRow>
-            <TableHead>Spiller</TableHead>
-            <TableHead className="hidden sm:table-cell">Status</TableHead>
-            <TableHead className="hidden text-right sm:table-cell">
-              Handling
-            </TableHead>
-            <TableHead className="hidden text-right sm:table-cell">
-              ID
-            </TableHead>
-          </TableRow>
-        </TableHeader>
-        <TableBody>
-          {players.map((player) => (
-            <TableRow key={player.id}>
-              <TableCell>
-                <div className="flex flex-col">
-                  <span className="text-foreground font-medium">
-                    {player.display_name}
-                  </span>
-                  <span className="text-muted-foreground text-xs sm:hidden">
-                    {player.active ? "Aktiv" : "Inaktiv"}
-                  </span>
-                  <div className="mt-2 flex flex-wrap gap-2 sm:hidden">
-                    <Button
-                      variant="outline"
-                      size="sm"
-                      onClick={() =>
-                        void handlePlayerUpdate(player, {
-                          active: !player.active,
-                        })
-                      }
-                      disabled={updatingPlayerId === player.id}
-                    >
-                      {player.active ? "Sett som inaktiv" : "Sett som aktiv"}
-                    </Button>
-                  </div>
-                </div>
-              </TableCell>
-              <TableCell className="hidden sm:table-cell">
-                <Badge variant={player.active ? "success" : "outline"}>
-                  {player.active ? "Aktiv" : "Inaktiv"}
-                </Badge>
-              </TableCell>
-              <TableCell className="hidden text-right sm:table-cell">
-                <Button
-                  variant="outline"
-                  size="sm"
-                  onClick={() =>
-                    void handlePlayerUpdate(player, {
-                      active: !player.active,
-                    })
-                  }
-                  disabled={updatingPlayerId === player.id}
-                >
-                  {player.active ? "Sett som inaktiv" : "Sett som aktiv"}
-                </Button>
-              </TableCell>
-              <TableCell className="text-muted-foreground hidden text-right text-xs sm:table-cell">
-                {player.id.slice(0, 8)}…
-              </TableCell>
+      <div className="overflow-x-auto">
+        <Table>
+          <TableHeader>
+            <TableRow>
+              <TableHead>Spiller</TableHead>
+              <TableHead className="hidden sm:table-cell">Status</TableHead>
+              <TableHead className="hidden text-right sm:table-cell">
+                Handling
+              </TableHead>
+              <TableHead className="hidden text-right sm:table-cell">
+                ID
+              </TableHead>
             </TableRow>
-          ))}
-        </TableBody>
-      </Table>
+          </TableHeader>
+          <TableBody>
+            {players.map((player) => (
+              <TableRow key={player.id}>
+                <TableCell>
+                  <div className="flex flex-col">
+                    <span className="text-foreground font-medium">
+                      {player.display_name}
+                    </span>
+                    <span className="text-muted-foreground text-xs sm:hidden">
+                      {player.active ? "Aktiv" : "Inaktiv"}
+                    </span>
+                    <div className="mt-2 flex flex-wrap gap-2 sm:hidden">
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        onClick={() =>
+                          void handlePlayerUpdate(player, {
+                            active: !player.active,
+                          })
+                        }
+                        disabled={updatingPlayerId === player.id}
+                      >
+                        {player.active ? "Sett som inaktiv" : "Sett som aktiv"}
+                      </Button>
+                    </div>
+                  </div>
+                </TableCell>
+                <TableCell className="hidden sm:table-cell">
+                  <Badge variant={player.active ? "success" : "outline"}>
+                    {player.active ? "Aktiv" : "Inaktiv"}
+                  </Badge>
+                </TableCell>
+                <TableCell className="hidden text-right sm:table-cell">
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    onClick={() =>
+                      void handlePlayerUpdate(player, {
+                        active: !player.active,
+                      })
+                    }
+                    disabled={updatingPlayerId === player.id}
+                  >
+                    {player.active ? "Sett som inaktiv" : "Sett som aktiv"}
+                  </Button>
+                </TableCell>
+                <TableCell className="text-muted-foreground hidden text-right text-xs sm:table-cell">
+                  {player.id.slice(0, 8)}…
+                </TableCell>
+              </TableRow>
+            ))}
+          </TableBody>
+        </Table>
+      </div>
     );
   } else {
     rosterContent = (
@@ -231,21 +234,17 @@ export default function PlayersClientPage() {
 
   return (
     <div className="container space-y-10 pt-12 pb-16">
-      <div className="flex flex-col gap-2 text-left">
-        <Badge
-          variant="outline"
-          className="border-primary/40 text-primary w-fit"
-        >
-          Verktøy for troppen
-        </Badge>
-        <h1 className="text-3xl font-semibold tracking-tight sm:text-4xl">
-          Administrer Mattis-gjengen
-        </h1>
-        <p className="text-muted-foreground max-w-2xl text-sm">
-          Opprett nye spillere, behold inaktive legender i arkivet og hold
-          navnelisten ryddig til hver runde.
-        </p>
-      </div>
+      <SectionHeader
+        badge={
+          <Badge variant="outline" className="border-primary/40 text-primary">
+            Verktøy for troppen
+          </Badge>
+        }
+        title="Administrer Mattis-gjengen"
+        description="Opprett nye spillere, behold inaktive legender i arkivet og hold navnelisten ryddig til hver runde."
+        titleAs="h1"
+        descriptionClassName="max-w-2xl"
+      />
 
       <div className="grid gap-6 lg:grid-cols-[380px_1fr]">
         <Card>

@@ -4,7 +4,9 @@ import { useQuery } from "@tanstack/react-query";
 import { AlertTriangle, ChevronDown, Loader2 } from "lucide-react";
 import type { ReactNode } from "react";
 import { useId, useMemo, useState } from "react";
+import { SectionHeader } from "@/components/section-header";
 import { Badge } from "@/components/ui/badge";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import {
   Table,
   TableBody,
@@ -13,6 +15,7 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import {
   getFettmattisLeaderboard,
   getRegularLeaderboard,
@@ -74,48 +77,50 @@ export function Leaderboard() {
     );
   } else {
     regularContent = (
-      <Table>
-        <TableHeader>
-          <TableRow>
-            <TableHead className="w-16">Plass</TableHead>
-            <TableHead>Spiller</TableHead>
-            <TableHead className="text-right">Tap %</TableHead>
-            <TableHead className="text-right">Tap</TableHead>
-            <TableHead className="text-right">Runder</TableHead>
-          </TableRow>
-        </TableHeader>
-        <TableBody>
-          {regular.map((entry) => (
-            <TableRow key={entry.playerId}>
-              <TableCell className="font-semibold">#{entry.rank}</TableCell>
-              <TableCell className="flex items-center gap-3">
-                <div className="flex flex-col">
-                  <span className="text-foreground font-medium">
-                    {entry.playerName}
-                  </span>
-                  <span className="text-muted-foreground text-xs">
-                    {entry.roundsPlayed} runder spilt
-                  </span>
-                </div>
-                <Badge
-                  variant={entry.lossPercentage < 30 ? "success" : "outline"}
-                >
-                  {entry.lossPercentage.toFixed(1)}%
-                </Badge>
-              </TableCell>
-              <TableCell className="text-right font-semibold">
-                {entry.lossPercentage.toFixed(1)}%
-              </TableCell>
-              <TableCell className="text-muted-foreground text-right">
-                {entry.totalLosses}
-              </TableCell>
-              <TableCell className="text-muted-foreground text-right">
-                {entry.roundsPlayed}
-              </TableCell>
+      <div className="overflow-x-auto">
+        <Table>
+          <TableHeader>
+            <TableRow>
+              <TableHead className="w-16">Plass</TableHead>
+              <TableHead>Spiller</TableHead>
+              <TableHead className="text-right">Tap %</TableHead>
+              <TableHead className="text-right">Tap</TableHead>
+              <TableHead className="text-right">Runder</TableHead>
             </TableRow>
-          ))}
-        </TableBody>
-      </Table>
+          </TableHeader>
+          <TableBody>
+            {regular.map((entry) => (
+              <TableRow key={entry.playerId}>
+                <TableCell className="font-semibold">#{entry.rank}</TableCell>
+                <TableCell className="flex items-center gap-3">
+                  <div className="flex flex-col">
+                    <span className="text-foreground font-medium">
+                      {entry.playerName}
+                    </span>
+                    <span className="text-muted-foreground text-xs">
+                      {entry.roundsPlayed} runder spilt
+                    </span>
+                  </div>
+                  <Badge
+                    variant={entry.lossPercentage < 30 ? "success" : "outline"}
+                  >
+                    {entry.lossPercentage.toFixed(1)}%
+                  </Badge>
+                </TableCell>
+                <TableCell className="text-right font-semibold">
+                  {entry.lossPercentage.toFixed(1)}%
+                </TableCell>
+                <TableCell className="text-muted-foreground text-right">
+                  {entry.totalLosses}
+                </TableCell>
+                <TableCell className="text-muted-foreground text-right">
+                  {entry.roundsPlayed}
+                </TableCell>
+              </TableRow>
+            ))}
+          </TableBody>
+        </Table>
+      </div>
     );
   }
 
@@ -134,47 +139,46 @@ export function Leaderboard() {
     );
   } else {
     fettmattisContent = (
-      <Table>
-        <TableHeader>
-          <TableRow>
-            <TableHead className="w-16">Plass</TableHead>
-            <TableHead>Spiller</TableHead>
-            <TableHead className="text-right">FettMattis</TableHead>
-          </TableRow>
-        </TableHeader>
-        <TableBody>
-          {fettmattis.map((entry) => (
-            <TableRow key={entry.playerId}>
-              <TableCell className="font-semibold">#{entry.rank}</TableCell>
-              <TableCell className="flex items-center gap-3">
-                <span className="text-foreground font-medium">
-                  {entry.playerName}
-                </span>
-                <Badge variant="secondary">Fettmattis-helt</Badge>
-              </TableCell>
-              <TableCell className="text-muted-foreground text-right">
-                {entry.fettmattisCount}
-              </TableCell>
+      <div className="overflow-x-auto">
+        <Table>
+          <TableHeader>
+            <TableRow>
+              <TableHead className="w-16">Plass</TableHead>
+              <TableHead>Spiller</TableHead>
+              <TableHead className="text-right">FettMattis</TableHead>
             </TableRow>
-          ))}
-        </TableBody>
-      </Table>
+          </TableHeader>
+          <TableBody>
+            {fettmattis.map((entry) => (
+              <TableRow key={entry.playerId}>
+                <TableCell className="font-semibold">#{entry.rank}</TableCell>
+                <TableCell className="flex items-center gap-3">
+                  <span className="text-foreground font-medium">
+                    {entry.playerName}
+                  </span>
+                  <Badge variant="secondary">Fettmattis-helt</Badge>
+                </TableCell>
+                <TableCell className="text-muted-foreground text-right">
+                  {entry.fettmattisCount}
+                </TableCell>
+              </TableRow>
+            ))}
+          </TableBody>
+        </Table>
+      </div>
     );
   }
 
   return (
     <div className="space-y-6">
       <div className="flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
-        <div className="flex flex-col items-start gap-2 text-left">
-          <h2 className="text-2xl font-semibold tracking-tight md:text-3xl">
-            Sesongoversikt for {isAllTime ? "alle år" : scope}
-          </h2>
-          <p className="text-muted-foreground max-w-2xl text-sm">
-            Tap-prosentene oppdateres med én gang en runde lagres.
-            Fettmattis-utdelinger følger 24-timersfristen for tilbakekalling.
-          </p>
-        </div>
-        <div className="flex items-center gap-3">
+        <SectionHeader
+          title={`Sesongoversikt for ${isAllTime ? "alle år" : scope}`}
+          description="Tap-prosentene oppdateres med én gang en runde lagres. Fettmattis-utdelinger følger 24-timersfristen for tilbakekalling."
+          className="gap-2"
+          descriptionClassName="max-w-2xl"
+        />
+        <div className="flex items-center gap-3 self-start md:self-auto">
           <label
             className="text-muted-foreground text-sm font-medium"
             htmlFor={yearSelectId}
@@ -209,25 +213,36 @@ export function Leaderboard() {
         </div>
       ) : null}
 
-      <div className="grid gap-6 lg:grid-cols-2">
-        <section className="space-y-4">
-          <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
-            <h3 className="text-lg font-semibold tracking-tight md:text-xl">
+      <div className="md:hidden">
+        <Tabs defaultValue="regular" className="w-full">
+          <TabsList className="w-full gap-2">
+            <TabsTrigger value="regular" className="flex-1">
               Vanlig tabell
-            </h3>
-            {regularLoading ? <LoadingNotice /> : null}
-          </div>
+            </TabsTrigger>
+            <TabsTrigger value="fettmattis" className="flex-1">
+              Fettmattis
+            </TabsTrigger>
+          </TabsList>
+          <TabsContent value="regular" className="mt-6">
+            <LeaderboardPanel title="Vanlig tabell" loading={regularLoading}>
+              {regularContent}
+            </LeaderboardPanel>
+          </TabsContent>
+          <TabsContent value="fettmattis" className="mt-6">
+            <LeaderboardPanel title="Fettmattis-utdelinger" loading={fettmattisLoading}>
+              {fettmattisContent}
+            </LeaderboardPanel>
+          </TabsContent>
+        </Tabs>
+      </div>
+
+      <div className="hidden gap-6 md:grid lg:grid-cols-2">
+        <LeaderboardPanel title="Vanlig tabell" loading={regularLoading}>
           {regularContent}
-        </section>
-        <section className="space-y-4">
-          <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
-            <h3 className="text-lg font-semibold tracking-tight md:text-xl">
-              Fettmattis-utdelinger
-            </h3>
-            {fettmattisLoading ? <LoadingNotice /> : null}
-          </div>
+        </LeaderboardPanel>
+        <LeaderboardPanel title="Fettmattis-utdelinger" loading={fettmattisLoading}>
           {fettmattisContent}
-        </section>
+        </LeaderboardPanel>
       </div>
     </div>
   );
@@ -266,5 +281,29 @@ function TableSkeleton() {
         />
       ))}
     </div>
+  );
+}
+
+interface LeaderboardPanelProps {
+  readonly title: string;
+  readonly loading: boolean;
+  readonly children: ReactNode;
+}
+
+function LeaderboardPanel({
+  title,
+  loading,
+  children,
+}: LeaderboardPanelProps) {
+  return (
+    <Card className="border-border/60 overflow-hidden rounded-3xl border">
+      <CardHeader className="flex flex-col gap-2 px-4 py-4 sm:flex-row sm:items-center sm:justify-between sm:px-6">
+        <CardTitle className="text-lg font-semibold tracking-tight md:text-xl">
+          {title}
+        </CardTitle>
+        {loading ? <LoadingNotice /> : null}
+      </CardHeader>
+      <CardContent className="px-4 pb-6 sm:px-6">{children}</CardContent>
+    </Card>
   );
 }
