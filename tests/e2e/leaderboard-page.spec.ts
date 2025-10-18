@@ -8,16 +8,16 @@ test.describe("Leaderboard Page", () => {
   test("loads and displays leaderboard content", async ({ page }) => {
     await test.step("Verify page heading is visible", async () => {
       await expect(
-        page.getByRole("heading", { name: "Tabeller", level: 1 }),
+        page.getByRole("heading", { name: "Tabeller", level: 1 })
       ).toBeVisible();
     });
 
     await test.step("Verify both leaderboard sections exist", async () => {
       await expect(
-        page.getByRole("heading", { name: "Vanlig tabell" }),
+        page.getByRole("heading", { name: "Vanlig tabell" })
       ).toBeVisible();
       await expect(
-        page.getByRole("heading", { name: "Fettmattis-utdelinger" }),
+        page.getByRole("heading", { name: "Fettmattis-utdelinger" })
       ).toBeVisible();
     });
 
@@ -32,19 +32,19 @@ test.describe("Leaderboard Page", () => {
       await expect(regularTable).toBeVisible();
 
       await expect(
-        regularTable.getByRole("columnheader", { name: "Plass" }),
+        regularTable.getByRole("columnheader", { name: "Plass" })
       ).toBeVisible();
       await expect(
-        regularTable.getByRole("columnheader", { name: "Spiller" }),
+        regularTable.getByRole("columnheader", { name: "Spiller" })
       ).toBeVisible();
       await expect(
-        regularTable.getByRole("columnheader", { name: "Tap %" }),
+        regularTable.getByRole("columnheader", { name: "Tap %" })
       ).toBeVisible();
       await expect(
-        regularTable.getByRole("columnheader", { name: "Tap", exact: true }),
+        regularTable.getByRole("columnheader", { name: "Tap", exact: true })
       ).toBeVisible();
       await expect(
-        regularTable.getByRole("columnheader", { name: "Runder" }),
+        regularTable.getByRole("columnheader", { name: "Runder" })
       ).toBeVisible();
     });
   });
@@ -67,7 +67,7 @@ test.describe("Leaderboard Page", () => {
     await test.step("Verify FettMattis table structure", async () => {
       // Wait for the page to fully load
       await page.waitForLoadState("networkidle");
-      
+
       const tables = page.getByRole("table");
       const tableCount = await tables.count();
 
@@ -76,13 +76,13 @@ test.describe("Leaderboard Page", () => {
         const fettmattisTable = tables.nth(1);
         await expect(fettmattisTable).toBeVisible();
         await expect(
-          fettmattisTable.getByRole("columnheader", { name: "Plass" }),
+          fettmattisTable.getByRole("columnheader", { name: "Plass" })
         ).toBeVisible();
         await expect(
-          fettmattisTable.getByRole("columnheader", { name: "Spiller" }),
+          fettmattisTable.getByRole("columnheader", { name: "Spiller" })
         ).toBeVisible();
         await expect(
-          fettmattisTable.getByRole("columnheader", { name: "FettMattis" }),
+          fettmattisTable.getByRole("columnheader", { name: "FettMattis" })
         ).toBeVisible();
       } else {
         // Verify empty state message is shown
@@ -104,7 +104,7 @@ test.describe("Leaderboard Page", () => {
       await expect(
         page.getByRole("heading", {
           name: `Sesongoversikt for ${currentYear}`,
-        }),
+        })
       ).toBeVisible();
     });
 
@@ -117,41 +117,45 @@ test.describe("Leaderboard Page", () => {
   test("handles empty leaderboard state gracefully", async ({ page }) => {
     await test.step("Find oldest available year in dropdown", async () => {
       const yearFilter = page.getByRole("combobox");
-      
+
       // Get all options from the select element
       const options = await yearFilter.locator("option").allTextContents();
-      
+
       // Find the oldest year (excluding "Alle år")
       const years = options
         .filter((opt) => opt !== "Alle år")
         .map((opt) => Number.parseInt(opt, 10))
         .filter((year) => !Number.isNaN(year))
         .sort((a, b) => a - b);
-      
-      // Select the oldest year available
-      if (years.length > 0) {
-        await yearFilter.selectOption(years[0].toString());
+
+      if (!years[0]) {
+        throw new Error("No valid years found in the year filter dropdown.");
       }
+
+      // Select the oldest year available
+      await yearFilter.selectOption(years[0].toString());
     });
 
     await test.step("Verify empty state messages can appear OR tables display", async () => {
       // Wait for content to load
       await page.waitForLoadState("networkidle");
-      
+
       const emptyRegularMessage = page.getByText(/ingen runder registrert/i);
       const emptyFettmattisMessage = page.getByText(/ingen fettmattis utdelt/i);
       const regularTable = page.getByRole("table").first();
 
       // Either we see empty state messages OR we see tables with data
-      const hasRegularEmpty =
-        await emptyRegularMessage.isVisible().catch(() => false);
-      const hasFettmattisEmpty =
-        await emptyFettmattisMessage.isVisible().catch(() => false);
+      const hasRegularEmpty = await emptyRegularMessage
+        .isVisible()
+        .catch(() => false);
+      const hasFettmattisEmpty = await emptyFettmattisMessage
+        .isVisible()
+        .catch(() => false);
       const hasRegularTable = await regularTable.isVisible().catch(() => false);
 
       // The page should show something (either empty state or table)
       expect(hasRegularEmpty || hasFettmattisEmpty || hasRegularTable).toBe(
-        true,
+        true
       );
     });
   });
