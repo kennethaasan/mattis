@@ -158,14 +158,14 @@ export const RegularLeaderboardItemSchema = z.object({
   player: PlayerSchema,
   rank: z.number().int(),
   loss_percentage: z.number(),
-  participation_count: z.number().int(),
-  loss_count: z.number().int(),
+  participation_count: z.coerce.number().int(),
+  loss_count: z.coerce.number().int(),
 });
 
 export const FettmattisLeaderboardItemSchema = z.object({
   player: PlayerSchema,
   rank: z.number().int(),
-  fettmattis_count: z.number().int(),
+  fettmattis_count: z.coerce.number().int(),
 });
 
 export const RegularLeaderboardResponseSchema =

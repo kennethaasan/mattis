@@ -22,7 +22,6 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
-import { useAuth } from "@/contexts/AuthContext";
 import {
   fetchPlayers,
   PLAYERS_QUERY_KEY,

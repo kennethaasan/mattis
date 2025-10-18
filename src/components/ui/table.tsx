@@ -80,9 +80,10 @@ TableRow.displayName = "TableRow";
 const TableHead = React.forwardRef<
   HTMLTableCellElement,
   React.ThHTMLAttributes<HTMLTableCellElement>
->(({ className, ...props }, ref) => (
+>(({ className, scope = "col", ...props }, ref) => (
   <th
     ref={ref}
+    scope={scope}
     className={cn(
       "text-muted-foreground px-6 py-3 text-left font-semibold",
       className,
