@@ -38,7 +38,10 @@ beforeEach(() => {
 });
 
 test("T011: PUT /api/rounds/{roundId} should return 400 if the request body is invalid", async () => {
-  const invalidBody = { participant_ids: ["p1"] }; // Invalid because less than 2 participants
+  const invalidBody = {
+    participant_ids: ["00000000-0000-7000-0000-000000000001"],
+    loser_id: "00000000-0000-7000-0000-000000000001",
+  }; // Invalid because less than 2 participants
 
   const req = createMockRequest(invalidBody);
   const res = await PUT(req, {
@@ -49,10 +52,12 @@ test("T011: PUT /api/rounds/{roundId} should return 400 if the request body is i
 
   expect(res.status).toBe(400);
   const contentType = res.headers.get("Content-Type") ?? "";
-  expect(contentType).toContain("application/json");
+  expect(contentType).toContain("application/problem+json");
 
   const body = await res.json();
-  expect(Array.isArray(body.error)).toBe(true);
+  expect(() => ProblemDetailsSchema.parse(body)).not.toThrow();
+  expect(body.title).toBe("Bad Request");
+  expect(body.detail).toBe("A round must have at least two participants.");
 
   // Ensure the database function was NOT called
   expect(mocks.updateRound).not.toHaveBeenCalled();

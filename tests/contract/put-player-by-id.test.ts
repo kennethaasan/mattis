@@ -80,8 +80,12 @@ test("T020: PUT /api/players/{id} should return 400 on invalid body", async () =
   const res = await PUT(req, { params: Promise.resolve({ playerId }) });
 
   expect(res.status).toBe(400);
+  const contentType = res.headers.get("Content-Type") ?? "";
+  expect(contentType).toContain("application/problem+json");
+
   const body = await res.json();
-  expect(Array.isArray(body.error)).toBe(true);
-  expect(body.error[0]?.message).toBeDefined();
+  expect(() => ProblemDetailsSchema.parse(body)).not.toThrow();
+  expect(body.title).toBe("Bad Request");
+  expect(body.detail).toBe("Display name cannot be empty.");
   expect(mocks.updatePlayer).not.toHaveBeenCalled();
 });

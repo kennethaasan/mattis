@@ -57,8 +57,13 @@ test("T008: POST /api/players returns 400 when validation fails", async () => {
   const response = await POST(request);
 
   expect(response.status).toBe(400);
+  const contentType = response.headers.get("Content-Type") ?? "";
+  expect(contentType).toContain("application/problem+json");
+
   const payload = await response.json();
-  expect(Array.isArray(payload.error)).toBe(true);
+  expect(() => ProblemDetailsSchema.parse(payload)).not.toThrow();
+  expect(payload.title).toBe("Bad Request");
+  expect(payload.detail).toBe("Display name cannot be empty.");
   expect(mocks.createPlayer).not.toHaveBeenCalled();
 });
 
