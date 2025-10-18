@@ -1,5 +1,4 @@
-import type { ZodTypeAny } from "zod";
-import type { z } from "zod";
+import type { ZodTypeAny, z } from "zod";
 
 interface FetchJsonOptions<TSchema extends ZodTypeAny> {
   input: RequestInfo | URL;

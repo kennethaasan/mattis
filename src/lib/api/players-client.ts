@@ -1,5 +1,5 @@
 import type { QueryKey } from "@tanstack/react-query";
-
+import { fetchJson, parseJsonResponse } from "./fetch-json";
 import {
   type Player,
   PlayerSchema,
@@ -8,7 +8,6 @@ import {
   PlayerUpdateSchema,
   ProblemDetailsSchema,
 } from "./schemas";
-import { fetchJson, parseJsonResponse } from "./fetch-json";
 
 export const PLAYERS_QUERY_KEY = ["players"] as const satisfies QueryKey;
 
