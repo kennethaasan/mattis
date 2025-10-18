@@ -262,8 +262,6 @@ paths:
                 $ref: "#/components/schemas/Round"
         "404":
           $ref: "#/components/responses/NotFound"
-        "410":
-          $ref: "#/components/responses/Gone"
     put:
       summary: Edit a Round (within 24h)
       operationId: updateRound
@@ -298,6 +296,8 @@ paths:
           $ref: "#/components/responses/Forbidden"
         "404":
           $ref: "#/components/responses/NotFound"
+        "409":
+          $ref: "#/components/responses/Conflict"
         "401":
           $ref: "#/components/responses/Unauthorized"
     delete:
@@ -750,12 +750,6 @@ components:
             $ref: "#/components/schemas/Problem"
     Conflict:
       description: The resource already exists or the request conflicts with the current state.
-      content:
-        application/problem+json:
-          schema:
-            $ref: "#/components/schemas/Problem"
-    Gone:
-      description: The resource has been deleted.
       content:
         application/problem+json:
           schema:
