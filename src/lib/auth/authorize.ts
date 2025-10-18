@@ -3,10 +3,8 @@ import { NextResponse } from "next/server";
 
 import { auth } from "@/lib/auth/auth";
 
-const AUTHORIZATION_PREFIX = "Bearer ";
-
 type ResolvedSession = NonNullable<
-  Awaited<ReturnType<typeof getSessionForToken>>
+  Awaited<ReturnType<typeof getSessionFromCookies>>
 >;
 
 export interface AuthenticatedUser {
@@ -26,16 +24,10 @@ export interface AuthFailure {
 
 export type AuthResult = AuthSuccess | AuthFailure;
 
-function createAuthorizationHeaders(token: string): Headers {
-  return new Headers({
-    authorization: `${AUTHORIZATION_PREFIX}${token}`,
-  });
-}
-
-async function getSessionForToken(token: string) {
+async function getSessionFromCookies(headers: Headers) {
   try {
     return await auth.api.getSession({
-      headers: createAuthorizationHeaders(token),
+      headers,
       query: {
         disableRefresh: true,
       },
@@ -58,17 +50,7 @@ function unauthorizedResponse(): NextResponse {
 export async function authenticateRequest(
   headers: Headers
 ): Promise<AuthResult> {
-  const header = headers.get("authorization");
-  if (!header?.startsWith(AUTHORIZATION_PREFIX)) {
-    return { ok: false, response: unauthorizedResponse() };
-  }
-
-  const token = header.slice(AUTHORIZATION_PREFIX.length).trim();
-  if (!token) {
-    return { ok: false, response: unauthorizedResponse() };
-  }
-
-  const session = await getSessionForToken(token);
+  const session = await getSessionFromCookies(headers);
   if (!session) {
     return { ok: false, response: unauthorizedResponse() };
   }

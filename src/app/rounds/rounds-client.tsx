@@ -14,7 +14,6 @@ import {
   CardHeader,
   CardTitle,
 } from "@/components/ui/card";
-import { useAuth } from "@/contexts/AuthContext";
 import {
   fetchPlayers,
   PLAYERS_QUERY_KEY,
@@ -56,8 +55,6 @@ export default function RoundsClientPage() {
   const queryClient = useQueryClient();
   const [status, setStatus] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
-  const { getAuthHeader } = useAuth();
-  const authHeader = getAuthHeader();
 
   const playersQuery = useQuery<Player[]>({
     queryKey: PLAYERS_QUERY_KEY,
@@ -120,15 +117,12 @@ export default function RoundsClientPage() {
 
   const roundMutation = useMutation<undefined, Error, RoundCreate>({
     mutationFn: async (payload) => {
-      if (!authHeader) {
-        throw new Error("Innlogging kreves for å registrere runder.");
-      }
       const response = await fetch("/api/rounds", {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
-          ...authHeader,
         },
+        credentials: "include",
         body: JSON.stringify(payload),
       });
 
@@ -151,15 +145,12 @@ export default function RoundsClientPage() {
 
   const fettMattisMutation = useMutation<undefined, Error, FettMattisCreate>({
     mutationFn: async (payload) => {
-      if (!authHeader) {
-        throw new Error("Innlogging kreves for å tildele Fettmattis.");
-      }
       const response = await fetch("/api/fettmattis", {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
-          ...authHeader,
         },
+        credentials: "include",
         body: JSON.stringify(payload),
       });
 

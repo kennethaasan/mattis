@@ -47,15 +47,14 @@ export type { Player, PlayerUpdate } from "./schemas";
 export async function updatePlayer(
   playerId: string,
   update: PlayerUpdate,
-  authHeader?: Record<string, string> | null,
 ): Promise<Player> {
   const parsedPayload = PlayerUpdateSchema.parse(update);
   const response = await fetch(`/api/players/${playerId}`, {
     method: "PUT",
     headers: {
       "Content-Type": "application/json",
-      ...(authHeader ?? {}),
     },
+    credentials: "include",
     body: JSON.stringify(parsedPayload),
   });
 
