@@ -1,7 +1,6 @@
 import { betterAuth } from "better-auth";
 import { drizzleAdapter } from "better-auth/adapters/drizzle";
 import { nextCookies } from "better-auth/next-js";
-
 import { config, env } from "@/env";
 import { db } from "@/lib/db/db";
 import * as schema from "@/lib/db/schema";

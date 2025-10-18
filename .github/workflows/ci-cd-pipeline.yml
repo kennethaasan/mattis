@@ -172,6 +172,8 @@ jobs:
     name: Build
     runs-on: ubuntu-latest
     timeout-minutes: 15
+    env:
+      BETTER_AUTH_SECRET: replace-with-a-strong-secret
     steps:
       - *node-checkout
       - *node-setup
