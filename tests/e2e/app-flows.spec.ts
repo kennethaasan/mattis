@@ -1,4 +1,9 @@
 import { expect, test } from "@playwright/test";
+import { loginAsTestUser } from "../helpers/auth";
+
+test.beforeEach(async ({ page }) => {
+  await loginAsTestUser(page);
+});
 
 test("T037: user can create a player from the roster page", async ({
   page,
@@ -35,7 +40,10 @@ test("T037: user can create a player from the roster page", async ({
     });
   });
 
-  await page.goto("/players", { waitUntil: "networkidle" });
+  await page.goto("/players");
+  
+  // Wait for the form to be ready
+  await page.waitForSelector('label:has-text("Visningsnavn")');
 
   await page.getByLabel("Visningsnavn").fill("Nova");
   await page.getByRole("button", { name: "Lagre spiller" }).click();
@@ -108,7 +116,10 @@ test("T037: recording a round confirms the success banner", async ({
     });
   });
 
-  await page.goto("/rounds", { waitUntil: "networkidle" });
+  await page.goto("/rounds");
+  
+  // Wait for player buttons to be available
+  await page.waitForSelector('button:has-text("Alex")');
 
   await page.getByRole("button", { name: /Alex/i }).click();
   await page.getByRole("button", { name: /Blair/i }).click();
@@ -162,9 +173,12 @@ test("T037: user can toggle player activity from the roster", async ({
     });
   });
 
-  await page.goto("/players", { waitUntil: "networkidle" });
-
-  await page.getByRole("button", { name: "Sett som inaktiv" }).click();
+  await page.goto("/players");
+  
+  // Wait for and click the first "Set as inactive" button
+  const inactiveButton = page.getByRole("button", { name: "Sett som inaktiv" }).first();
+  await inactiveButton.waitFor({ state: "visible" });
+  await inactiveButton.click();
 
   await expect(
     page.getByText("Signe er nå inaktiv.", { exact: true }),

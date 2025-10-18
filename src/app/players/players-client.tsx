@@ -22,7 +22,6 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
-import { useAuth } from "@/contexts/AuthContext";
 import {
   fetchPlayers,
   PLAYERS_QUERY_KEY,
@@ -48,8 +47,6 @@ export default function PlayersClientPage() {
   const [rosterMessage, setRosterMessage] = useState<string | null>(null);
   const [rosterError, setRosterError] = useState<string | null>(null);
   const [updatingPlayerId, setUpdatingPlayerId] = useState<string | null>(null);
-  const { getAuthHeader } = useAuth();
-  const authHeader = getAuthHeader();
 
   const playersQuery = useQuery<Player[]>({
     queryKey: PLAYERS_QUERY_KEY,
@@ -60,15 +57,12 @@ export default function PlayersClientPage() {
 
   const createPlayerMutation = useMutation<Player, Error, PlayerCreate>({
     mutationFn: async (payload) => {
-      if (!authHeader) {
-        throw new Error("Innlogging kreves for å opprette en spiller.");
-      }
       const response = await fetch("/api/players", {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
-          ...authHeader,
         },
+        credentials: "include",
         body: JSON.stringify(payload),
       });
 
@@ -114,11 +108,7 @@ export default function PlayersClientPage() {
     { playerId: string; payload: PlayerUpdate }
   >({
     mutationFn: async ({ playerId, payload }) => {
-      if (!authHeader) {
-        throw new Error("Innlogging kreves for å oppdatere spillere.");
-      }
-
-      return updatePlayer(playerId, payload, authHeader);
+      return updatePlayer(playerId, payload);
     },
     onSuccess: async () => {
       await queryClient.invalidateQueries({ queryKey: PLAYERS_QUERY_KEY });

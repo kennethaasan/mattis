@@ -10,7 +10,7 @@ import { useAuth } from "@/contexts/AuthContext";
 
 export default function LoginPage() {
   const router = useRouter();
-  const { login, user, loading, error, getAuthHeader } = useAuth();
+  const { login, user, loading, error } = useAuth();
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [formError, setFormError] = useState<string | null>(null);
@@ -19,10 +19,10 @@ export default function LoginPage() {
   const passwordId = useId();
 
   useEffect(() => {
-    if (user && getAuthHeader()) {
+    if (user) {
       router.replace("/rounds");
     }
-  }, [getAuthHeader, router, user]);
+  }, [router, user]);
 
   const handleSubmit = useCallback(
     async (event: React.FormEvent<HTMLFormElement>) => {

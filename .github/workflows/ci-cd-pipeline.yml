@@ -131,25 +131,23 @@ jobs:
         ports:
           - 5432:5432
         env:
-          POSTGRES_DB: mattis_db
-          POSTGRES_USER: user
-          POSTGRES_PASSWORD: password
+          POSTGRES_DB: mattis
+          POSTGRES_USER: mattis
+          POSTGRES_PASSWORD: mattis
         options: >-
-          --health-cmd "pg_isready -U user -d mattis_db"
+          --health-cmd "pg_isready -U mattis -d mattis"
           --health-interval 10s
           --health-timeout 5s
           --health-retries 5
     env:
-      DATABASE_URL: postgresql://user:password@postgres:5432/mattis_db
-      BETTER_AUTH_SECRET: test-secret-test-secret-test-secret-123
-      BASIC_AUTH_USERNAME: admin
-      BASIC_AUTH_PASSWORD: admin
-      BASIC_AUTH_USER_ID: 00000000-0000-7000-8000-000000000000
-      PLAYWRIGHT_BASE_URL: http://127.0.0.1:3000
+      DATABASE_URL: postgresql://mattis:mattis@postgres:5432/mattis
     steps:
       - *node-checkout
       - *node-setup
       - *node-install-dependencies
+      - &copy-example-env
+        name: Copy .env.example to .env
+        run: cp .env.example .env
 
       - name: Seed database
         run: npm run seed
@@ -176,8 +174,7 @@ jobs:
       - *node-checkout
       - *node-setup
       - *node-install-dependencies
-      - name: Copy .env.example to .env
-        run: cp .env.example .env
+      - *copy-example-env
       - name: Build and package Lambda function
         run: npm run build:lambda
       - name: Clean up build-time env
