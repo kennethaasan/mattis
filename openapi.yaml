@@ -433,6 +433,21 @@ paths:
                 items:
                   $ref: "#/components/schemas/FettmattisLeaderboardItem"
 
+  /leaderboard/seasons:
+    get:
+      summary: List Available Leaderboard Seasons
+      operationId: listLeaderboardSeasons
+      tags:
+        - Leaderboards
+      security: []
+      responses:
+        "200":
+          description: Available leaderboard seasons.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/LeaderboardSeasonsResponse"
+
 components:
   schemas:
     AuthUser:
@@ -700,6 +715,17 @@ components:
           type: integer
         fettmattis_count:
           type: integer
+
+    LeaderboardSeasonsResponse:
+      type: object
+      required:
+        - seasons
+      properties:
+        seasons:
+          type: array
+          description: Years with leaderboard data available.
+          items:
+            type: integer
 
     Problem:
       type: object

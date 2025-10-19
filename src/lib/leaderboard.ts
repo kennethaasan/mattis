@@ -1,5 +1,7 @@
+import { fetchJson } from "@/lib/api/fetch-json";
 import {
   FettmattisLeaderboardResponseSchema,
+  LeaderboardSeasonsResponseSchema,
   RegularLeaderboardResponseSchema,
 } from "@/lib/api/schemas";
 import type {
@@ -77,4 +79,19 @@ export async function getFettmattisLeaderboard(
     fettmattisCount: entry.fettmattis_count,
     rank: entry.rank ?? index + 1,
   }));
+}
+
+export async function getLeaderboardSeasons(): Promise<number[]> {
+  const payload = await fetchJson({
+    input: `/api/leaderboard/seasons`,
+    init: {
+      credentials: "include",
+    },
+    schema: LeaderboardSeasonsResponseSchema,
+    requestErrorMessage: "Failed to load leaderboard seasons.",
+    parseErrorMessage:
+      "Received an invalid response when loading leaderboard seasons.",
+  });
+
+  return payload.seasons;
 }
