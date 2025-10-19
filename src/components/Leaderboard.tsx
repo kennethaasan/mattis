@@ -28,8 +28,8 @@ import type {
 } from "@/lib/leaderboard-types";
 
 export function Leaderboard() {
-  const [scope, setScope] = useState<LeaderboardScope>(
-    () => new Date().getFullYear(),
+  const [scope, setScope] = useState<LeaderboardScope>(() =>
+    new Date().getFullYear()
   );
   const currentYear = useMemo(() => new Date().getFullYear(), []);
   const yearSelectId = useId();
@@ -63,9 +63,7 @@ export function Leaderboard() {
   const yearOptions = useMemo(() => {
     const seasons =
       availableSeasons.length > 0 ? availableSeasons : [currentYear];
-    const uniqueSeasons = Array.from(new Set(seasons)).sort(
-      (a, b) => b - a,
-    );
+    const uniqueSeasons = Array.from(new Set(seasons)).sort((a, b) => b - a);
 
     return [
       { value: "all" as const, label: "Alle år" },
