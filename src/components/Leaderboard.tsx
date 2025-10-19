@@ -93,49 +93,81 @@ export function Leaderboard() {
     );
   } else {
     regularContent = (
-      <div className="overflow-x-auto">
-        <Table>
-          <TableHeader>
-            <TableRow>
-              <TableHead className="w-16">Plass</TableHead>
-              <TableHead>Spiller</TableHead>
-              <TableHead className="text-right">Tap %</TableHead>
-              <TableHead className="text-right">Tap</TableHead>
-              <TableHead className="text-right">Runder</TableHead>
-            </TableRow>
-          </TableHeader>
-          <TableBody>
-            {regular.map((entry) => (
-              <TableRow key={entry.playerId}>
-                <TableCell className="font-semibold">#{entry.rank}</TableCell>
-                <TableCell className="flex items-center gap-3">
-                  <div className="flex flex-col">
+      <div className="space-y-4">
+        <div className="md:hidden space-y-3">
+          {regular.map((entry) => (
+            <article
+              key={entry.playerId}
+              className="border-border/60 bg-card text-card-foreground rounded-3xl border p-4 shadow-xs"
+            >
+              <div className="flex items-center justify-between gap-3">
+                <span className="text-muted-foreground text-xs font-medium uppercase tracking-[0.2em]">
+                  #{entry.rank}
+                </span>
+                <Badge
+                  variant={entry.lossPercentage < 30 ? "success" : "outline"}
+                >
+                  {entry.lossPercentage.toFixed(1)}%
+                </Badge>
+              </div>
+              <div className="mt-2">
+                <p className="text-lg font-semibold">{entry.playerName}</p>
+              </div>
+              <dl className="text-muted-foreground mt-4 grid grid-cols-2 gap-3 text-sm">
+                <div className="space-y-1">
+                  <dt className="text-xs font-medium uppercase tracking-[0.2em]">
+                    Tap
+                  </dt>
+                  <dd className="text-foreground text-base font-semibold">
+                    {entry.totalLosses}
+                  </dd>
+                </div>
+                <div className="space-y-1">
+                  <dt className="text-xs font-medium uppercase tracking-[0.2em]">
+                    Runder
+                  </dt>
+                  <dd className="text-foreground text-base font-semibold">
+                    {entry.roundsPlayed}
+                  </dd>
+                </div>
+              </dl>
+            </article>
+          ))}
+        </div>
+        <div className="hidden overflow-x-auto md:block">
+          <Table>
+            <TableHeader>
+              <TableRow>
+                <TableHead className="w-16">Plass</TableHead>
+                <TableHead>Spiller</TableHead>
+                <TableHead className="text-right">Tap %</TableHead>
+                <TableHead className="text-right">Tap</TableHead>
+                <TableHead className="text-right">Runder</TableHead>
+              </TableRow>
+            </TableHeader>
+            <TableBody>
+              {regular.map((entry) => (
+                <TableRow key={entry.playerId}>
+                  <TableCell className="font-semibold">#{entry.rank}</TableCell>
+                  <TableCell>
                     <span className="text-foreground font-medium">
                       {entry.playerName}
                     </span>
-                    <span className="text-muted-foreground text-xs">
-                      {entry.roundsPlayed} runder spilt
-                    </span>
-                  </div>
-                  <Badge
-                    variant={entry.lossPercentage < 30 ? "success" : "outline"}
-                  >
+                  </TableCell>
+                  <TableCell className="text-right font-semibold">
                     {entry.lossPercentage.toFixed(1)}%
-                  </Badge>
-                </TableCell>
-                <TableCell className="text-right font-semibold">
-                  {entry.lossPercentage.toFixed(1)}%
-                </TableCell>
-                <TableCell className="text-muted-foreground text-right">
-                  {entry.totalLosses}
-                </TableCell>
-                <TableCell className="text-muted-foreground text-right">
-                  {entry.roundsPlayed}
-                </TableCell>
-              </TableRow>
-            ))}
-          </TableBody>
-        </Table>
+                  </TableCell>
+                  <TableCell className="text-muted-foreground text-right">
+                    {entry.totalLosses}
+                  </TableCell>
+                  <TableCell className="text-muted-foreground text-right">
+                    {entry.roundsPlayed}
+                  </TableCell>
+                </TableRow>
+              ))}
+            </TableBody>
+          </Table>
+        </div>
       </div>
     );
   }
@@ -159,32 +191,57 @@ export function Leaderboard() {
     );
   } else {
     fettmattisContent = (
-      <div className="overflow-x-auto">
-        <Table>
-          <TableHeader>
-            <TableRow>
-              <TableHead className="w-16">Plass</TableHead>
-              <TableHead>Spiller</TableHead>
-              <TableHead className="text-right">FettMattis</TableHead>
-            </TableRow>
-          </TableHeader>
-          <TableBody>
-            {fettmattis.map((entry) => (
-              <TableRow key={entry.playerId}>
-                <TableCell className="font-semibold">#{entry.rank}</TableCell>
-                <TableCell className="flex items-center gap-3">
-                  <span className="text-foreground font-medium">
-                    {entry.playerName}
-                  </span>
-                  <Badge variant="secondary">Fettmattis-helt</Badge>
-                </TableCell>
-                <TableCell className="text-muted-foreground text-right">
+      <div className="space-y-4">
+        <div className="md:hidden space-y-3">
+          {fettmattis.map((entry) => (
+            <article
+              key={entry.playerId}
+              className="border-border/60 bg-card text-card-foreground rounded-3xl border p-4 shadow-xs"
+            >
+              <div className="flex items-center justify-between gap-3">
+                <span className="text-muted-foreground text-xs font-medium uppercase tracking-[0.2em]">
+                  #{entry.rank}
+                </span>
+                <Badge variant="secondary">Fettmattis-helt</Badge>
+              </div>
+              <div className="mt-2">
+                <p className="text-lg font-semibold">{entry.playerName}</p>
+              </div>
+              <div className="text-muted-foreground mt-4 text-sm">
+                <span className="text-foreground text-base font-semibold">
                   {entry.fettmattisCount}
-                </TableCell>
+                </span>{" "}
+                tildelinger
+              </div>
+            </article>
+          ))}
+        </div>
+        <div className="hidden overflow-x-auto md:block">
+          <Table>
+            <TableHeader>
+              <TableRow>
+                <TableHead className="w-16">Plass</TableHead>
+                <TableHead>Spiller</TableHead>
+                <TableHead className="text-right">FettMattis</TableHead>
               </TableRow>
-            ))}
-          </TableBody>
-        </Table>
+            </TableHeader>
+            <TableBody>
+              {fettmattis.map((entry) => (
+                <TableRow key={entry.playerId}>
+                  <TableCell className="font-semibold">#{entry.rank}</TableCell>
+                  <TableCell>
+                    <span className="text-foreground font-medium">
+                      {entry.playerName}
+                    </span>
+                  </TableCell>
+                  <TableCell className="text-muted-foreground text-right">
+                    {entry.fettmattisCount}
+                  </TableCell>
+                </TableRow>
+              ))}
+            </TableBody>
+          </Table>
+        </div>
       </div>
     );
   }
