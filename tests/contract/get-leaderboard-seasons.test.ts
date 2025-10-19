@@ -19,9 +19,7 @@ beforeEach(() => {
 test("T190: GET /api/leaderboard/seasons returns all available seasons", async () => {
   mocks.getLeaderboardSeasons.mockResolvedValueOnce([2024, 2023, 2020]);
 
-  const response = await GET(
-    new Request("http://localhost/api/leaderboard/seasons"),
-  );
+  const response = await GET();
 
   expect(response.status).toBe(200);
   const payload = await response.json();
@@ -32,9 +30,7 @@ test("T190: GET /api/leaderboard/seasons returns all available seasons", async (
 test("T191: GET /api/leaderboard/seasons returns 500 on failure", async () => {
   mocks.getLeaderboardSeasons.mockRejectedValueOnce(new Error("DB down"));
 
-  const response = await GET(
-    new Request("http://localhost/api/leaderboard/seasons"),
-  );
+  const response = await GET();
 
   expect(response.status).toBe(500);
   const payload = await response.json();
