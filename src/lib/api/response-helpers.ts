@@ -1,10 +1,11 @@
 import type {
+  FettMattisRecord,
   PlayerRecord,
   RoundParticipantRecord,
   RoundRecord,
 } from "@/lib/db-client";
 
-import type { Player, Round } from "./schemas";
+import type { FettMattis, Player, Round } from "./schemas";
 
 export type PlayerResponseInput =
   | Pick<PlayerRecord, "id" | "displayName" | "active">
@@ -13,6 +14,7 @@ export type PlayerResponseInput =
 export type PlayerResponse = Player;
 
 export type RoundResponse = Round;
+export type FettMattisResponse = FettMattis;
 
 export function toPlayerResponse(player: PlayerResponseInput): PlayerResponse {
   return {
@@ -28,5 +30,16 @@ export function toRoundResponse(round: RoundRecord): RoundResponse {
     created_at: round.createdAt.toISOString(),
     participants: round.participants.map(toPlayerResponse),
     loser: toPlayerResponse(round.loser),
+  };
+}
+
+export function toFettMattisResponse(
+  record: FettMattisRecord,
+): FettMattisResponse {
+  return {
+    id: record.id,
+    player: toPlayerResponse(record.player),
+    created_at: record.createdAt.toISOString(),
+    round_id: record.roundId ?? null,
   };
 }

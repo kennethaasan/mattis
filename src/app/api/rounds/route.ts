@@ -2,9 +2,45 @@ import type { NextRequest } from "next/server";
 import { NextResponse } from "next/server";
 import { badRequest, createProblemResponse } from "@/lib/api/problem-details";
 import { toRoundResponse } from "@/lib/api/response-helpers";
-import { RoundCreateSchema } from "@/lib/api/schemas";
+import { ListQuerySchema, RoundCreateSchema } from "@/lib/api/schemas";
 import { resolveRequestUserId } from "@/lib/auth/request-user";
-import { ConflictError, createRound, NotFoundError } from "@/lib/db-client";
+import {
+  ConflictError,
+  createRound,
+  listRecentRounds,
+  NotFoundError,
+} from "@/lib/db-client";
+
+export async function GET(req: NextRequest) {
+  const { searchParams } = new URL(req.url);
+  const query = Object.fromEntries(searchParams.entries());
+
+  const validation = ListQuerySchema.safeParse(query);
+  if (!validation.success) {
+    const detail =
+      validation.error.issues.at(0)?.message ?? "Query parameters are invalid.";
+    return badRequest(detail);
+  }
+
+  try {
+    const rounds = await listRecentRounds({ limit: validation.data.limit });
+    return NextResponse.json(rounds.map(toRoundResponse));
+  } catch (error) {
+    if (error instanceof ConflictError) {
+      return createProblemResponse({
+        status: 409,
+        title: "Conflict",
+        detail: error.message,
+      });
+    }
+
+    return createProblemResponse({
+      status: 500,
+      title: "Internal Server Error",
+      detail: "Internal Server Error",
+    });
+  }
+}
 
 /**
  * POST /api/rounds

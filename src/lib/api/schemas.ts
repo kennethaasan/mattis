@@ -125,6 +125,10 @@ export const RoundUpdateSchema = z
 export const RoundListResponseSchema = RoundSchema.array();
 export const LatestRoundResponseSchema = RoundSchema.nullable();
 
+export const ListQuerySchema = z.object({
+  limit: z.coerce.number().int().min(1).max(100).optional(),
+});
+
 // --- FettMattis Schemas ---
 
 export const FettMattisSchema = z.object({
@@ -212,6 +216,7 @@ export type RoundCreate = z.infer<typeof RoundCreateSchema>;
 export type RoundUpdate = z.infer<typeof RoundUpdateSchema>;
 export type FettMattis = z.infer<typeof FettMattisSchema>;
 export type FettMattisCreate = z.infer<typeof FettMattisCreateSchema>;
+export type ListQuery = z.infer<typeof ListQuerySchema>;
 export type RegularLeaderboardItem = z.infer<
   typeof RegularLeaderboardItemSchema
 >;

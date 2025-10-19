@@ -46,6 +46,7 @@ export interface FettMattisRecord {
   createdAt: Date;
   createdBy: string;
   revokedAt: Date | null;
+  roundId: string | null;
 }
 
 export interface CreatePlayerInput {
@@ -410,6 +411,72 @@ export async function getMostRecentRound(): Promise<RoundRecord | null> {
   return round;
 }
 
+interface RecentListOptions {
+  limit?: number;
+}
+
+function resolveListLimit(limit: number | undefined): number {
+  if (!limit || Number.isNaN(limit)) {
+    return 20;
+  }
+
+  return Math.min(Math.max(Math.trunc(limit), 1), 100);
+}
+
+export async function listRecentRounds(
+  options: RecentListOptions = {},
+): Promise<RoundRecord[]> {
+  const listLimit = resolveListLimit(options.limit);
+
+  const roundRows = await db
+    .select({ id: rounds.id })
+    .from(rounds)
+    .where(isNull(rounds.deletedAt))
+    .orderBy(desc(rounds.createdAt))
+    .limit(listLimit);
+
+  const loadedRounds = await Promise.all(
+    roundRows.map(async ({ id }) => loadRound(db, id)),
+  );
+
+  return loadedRounds.filter((round): round is RoundRecord => round !== null);
+}
+
+export async function listRecentFettMattis(
+  options: RecentListOptions = {},
+): Promise<FettMattisRecord[]> {
+  const listLimit = resolveListLimit(options.limit);
+
+  const rows = await db
+    .select({
+      id: fettmattis.id,
+      playerId: fettmattis.playerId,
+      createdAt: fettmattis.createdAt,
+      createdBy: fettmattis.createdBy,
+      revokedAt: fettmattis.revokedAt,
+      playerDisplayName: players.displayName,
+      playerActive: players.active,
+    })
+    .from(fettmattis)
+    .innerJoin(players, eq(fettmattis.playerId, players.id))
+    .where(isNull(fettmattis.revokedAt))
+    .orderBy(desc(fettmattis.createdAt))
+    .limit(listLimit);
+
+  return rows.map((row) => ({
+    id: row.id,
+    createdAt: row.createdAt,
+    createdBy: row.createdBy,
+    revokedAt: row.revokedAt,
+    roundId: null,
+    player: mapParticipant({
+      id: row.playerId,
+      displayName: row.playerDisplayName,
+      active: row.playerActive,
+    }),
+  }));
+}
+
 export async function updateRound(
   roundId: string,
   input: UpdateRoundInput,
@@ -532,6 +599,7 @@ export async function createFettMattis(
       createdAt: row.createdAt,
       createdBy: row.createdBy,
       revokedAt: row.revokedAt,
+      roundId: null,
     };
   });
 }
