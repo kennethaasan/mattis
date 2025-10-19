@@ -98,7 +98,7 @@ export function Leaderboard() {
                   </span>
                 </div>
                 <Badge
-                  variant={entry.lossPercentage < 30 ? "success" : "outline"}
+                  variant={entry.lossPercentage < 20 ? "success" : "outline"}
                 >
                   {entry.lossPercentage.toFixed(1)}%
                 </Badge>
