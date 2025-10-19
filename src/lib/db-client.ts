@@ -671,6 +671,53 @@ export async function getFettMattisLeaderboard(
   }));
 }
 
+export async function getLeaderboardSeasons(): Promise<number[]> {
+  const currentYear = new Date().getFullYear();
+
+  const roundsResult = await db.execute<{ created_at: string | null }>(sql`
+    SELECT MIN(${rounds.createdAt}) AS created_at
+    FROM ${rounds}
+    WHERE ${rounds.deletedAt} IS NULL;
+  `);
+
+  const fettmattisResult = await db.execute<{ created_at: string | null }>(sql`
+    SELECT MIN(${fettmattis.createdAt}) AS created_at
+    FROM ${fettmattis}
+    WHERE ${fettmattis.revokedAt} IS NULL;
+  `);
+
+  const roundYear = extractYear(roundsResult.rows.at(0)?.created_at);
+  const fettmattisYear = extractYear(fettmattisResult.rows.at(0)?.created_at);
+
+  const candidateYears = [roundYear, fettmattisYear].filter(
+    (value): value is number => typeof value === "number" && Number.isFinite(value),
+  );
+
+  const earliestCandidate =
+    candidateYears.length > 0 ? Math.min(...candidateYears) : currentYear;
+  const earliestYear = Math.min(earliestCandidate, currentYear);
+
+  const seasons: number[] = [];
+  for (let year = currentYear; year >= earliestYear; year -= 1) {
+    seasons.push(year);
+  }
+
+  return seasons;
+}
+
+function extractYear(value: string | Date | null | undefined): number | null {
+  if (!value) {
+    return null;
+  }
+
+  const date = value instanceof Date ? value : new Date(value);
+  if (Number.isNaN(date.getTime())) {
+    return null;
+  }
+
+  return date.getUTCFullYear();
+}
+
 function regularLeaderboardQuery(year: number | null) {
   const yearFilter =
     typeof year === "number"

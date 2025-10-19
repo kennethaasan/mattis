@@ -1,5 +1,5 @@
 import type { QueryKey } from "@tanstack/react-query";
-
+import { fetchJson, parseJsonResponse } from "./fetch-json";
 import {
   type Player,
   PlayerSchema,
@@ -12,24 +12,13 @@ import {
 export const PLAYERS_QUERY_KEY = ["players"] as const satisfies QueryKey;
 
 export async function fetchPlayers(): Promise<Player[]> {
-  const response = await fetch("/api/players", {
-    cache: "no-store",
-  });
-
-  if (!response.ok) {
-    throw new Error(
+  return fetchJson({
+    input: "/api/players",
+    schema: PlayersResponseSchema,
+    requestErrorMessage:
       "We couldn't load the players right now. Please try again.",
-    );
-  }
-
-  const payload = (await response.json()) as unknown;
-  const parsed = PlayersResponseSchema.safeParse(payload);
-
-  if (!parsed.success) {
-    throw new Error("Received an invalid response when loading players.");
-  }
-
-  return parsed.data;
+    parseErrorMessage: "Received an invalid response when loading players.",
+  });
 }
 
 export const resolvePlayerError = (payload: unknown): string | undefined => {
@@ -69,12 +58,9 @@ export async function updatePlayer(
     throw new Error(detail ?? "We couldn't update the player right now.");
   }
 
-  const responseBody = (await response.json()) as unknown;
-  const parsed = PlayerSchema.safeParse(responseBody);
-
-  if (!parsed.success) {
-    throw new Error("Received an invalid response when updating the player.");
-  }
-
-  return parsed.data;
+  return parseJsonResponse(
+    response,
+    PlayerSchema,
+    "Received an invalid response when updating the player.",
+  );
 }

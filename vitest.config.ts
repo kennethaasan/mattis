@@ -14,12 +14,12 @@ export default defineConfig({
           include: ["src/**/*.test.ts", "tests/**/*.test.ts"],
         },
       },
-      // React tests with jsdom
+      // React tests with happy-dom
       {
         extends: true,
         test: {
           name: "react",
-          environment: "jsdom",
+          environment: "happy-dom",
           include: ["src/**/*.test.tsx", "tests/**/*.test.tsx"],
         },
       },

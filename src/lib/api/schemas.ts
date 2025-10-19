@@ -173,6 +173,12 @@ export const RegularLeaderboardResponseSchema =
 export const FettmattisLeaderboardResponseSchema =
   FettmattisLeaderboardItemSchema.array();
 
+export const LeaderboardSeasonsResponseSchema = z.object({
+  seasons: z
+    .array(z.coerce.number().int().min(2000).max(CURRENT_YEAR))
+    .min(1),
+});
+
 // --- Utility Schemas ---
 
 export const ProblemDetailsSchema = z.object({
@@ -198,6 +204,9 @@ export type SignOutResponse = z.infer<typeof SignOutResponseSchema>;
 export type Player = z.infer<typeof PlayerSchema>;
 export type PlayerCreate = z.infer<typeof PlayerCreateSchema>;
 export type PlayerUpdate = z.infer<typeof PlayerUpdateSchema>;
+export type LeaderboardSeasonsResponse = z.infer<
+  typeof LeaderboardSeasonsResponseSchema
+>;
 export type Round = z.infer<typeof RoundSchema>;
 export type RoundCreate = z.infer<typeof RoundCreateSchema>;
 export type RoundUpdate = z.infer<typeof RoundUpdateSchema>;

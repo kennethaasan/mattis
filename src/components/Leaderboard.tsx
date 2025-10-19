@@ -18,6 +18,7 @@ import {
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import {
   getFettmattisLeaderboard,
+  getLeaderboardSeasons,
   getRegularLeaderboard,
 } from "@/lib/leaderboard";
 import type {
@@ -28,9 +29,14 @@ import type {
 
 export function Leaderboard() {
   const [scope, setScope] = useState<LeaderboardScope>(
-    new Date().getFullYear(),
+    () => new Date().getFullYear(),
   );
+  const currentYear = useMemo(() => new Date().getFullYear(), []);
   const yearSelectId = useId();
+  const seasonsQuery = useQuery<number[]>({
+    queryKey: ["leaderboard", "seasons"],
+    queryFn: getLeaderboardSeasons,
+  });
   const regularQuery = useQuery<RegularLeaderboard>({
     queryKey: ["leaderboard", "regular", scope],
     queryFn: () => getRegularLeaderboard(scope),
@@ -41,8 +47,11 @@ export function Leaderboard() {
     queryFn: () => getFettmattisLeaderboard(scope),
   });
 
-  const regular = regularQuery.data ?? [];
-  const fettmattis = fettmattisQuery.data ?? [];
+  const regularHasError = regularQuery.isError;
+  const fettmattisHasError = fettmattisQuery.isError;
+
+  const regular = regularHasError ? [] : regularQuery.data ?? [];
+  const fettmattis = fettmattisHasError ? [] : fettmattisQuery.data ?? [];
   const regularLoading = regularQuery.isLoading || regularQuery.isFetching;
   const fettmattisLoading =
     fettmattisQuery.isLoading || fettmattisQuery.isFetching;
@@ -50,20 +59,29 @@ export function Leaderboard() {
     regularQuery.error?.message ?? fettmattisQuery.error?.message ?? null;
   const isAllTime = scope === "all";
 
+  const availableSeasons = seasonsQuery.data ?? [];
   const yearOptions = useMemo(() => {
-    const now = new Date().getFullYear();
-    const years = Array.from({ length: 6 }, (_, index) => now - index);
+    const seasons =
+      availableSeasons.length > 0 ? availableSeasons : [currentYear];
+    const uniqueSeasons = Array.from(new Set(seasons)).sort(
+      (a, b) => b - a,
+    );
+
     return [
       { value: "all" as const, label: "Alle år" },
-      ...years.map((yearOption) => ({
+      ...uniqueSeasons.map((yearOption) => ({
         value: yearOption,
         label: yearOption.toString(),
       })),
     ];
-  }, []);
+  }, [availableSeasons, currentYear]);
 
   let regularContent: ReactNode;
-  if (regularLoading) {
+  if (regularHasError) {
+    regularContent = (
+      <ErrorPanel message="Kunne ikke laste vanlige resultater. Prøv igjen senere." />
+    );
+  } else if (regularLoading) {
     regularContent = <TableSkeleton />;
   } else if (regular.length === 0) {
     regularContent = (
@@ -125,7 +143,11 @@ export function Leaderboard() {
   }
 
   let fettmattisContent: ReactNode;
-  if (fettmattisLoading) {
+  if (fettmattisHasError) {
+    fettmattisContent = (
+      <ErrorPanel message="Kunne ikke laste Fettmattis-oversikten. Prøv igjen senere." />
+    );
+  } else if (fettmattisLoading) {
     fettmattisContent = <TableSkeleton />;
   } else if (fettmattis.length === 0) {
     fettmattisContent = (
@@ -229,7 +251,10 @@ export function Leaderboard() {
             </LeaderboardPanel>
           </TabsContent>
           <TabsContent value="fettmattis" className="mt-6">
-            <LeaderboardPanel title="Fettmattis-utdelinger" loading={fettmattisLoading}>
+            <LeaderboardPanel
+              title="Fettmattis-utdelinger"
+              loading={fettmattisLoading}
+            >
               {fettmattisContent}
             </LeaderboardPanel>
           </TabsContent>
@@ -240,7 +265,10 @@ export function Leaderboard() {
         <LeaderboardPanel title="Vanlig tabell" loading={regularLoading}>
           {regularContent}
         </LeaderboardPanel>
-        <LeaderboardPanel title="Fettmattis-utdelinger" loading={fettmattisLoading}>
+        <LeaderboardPanel
+          title="Fettmattis-utdelinger"
+          loading={fettmattisLoading}
+        >
           {fettmattisContent}
         </LeaderboardPanel>
       </div>
@@ -269,6 +297,19 @@ function EmptyState({ message }: EmptyStateProps) {
   );
 }
 
+interface ErrorPanelProps {
+  readonly message: string;
+}
+
+function ErrorPanel({ message }: ErrorPanelProps) {
+  return (
+    <div className="border-destructive/40 bg-destructive/10 text-destructive flex flex-col items-center justify-center gap-3 rounded-3xl border border-dashed px-6 py-12 text-center">
+      <AlertTriangle aria-hidden className="h-5 w-5" />
+      <p className="text-sm font-medium">{message}</p>
+    </div>
+  );
+}
+
 const TABLE_SKELETON_KEYS = ["first", "second", "third", "fourth"] as const;
 
 function TableSkeleton() {
@@ -290,11 +331,7 @@ interface LeaderboardPanelProps {
   readonly children: ReactNode;
 }
 
-function LeaderboardPanel({
-  title,
-  loading,
-  children,
-}: LeaderboardPanelProps) {
+function LeaderboardPanel({ title, loading, children }: LeaderboardPanelProps) {
   return (
     <Card className="border-border/60 overflow-hidden rounded-3xl border">
       <CardHeader className="flex flex-col gap-2 px-4 py-4 sm:flex-row sm:items-center sm:justify-between sm:px-6">
