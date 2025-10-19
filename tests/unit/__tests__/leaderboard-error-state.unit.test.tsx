@@ -1,8 +1,8 @@
+import type { UseQueryResult } from "@tanstack/react-query";
+import { useQuery } from "@tanstack/react-query";
 import { render, screen } from "@testing-library/react";
 import type { Mock } from "vitest";
 import { beforeEach, expect, test, vi } from "vitest";
-import type { UseQueryResult } from "@tanstack/react-query";
-import { useQuery } from "@tanstack/react-query";
 
 import { Leaderboard } from "@/components/Leaderboard";
 import type {
