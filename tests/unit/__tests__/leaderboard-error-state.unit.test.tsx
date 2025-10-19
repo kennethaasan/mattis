@@ -57,14 +57,14 @@ test("renders error panel for failed leaderboard queries", () => {
 
   render(<Leaderboard />);
 
-  const inlineError = screen.getByText(
+  const inlineErrors = screen.getAllByText(
     "Kunne ikke laste vanlige resultater. Prøv igjen senere.",
   );
   const bannerError = screen.getByText(
     "Kunne ikke hente vanlige resultater",
   );
 
-  expect(inlineError).toBeDefined();
+  expect(inlineErrors.length).toBeGreaterThan(0);
   expect(bannerError).toBeDefined();
   expect(
     screen.queryByText("Ingen runder registrert denne sesongen ennå."),

@@ -4,7 +4,9 @@ import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { CalendarCheck, Trophy } from "lucide-react";
 import { useMemo, useState } from "react";
 import { FettMattisForm } from "@/components/FettMattisForm";
+import { PageShell } from "@/components/layout/page-shell";
 import { RoundForm } from "@/components/RoundForm";
+import { SectionHeader } from "@/components/section-header";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import {
@@ -72,7 +74,7 @@ export default function RoundsClientPage() {
 
   const activePlayers = useMemo(
     () => players.filter((player) => player.active),
-    [players],
+    [players]
   );
 
   const latestRoundParticipants = latestRoundQuery.data?.participants ?? [];
@@ -80,10 +82,10 @@ export default function RoundsClientPage() {
     () =>
       new Map(
         latestRoundParticipants.map(
-          (participant, index) => [participant.id, index] as const,
-        ),
+          (participant, index) => [participant.id, index] as const
+        )
       ),
-    [latestRoundParticipants],
+    [latestRoundParticipants]
   );
 
   const hydratablePlayers = useMemo(
@@ -112,7 +114,7 @@ export default function RoundsClientPage() {
 
           return a.displayName.localeCompare(b.displayName);
         }),
-    [activePlayers, participantOrder],
+    [activePlayers, participantOrder]
   );
 
   const roundMutation = useMutation<undefined, Error, RoundCreate>({
@@ -180,22 +182,19 @@ export default function RoundsClientPage() {
   };
 
   return (
-    <div className="container space-y-10 pt-12 pb-16">
-      <div className="flex flex-col gap-2 text-left">
-        <Badge
-          variant="outline"
-          className="border-primary/40 text-primary w-fit"
-        >
-          Kontrollsenter for runder
-        </Badge>
-        <h1 className="text-3xl font-semibold tracking-tight sm:text-4xl">
-          Loggfør runder og Fettmattis-øyeblikk
-        </h1>
-        <p className="text-muted-foreground max-w-2xl text-sm">
-          Registrer spillerne, lås taperen og feir Fettmattis-utdelinger – alt
-          fra ett sted.
-        </p>
-      </div>
+    <PageShell className="gap-10">
+      <SectionHeader
+        badge={
+          <Badge
+            variant="outline"
+            className="border-primary/40 text-primary w-fit"
+          >
+            Kontrollsenter for runder
+          </Badge>
+        }
+        title="Loggfør runder og Fettmattis-øyeblikk"
+        description="Registrer spillerne, lås taperen og feir Fettmattis-utdelinger – alt fra ett sted."
+      />
 
       <div className="grid gap-6 lg:grid-cols-[1.1fr_0.9fr]">
         <Card>
@@ -284,6 +283,6 @@ export default function RoundsClientPage() {
           Oppdater spillerliste
         </Button>
       </div>
-    </div>
+    </PageShell>
   );
 }
