@@ -37,6 +37,12 @@ test("renders error panel for failed leaderboard queries", () => {
   const regularError = new Error("Kunne ikke hente vanlige resultater");
 
   mockedUseQuery.mockImplementationOnce(() =>
+    createQueryResult<number[]>({
+      data: [2025],
+    }),
+  );
+
+  mockedUseQuery.mockImplementationOnce(() =>
     createQueryResult<RegularLeaderboard>({
       isError: true,
       error: regularError,
