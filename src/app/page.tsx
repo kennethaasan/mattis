@@ -172,11 +172,11 @@ export default async function Home() {
                 før neste kamp.
               </CardDescription>
             </CardHeader>
-            <CardContent className="flex flex-col gap-3 p-6 pt-4 pb-6 sm:flex-row">
-              <Button asChild className="flex-1">
+            <CardContent className="flex flex-col gap-3 p-6 pt-4 pb-6 sm:flex-row sm:items-center">
+              <Button asChild className="w-full sm:flex-1">
                 <Link href="/rounds">Registrer en runde</Link>
               </Button>
-              <Button variant="outline" asChild className="flex-1">
+              <Button variant="outline" asChild className="w-full sm:flex-1">
                 <Link href="/players">Administrer spillere</Link>
               </Button>
             </CardContent>
