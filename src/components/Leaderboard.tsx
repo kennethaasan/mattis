@@ -38,8 +38,11 @@ export function Leaderboard() {
     queryFn: () => getFettmattisLeaderboard(scope),
   });
 
-  const regular = regularQuery.data ?? [];
-  const fettmattis = fettmattisQuery.data ?? [];
+  const regularHasError = regularQuery.isError;
+  const fettmattisHasError = fettmattisQuery.isError;
+
+  const regular = regularHasError ? [] : regularQuery.data ?? [];
+  const fettmattis = fettmattisHasError ? [] : fettmattisQuery.data ?? [];
   const regularLoading = regularQuery.isLoading || regularQuery.isFetching;
   const fettmattisLoading =
     fettmattisQuery.isLoading || fettmattisQuery.isFetching;
@@ -60,7 +63,11 @@ export function Leaderboard() {
   }, []);
 
   let regularContent: ReactNode;
-  if (regularLoading) {
+  if (regularHasError) {
+    regularContent = (
+      <ErrorPanel message="Kunne ikke laste vanlige resultater. Prøv igjen senere." />
+    );
+  } else if (regularLoading) {
     regularContent = <TableSkeleton />;
   } else if (regular.length === 0) {
     regularContent = (
@@ -120,7 +127,11 @@ export function Leaderboard() {
   }
 
   let fettmattisContent: ReactNode;
-  if (fettmattisLoading) {
+  if (fettmattisHasError) {
+    fettmattisContent = (
+      <ErrorPanel message="Kunne ikke laste Fettmattis-oversikten. Prøv igjen senere." />
+    );
+  } else if (fettmattisLoading) {
     fettmattisContent = <TableSkeleton />;
   } else if (fettmattis.length === 0) {
     fettmattisContent = (
@@ -250,6 +261,19 @@ function EmptyState({ message }: EmptyStateProps) {
   return (
     <div className="border-border/70 bg-muted/40 flex flex-col items-center justify-center gap-3 rounded-3xl border border-dashed px-6 py-12 text-center">
       <p className="text-muted-foreground text-sm">{message}</p>
+    </div>
+  );
+}
+
+interface ErrorPanelProps {
+  readonly message: string;
+}
+
+function ErrorPanel({ message }: ErrorPanelProps) {
+  return (
+    <div className="border-destructive/40 bg-destructive/10 text-destructive flex flex-col items-center justify-center gap-3 rounded-3xl border border-dashed px-6 py-12 text-center">
+      <AlertTriangle aria-hidden className="h-5 w-5" />
+      <p className="text-sm font-medium">{message}</p>
     </div>
   );
 }
