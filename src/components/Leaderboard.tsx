@@ -94,39 +94,40 @@ export function Leaderboard() {
   } else {
     regularContent = (
       <div className="space-y-4">
-        <div className="md:hidden space-y-3">
+        <div className="md:hidden space-y-2.5">
           {regular.map((entry) => (
             <article
               key={entry.playerId}
-              className="border-border/60 bg-card text-card-foreground rounded-3xl border p-4 shadow-xs"
+              className="border-border/60 bg-card text-card-foreground rounded-2xl border p-3 shadow-xs"
             >
-              <div className="flex items-center justify-between gap-3">
-                <span className="text-muted-foreground text-xs font-medium uppercase tracking-[0.2em]">
+              <div className="flex items-center justify-between gap-2">
+                <span className="text-muted-foreground text-[11px] font-medium uppercase tracking-[0.18em]">
                   #{entry.rank}
                 </span>
                 <Badge
                   variant={entry.lossPercentage < 30 ? "success" : "outline"}
+                  className="px-2 py-0.5 text-[11px] font-semibold"
                 >
                   {entry.lossPercentage.toFixed(1)}%
                 </Badge>
               </div>
-              <div className="mt-2">
-                <p className="text-lg font-semibold">{entry.playerName}</p>
+              <div className="mt-1.5">
+                <p className="text-base font-semibold">{entry.playerName}</p>
               </div>
-              <dl className="text-muted-foreground mt-4 grid grid-cols-2 gap-3 text-sm">
-                <div className="space-y-1">
-                  <dt className="text-xs font-medium uppercase tracking-[0.2em]">
+              <dl className="text-muted-foreground mt-3 grid grid-cols-2 gap-2 text-xs">
+                <div className="space-y-0.5">
+                  <dt className="text-[10px] font-medium uppercase tracking-[0.18em]">
                     Tap
                   </dt>
-                  <dd className="text-foreground text-base font-semibold">
+                  <dd className="text-foreground text-sm font-semibold">
                     {entry.totalLosses}
                   </dd>
                 </div>
-                <div className="space-y-1">
-                  <dt className="text-xs font-medium uppercase tracking-[0.2em]">
+                <div className="space-y-0.5">
+                  <dt className="text-[10px] font-medium uppercase tracking-[0.18em]">
                     Runder
                   </dt>
-                  <dd className="text-foreground text-base font-semibold">
+                  <dd className="text-foreground text-sm font-semibold">
                     {entry.roundsPlayed}
                   </dd>
                 </div>
@@ -192,23 +193,28 @@ export function Leaderboard() {
   } else {
     fettmattisContent = (
       <div className="space-y-4">
-        <div className="md:hidden space-y-3">
+        <div className="md:hidden space-y-2.5">
           {fettmattis.map((entry) => (
             <article
               key={entry.playerId}
-              className="border-border/60 bg-card text-card-foreground rounded-3xl border p-4 shadow-xs"
+              className="border-border/60 bg-card text-card-foreground rounded-2xl border p-3 shadow-xs"
             >
-              <div className="flex items-center justify-between gap-3">
-                <span className="text-muted-foreground text-xs font-medium uppercase tracking-[0.2em]">
+              <div className="flex items-center justify-between gap-2">
+                <span className="text-muted-foreground text-[11px] font-medium uppercase tracking-[0.18em]">
                   #{entry.rank}
                 </span>
-                <Badge variant="secondary">Fettmattis-helt</Badge>
+                <Badge
+                  variant="secondary"
+                  className="px-2 py-0.5 text-[11px] font-semibold"
+                >
+                  Fettmattis-helt
+                </Badge>
               </div>
-              <div className="mt-2">
-                <p className="text-lg font-semibold">{entry.playerName}</p>
+              <div className="mt-1.5">
+                <p className="text-base font-semibold">{entry.playerName}</p>
               </div>
-              <div className="text-muted-foreground mt-4 text-sm">
-                <span className="text-foreground text-base font-semibold">
+              <div className="text-muted-foreground mt-3 text-xs">
+                <span className="text-foreground text-sm font-semibold">
                   {entry.fettmattisCount}
                 </span>{" "}
                 tildelinger
