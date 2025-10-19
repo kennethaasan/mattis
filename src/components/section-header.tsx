@@ -1,4 +1,4 @@
-import type { ReactNode } from "react";
+import type { ElementType, ReactNode } from "react";
 
 import { cn } from "@/lib/utils";
 
@@ -9,7 +9,7 @@ interface SectionHeaderProps {
   readonly align?: "left" | "center";
   readonly className?: string;
   readonly descriptionClassName?: string;
-  readonly titleAs?: keyof JSX.IntrinsicElements;
+  readonly titleAs?: ElementType;
 }
 
 export function SectionHeader({

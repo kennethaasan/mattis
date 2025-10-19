@@ -168,8 +168,8 @@ export default async function Home() {
                 Klar for å registrere neste runde?
               </CardTitle>
               <CardDescription>
-                Gå direkte til rundeoversikten, eller finjuster spillerlisten før
-                neste kamp.
+                Gå direkte til rundeoversikten, eller finjuster spillerlisten
+                før neste kamp.
               </CardDescription>
             </CardHeader>
             <CardContent className="flex flex-col gap-3 p-6 pt-4 pb-6 sm:flex-row">
@@ -188,7 +188,10 @@ export default async function Home() {
         <div className="container flex flex-col items-center gap-6 text-center">
           <SectionHeader
             badge={
-              <Badge variant="outline" className="border-primary/40 text-primary">
+              <Badge
+                variant="outline"
+                className="border-primary/40 text-primary"
+              >
                 Skapt for nattlig skryt
               </Badge>
             }
