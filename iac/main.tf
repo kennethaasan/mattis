@@ -46,34 +46,9 @@ module "acm" {
   tags                   = local.default_tags
 }
 
-module "lambda_role" {
-  source  = "terraform-aws-modules/iam/aws//modules/iam-role"
-  version = "6.2.1"
-
-  name            = "${local.stack_name}-lambda"
-  use_name_prefix = false
-  trust_policy_permissions = {
-    lambda = {
-      actions = ["sts:AssumeRole"]
-      principals = [{
-        type        = "Service"
-        identifiers = ["lambda.amazonaws.com"]
-      }]
-    }
-  }
-
-  policies = {
-    AWSLambdaBasicExecutionRole = "arn:aws:iam::aws:policy/service-role/AWSLambdaBasicExecutionRole"
-  }
-
-  tags = local.default_tags
-}
-
 module "fn" {
   source  = "terraform-aws-modules/lambda/aws"
   version = "8.1.0"
-
-  create_role = false
 
   function_name = local.stack_name
   description   = "Next.js on Lambda via AWS Lambda Web Adapter"
@@ -109,7 +84,6 @@ module "fn" {
   create_lambda_function_url        = true
   authorization_type                = "AWS_IAM"
   cloudwatch_logs_retention_in_days = var.lambda_log_retention_days
-  lambda_role                       = module.lambda_role.arn
   tags                              = local.default_tags
 }
 
