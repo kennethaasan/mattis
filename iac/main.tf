@@ -67,13 +67,13 @@ module "fn" {
   environment_variables = merge(
     var.lambda_environment,
     {
-      AWS_LAMBDA_EXEC_WRAPPER      = "/opt/bootstrap"
-      AWS_LWA_ASYNC_INIT           = "true"
-      AWS_LWA_ENABLE_COMPRESSION   = "true"
-      NODE_ENV                     = "production"
-      PORT                         = "3000"
-      DATABASE_URL                 = local.database_url
-      BETTER_AUTH_SECRET           = var.better_auth_secret
+      AWS_LAMBDA_EXEC_WRAPPER    = "/opt/bootstrap"
+      AWS_LWA_ASYNC_INIT         = "true"
+      AWS_LWA_ENABLE_COMPRESSION = "true"
+      NODE_ENV                   = "production"
+      PORT                       = "3000"
+      DATABASE_URL               = local.database_url
+      BETTER_AUTH_SECRET         = var.better_auth_secret
     }
   )
 
