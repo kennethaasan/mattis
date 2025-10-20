@@ -81,7 +81,7 @@ module "fn" {
   )
 
   create_lambda_function_url        = true
-  authorization_type                = "NONE"
+  authorization_type                = "AWS_IAM"
   cloudwatch_logs_retention_in_days = var.lambda_log_retention_days
   tags                              = local.default_tags
 }
@@ -103,6 +103,24 @@ data "aws_cloudfront_cache_policy" "caching_disabled" {
 
 data "aws_cloudfront_cache_policy" "caching_optimized" {
   name = "Managed-CachingOptimized"
+}
+
+resource "aws_cloudfront_origin_request_policy" "dynamic_requests" {
+  name    = "${local.stack_name}-dynamic"
+  comment = "Forward all viewer headers (except host) plus the CloudFront payload hash for Lambda URL signing"
+
+  cookies_config {
+    cookie_behavior = "all"
+  }
+
+  headers_config {
+    header_behavior = "allViewerAndWhitelistCloudFront"
+    headers         = ["x-amz-content-sha256"]
+  }
+
+  query_strings_config {
+    query_string_behavior = "all"
+  }
 }
 
 data "aws_cloudfront_origin_request_policy" "all_viewer_except_host" {
@@ -135,7 +153,7 @@ resource "aws_cloudfront_distribution" "cdn" {
     allowed_methods          = ["GET", "HEAD", "OPTIONS", "PUT", "POST", "PATCH", "DELETE"]
     cached_methods           = ["GET", "HEAD"]
     cache_policy_id          = data.aws_cloudfront_cache_policy.caching_disabled.id
-    origin_request_policy_id = data.aws_cloudfront_origin_request_policy.all_viewer_except_host.id
+    origin_request_policy_id = aws_cloudfront_origin_request_policy.dynamic_requests.id
   }
 
   ordered_cache_behavior {
@@ -172,7 +190,7 @@ resource "aws_lambda_permission" "allow_cloudfront" {
   function_name          = module.fn.lambda_function_name
   principal              = "cloudfront.amazonaws.com"
   source_arn             = aws_cloudfront_distribution.cdn.arn
-  function_url_auth_type = "NONE"
+  function_url_auth_type = "AWS_IAM"
 }
 
 resource "aws_lambda_permission" "allow_cloudfront_invoke" {
