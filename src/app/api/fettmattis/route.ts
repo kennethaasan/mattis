@@ -1,14 +1,48 @@
 import type { NextRequest } from "next/server";
 import { NextResponse } from "next/server";
 import { badRequest, createProblemResponse } from "@/lib/api/problem-details";
-import { toPlayerResponse } from "@/lib/api/response-helpers";
-import { FettMattisCreateSchema } from "@/lib/api/schemas";
+import { toFettMattisResponse } from "@/lib/api/response-helpers";
+import { FettMattisCreateSchema, ListQuerySchema } from "@/lib/api/schemas";
 import { resolveRequestUserId } from "@/lib/auth/request-user";
 import {
   ConflictError,
   createFettMattis,
+  listRecentFettMattis,
   NotFoundError,
 } from "@/lib/db-client";
+
+export async function GET(req: NextRequest) {
+  const { searchParams } = new URL(req.url);
+  const query = Object.fromEntries(searchParams.entries());
+
+  const validation = ListQuerySchema.safeParse(query);
+  if (!validation.success) {
+    const detail =
+      validation.error.issues.at(0)?.message ?? "Query parameters are invalid.";
+    return badRequest(detail);
+  }
+
+  try {
+    const fettMattisList = await listRecentFettMattis({
+      limit: validation.data.limit,
+    });
+    return NextResponse.json(fettMattisList.map(toFettMattisResponse));
+  } catch (error) {
+    if (error instanceof ConflictError) {
+      return createProblemResponse({
+        status: 409,
+        title: "Conflict",
+        detail: error.message,
+      });
+    }
+
+    return createProblemResponse({
+      status: 500,
+      title: "Internal Server Error",
+      detail: "Internal Server Error",
+    });
+  }
+}
 
 /**
  * POST /api/fettmattis
@@ -72,16 +106,4 @@ export async function POST(req: NextRequest) {
       detail: "Internal Server Error",
     });
   }
-}
-
-function toFettMattisResponse(record: {
-  id: string;
-  player: { id: string; displayName: string; active: boolean };
-  createdAt: Date;
-}) {
-  return {
-    id: record.id,
-    player: toPlayerResponse(record.player),
-    created_at: record.createdAt.toISOString(),
-  };
 }

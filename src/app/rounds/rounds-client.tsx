@@ -4,8 +4,10 @@ import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { CalendarCheck, Trophy } from "lucide-react";
 import { useMemo, useState } from "react";
 import { FettMattisForm } from "@/components/FettMattisForm";
+import { FettmattisTable } from "@/components/fettmattis-table";
 import { PageShell } from "@/components/layout/page-shell";
 import { RoundForm } from "@/components/RoundForm";
+import { RoundsTable } from "@/components/rounds-table";
 import { SectionHeader } from "@/components/section-header";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -17,12 +19,21 @@ import {
   CardTitle,
 } from "@/components/ui/card";
 import {
+  createFettMattisListQueryKey,
+  type FettMattis,
+  fetchFettMattis,
+  revokeFettMattis,
+} from "@/lib/api/fettmattis-client";
+import {
   fetchPlayers,
   PLAYERS_QUERY_KEY,
   type Player,
 } from "@/lib/api/players-client";
 import {
+  createRoundsListQueryKey,
+  deleteRound,
   fetchLatestRound,
+  fetchRounds,
   LATEST_ROUND_QUERY_KEY,
   type Round,
 } from "@/lib/api/rounds-client";
@@ -53,6 +64,9 @@ const FETTMATTIS_FORM_SKELETON_KEYS = [
   "fettmattis-skeleton-3",
 ] as const;
 
+const ROUNDS_LIST_LIMIT = 25;
+const FETTMATTIS_LIST_LIMIT = 25;
+
 export default function RoundsClientPage() {
   const queryClient = useQueryClient();
   const [status, setStatus] = useState<string | null>(null);
@@ -71,6 +85,27 @@ export default function RoundsClientPage() {
     queryKey: LATEST_ROUND_QUERY_KEY,
     queryFn: fetchLatestRound,
   });
+
+  const roundsListQueryKey = createRoundsListQueryKey(ROUNDS_LIST_LIMIT);
+  const fettMattisListQueryKey =
+    createFettMattisListQueryKey(FETTMATTIS_LIST_LIMIT);
+
+  const roundsQuery = useQuery<Round[], Error>({
+    queryKey: roundsListQueryKey,
+    queryFn: () => fetchRounds({ limit: ROUNDS_LIST_LIMIT }),
+  });
+
+  const fettMattisQuery = useQuery<FettMattis[], Error>({
+    queryKey: fettMattisListQueryKey,
+    queryFn: () => fetchFettMattis({ limit: FETTMATTIS_LIST_LIMIT }),
+  });
+
+  const rounds = roundsQuery.data ?? [];
+  const fettMattisEntries = fettMattisQuery.data ?? [];
+  const isRoundsLoading = roundsQuery.isLoading;
+  const isRoundsFetching = roundsQuery.isFetching;
+  const isFettMattisLoading = fettMattisQuery.isLoading;
+  const isFettMattisFetching = fettMattisQuery.isFetching;
 
   const activePlayers = useMemo(
     () => players.filter((player) => player.active),
@@ -137,6 +172,12 @@ export default function RoundsClientPage() {
     onSuccess: () => {
       setStatus("Runde lagret. Tabellene er oppdatert!");
       setError(null);
+      void queryClient.invalidateQueries({
+        queryKey: roundsListQueryKey,
+      });
+      void queryClient.invalidateQueries({
+        queryKey: LATEST_ROUND_QUERY_KEY,
+      });
       void queryClient.invalidateQueries({ queryKey: ["leaderboard"] });
     },
     onError: (mutationError) => {
@@ -165,6 +206,9 @@ export default function RoundsClientPage() {
     onSuccess: () => {
       setStatus("Fettmattis tildelt. Klar for feiring!");
       setError(null);
+      void queryClient.invalidateQueries({
+        queryKey: fettMattisListQueryKey,
+      });
       void queryClient.invalidateQueries({ queryKey: ["leaderboard"] });
     },
     onError: (mutationError) => {
@@ -180,6 +224,56 @@ export default function RoundsClientPage() {
   const handleFettMattisSubmit = async (data: FettMattisCreate) => {
     await fettMattisMutation.mutateAsync(data);
   };
+
+  const deleteRoundMutation = useMutation<void, Error, string>({
+    mutationFn: async (roundId) => deleteRound(roundId),
+    onSuccess: () => {
+      setStatus("Runde slettet. Tabellene er oppdatert!");
+      setError(null);
+      void queryClient.invalidateQueries({ queryKey: roundsListQueryKey });
+      void queryClient.invalidateQueries({
+        queryKey: LATEST_ROUND_QUERY_KEY,
+      });
+      void queryClient.invalidateQueries({ queryKey: ["leaderboard"] });
+    },
+    onError: (mutationError) => {
+      setStatus(null);
+      setError(mutationError.message);
+    },
+  });
+
+  const revokeFettMattisMutation = useMutation<void, Error, string>({
+    mutationFn: async (fettMattisId) => revokeFettMattis(fettMattisId),
+    onSuccess: () => {
+      setStatus("Fettmattis fjernet. Oversikten er oppdatert.");
+      setError(null);
+      void queryClient.invalidateQueries({ queryKey: fettMattisListQueryKey });
+      void queryClient.invalidateQueries({ queryKey: ["leaderboard"] });
+    },
+    onError: (mutationError) => {
+      setStatus(null);
+      setError(mutationError.message);
+    },
+  });
+
+  const handleRoundDelete = async (roundId: string) => {
+    await deleteRoundMutation.mutateAsync(roundId);
+  };
+
+  const handleFettMattisDelete = async (fettMattisId: string) => {
+    await revokeFettMattisMutation.mutateAsync(fettMattisId);
+  };
+
+  const deletingRoundIds =
+    deleteRoundMutation.isPending && deleteRoundMutation.variables
+      ? new Set([deleteRoundMutation.variables])
+      : undefined;
+
+  const deletingFettMattisIds =
+    revokeFettMattisMutation.isPending &&
+    revokeFettMattisMutation.variables
+      ? new Set([revokeFettMattisMutation.variables])
+      : undefined;
 
   return (
     <PageShell className="gap-10">
@@ -268,6 +362,73 @@ export default function RoundsClientPage() {
       {playersQuery.error ? (
         <p className="text-destructive text-sm">{playersQuery.error.message}</p>
       ) : null}
+
+      <div className="grid gap-6 lg:grid-cols-2">
+        <Card>
+          <CardHeader className="flex flex-col gap-2 lg:flex-row lg:items-center lg:justify-between">
+            <div className="space-y-1">
+              <CardTitle>Registrerte runder</CardTitle>
+              <CardDescription>
+                De siste registreringene fra Mattis-boka.
+              </CardDescription>
+            </div>
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={() => void roundsQuery.refetch()}
+              disabled={isRoundsFetching}
+            >
+              Oppdater
+            </Button>
+          </CardHeader>
+          <CardContent className="space-y-3">
+            <RoundsTable
+              rounds={rounds}
+              isLoading={isRoundsLoading}
+              onDeleteRound={handleRoundDelete}
+              deletingRoundIds={deletingRoundIds}
+              emptyMessage="Ingen runder er registrert ennå."
+            />
+            {roundsQuery.error ? (
+              <p className="text-destructive text-sm">
+                {roundsQuery.error.message}
+              </p>
+            ) : null}
+          </CardContent>
+        </Card>
+
+        <Card>
+          <CardHeader className="flex flex-col gap-2 lg:flex-row lg:items-center lg:justify-between">
+            <div className="space-y-1">
+              <CardTitle>Fettmattis-øyeblikk</CardTitle>
+              <CardDescription>
+                Feiringene som fortsatt kan justeres det siste døgnet.
+              </CardDescription>
+            </div>
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={() => void fettMattisQuery.refetch()}
+              disabled={isFettMattisFetching}
+            >
+              Oppdater
+            </Button>
+          </CardHeader>
+          <CardContent className="space-y-3">
+            <FettmattisTable
+              fettMattis={fettMattisEntries}
+              isLoading={isFettMattisLoading}
+              onDelete={handleFettMattisDelete}
+              deletingIds={deletingFettMattisIds}
+            />
+            {fettMattisQuery.error ? (
+              <p className="text-destructive text-sm">
+                {fettMattisQuery.error.message}
+              </p>
+            ) : null}
+          </CardContent>
+        </Card>
+      </div>
 
       <div className="border-border/70 bg-muted/30 text-muted-foreground flex flex-wrap items-center gap-3 rounded-3xl border px-4 py-5 text-xs">
         <span>
