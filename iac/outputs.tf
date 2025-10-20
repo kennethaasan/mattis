@@ -4,7 +4,7 @@ output "database_url" {
 }
 
 output "cloudfront_domain_name" {
-  value = aws_cloudfront_distribution.cdn.domain_name
+  value = module.cdn.cloudfront_distribution_domain_name
 }
 
 output "function_url" {
