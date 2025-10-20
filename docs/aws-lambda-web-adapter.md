@@ -14,7 +14,12 @@ This setup follows AWS' Function URL guidance that recommends locking down
 The policy we attach in `iac/main.tf:166-173` allows only our CloudFront
 distribution (principal `cloudfront.amazonaws.com` scoped to the distribution
 ARN) to invoke the URL, so the Lambda endpoint is still unreachable from the
-public internet. If we need an additional safeguard in the future we can ask
-CloudFront to inject a shared secret header and verify it before processing the
-request, but it is optional because the resource policy already enforces the
-minimum-privilege boundary that AWS calls out as the best practice.
+public internet. Because AWS now requires both `lambda:InvokeFunctionUrl` and
+`lambda:InvokeFunction` permissions for new Function URLs, we grant CloudFront
+the second action in `iac/main.tf:175-187` with a `lambda:InvokedViaFunctionUrl`
+condition so invocation is still limited to the URL path.
+
+If we need an additional safeguard in the future we can ask CloudFront to inject
+a shared secret header and verify it before processing the request, but it is
+optional because the resource policy already enforces the minimum-privilege
+boundary that AWS calls out as the best practice.

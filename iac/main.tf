@@ -67,15 +67,15 @@ module "fn" {
   environment_variables = merge(
     var.lambda_environment,
     {
-      AWS_LAMBDA_EXEC_WRAPPER      = "/opt/bootstrap"
-      AWS_LWA_ASYNC_INIT           = "true"
-      AWS_LWA_ENABLE_COMPRESSION   = "true"
-      NODE_ENV                     = "production"
-      PORT                         = "3000"
-      DATABASE_URL                 = local.database_url
-      BETTER_AUTH_SECRET           = var.better_auth_secret
-      POWERTOOLS_SERVICE_NAME      = lookup(var.lambda_environment, "POWERTOOLS_SERVICE_NAME", var.app_name)
-      POWERTOOLS_LOG_LEVEL         = lookup(var.lambda_environment, "POWERTOOLS_LOG_LEVEL", "INFO")
+      AWS_LAMBDA_EXEC_WRAPPER        = "/opt/bootstrap"
+      AWS_LWA_ASYNC_INIT             = "true"
+      AWS_LWA_ENABLE_COMPRESSION     = "true"
+      NODE_ENV                       = "production"
+      PORT                           = "3000"
+      DATABASE_URL                   = local.database_url
+      BETTER_AUTH_SECRET             = var.better_auth_secret
+      POWERTOOLS_SERVICE_NAME        = lookup(var.lambda_environment, "POWERTOOLS_SERVICE_NAME", var.app_name)
+      POWERTOOLS_LOG_LEVEL           = lookup(var.lambda_environment, "POWERTOOLS_LOG_LEVEL", "INFO")
       POWERTOOLS_TRACING_SAMPLE_RATE = lookup(var.lambda_environment, "POWERTOOLS_TRACING_SAMPLE_RATE", "0")
     }
   )
@@ -173,6 +173,20 @@ resource "aws_lambda_permission" "allow_cloudfront" {
   principal              = "cloudfront.amazonaws.com"
   source_arn             = aws_cloudfront_distribution.cdn.arn
   function_url_auth_type = "NONE"
+}
+
+resource "aws_lambda_permission" "allow_cloudfront_invoke" {
+  statement_id  = "AllowCloudFrontInvokeFunctionURLExecution"
+  action        = "lambda:InvokeFunction"
+  function_name = module.fn.lambda_function_name
+  principal     = "cloudfront.amazonaws.com"
+  source_arn    = aws_cloudfront_distribution.cdn.arn
+
+  condition {
+    test     = "Bool"
+    variable = "lambda:InvokedViaFunctionUrl"
+    values   = ["true"]
+  }
 }
 
 resource "aws_route53_record" "app_a" {
