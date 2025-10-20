@@ -46,9 +46,34 @@ module "acm" {
   tags                   = local.default_tags
 }
 
+module "lambda_role" {
+  source  = "terraform-aws-modules/iam/aws//modules/iam-role"
+  version = "6.2.1"
+
+  name            = "${local.stack_name}-lambda"
+  use_name_prefix = false
+  trust_policy_permissions = {
+    lambda = {
+      actions = ["sts:AssumeRole"]
+      principals = [{
+        type        = "Service"
+        identifiers = ["lambda.amazonaws.com"]
+      }]
+    }
+  }
+
+  policies = {
+    AWSLambdaBasicExecutionRole = "arn:aws:iam::aws:policy/service-role/AWSLambdaBasicExecutionRole"
+  }
+
+  tags = local.default_tags
+}
+
 module "fn" {
   source  = "terraform-aws-modules/lambda/aws"
   version = "8.1.0"
+
+  create_role = false
 
   function_name = local.stack_name
   description   = "Next.js on Lambda via AWS Lambda Web Adapter"
@@ -84,18 +109,12 @@ module "fn" {
   create_lambda_function_url        = true
   authorization_type                = "AWS_IAM"
   cloudwatch_logs_retention_in_days = var.lambda_log_retention_days
+  lambda_role                       = module.lambda_role.arn
   tags                              = local.default_tags
 }
 
 locals {
   lambda_origin_domain = replace(replace(module.fn.lambda_function_url, "https://", ""), "/", "")
-}
-
-resource "aws_cloudfront_origin_access_control" "oac" {
-  name                              = "${local.stack_name}-oac"
-  origin_access_control_origin_type = "lambda"
-  signing_behavior                  = "always"
-  signing_protocol                  = "sigv4"
 }
 
 data "aws_cloudfront_cache_policy" "caching_disabled" {
@@ -110,26 +129,40 @@ data "aws_cloudfront_origin_request_policy" "all_viewer_except_host" {
   name = "Managed-AllViewerExceptHostHeader"
 }
 
-resource "aws_cloudfront_distribution" "cdn" {
+module "cdn" {
+  source  = "terraform-aws-modules/cloudfront/aws"
+  version = "5.0.0"
+
+  aliases         = [var.app_domain]
   enabled         = true
   is_ipv6_enabled = true
-  aliases         = [var.app_domain]
   price_class     = var.cloudfront_price_class
 
-  origin {
-    domain_name              = local.lambda_origin_domain
-    origin_id                = "lambda-url"
-    origin_access_control_id = aws_cloudfront_origin_access_control.oac.id
-
-    custom_origin_config {
-      origin_protocol_policy = "https-only"
-      http_port              = 443
-      https_port             = 443
-      origin_ssl_protocols   = ["TLSv1.2"]
+  create_origin_access_control = true
+  origin_access_control = {
+    lambda = {
+      description      = "Lambda origin access control"
+      origin_type      = "lambda"
+      signing_behavior = "always"
+      signing_protocol = "sigv4"
     }
   }
 
-  default_cache_behavior {
+  origin = {
+    lambda = {
+      domain_name          = local.lambda_origin_domain
+      origin_id            = "lambda-url"
+      origin_access_control = "lambda"
+      custom_origin_config = {
+        http_port              = 443
+        https_port             = 443
+        origin_protocol_policy = "https-only"
+        origin_ssl_protocols   = ["TLSv1.2"]
+      }
+    }
+  }
+
+  default_cache_behavior = {
     target_origin_id         = "lambda-url"
     viewer_protocol_policy   = "redirect-to-https"
     compress                 = true
@@ -137,26 +170,28 @@ resource "aws_cloudfront_distribution" "cdn" {
     cached_methods           = ["GET", "HEAD"]
     cache_policy_id          = data.aws_cloudfront_cache_policy.caching_disabled.id
     origin_request_policy_id = data.aws_cloudfront_origin_request_policy.all_viewer_except_host.id
+    use_forwarded_values     = false
   }
 
-  ordered_cache_behavior {
-    path_pattern             = "/_next/static/*"
-    target_origin_id         = "lambda-url"
-    viewer_protocol_policy   = "redirect-to-https"
-    compress                 = true
-    allowed_methods          = ["GET", "HEAD", "OPTIONS"]
-    cached_methods           = ["GET", "HEAD"]
-    cache_policy_id          = data.aws_cloudfront_cache_policy.caching_optimized.id
-    origin_request_policy_id = data.aws_cloudfront_origin_request_policy.all_viewer_except_host.id
-  }
-
-  restrictions {
-    geo_restriction {
-      restriction_type = "none"
+  ordered_cache_behavior = [
+    {
+      path_pattern             = "/_next/static/*"
+      target_origin_id         = "lambda-url"
+      viewer_protocol_policy   = "redirect-to-https"
+      compress                 = true
+      allowed_methods          = ["GET", "HEAD", "OPTIONS"]
+      cached_methods           = ["GET", "HEAD"]
+      cache_policy_id          = data.aws_cloudfront_cache_policy.caching_optimized.id
+      origin_request_policy_id = data.aws_cloudfront_origin_request_policy.all_viewer_except_host.id
+      use_forwarded_values     = false
     }
+  ]
+
+  geo_restriction = {
+    restriction_type = "none"
   }
 
-  viewer_certificate {
+  viewer_certificate = {
     acm_certificate_arn      = module.acm.acm_certificate_arn
     ssl_support_method       = "sni-only"
     minimum_protocol_version = "TLSv1.2_2021"
@@ -172,7 +207,7 @@ resource "aws_lambda_permission" "allow_cloudfront" {
   action                 = "lambda:InvokeFunctionUrl"
   function_name          = module.fn.lambda_function_name
   principal              = "cloudfront.amazonaws.com"
-  source_arn             = aws_cloudfront_distribution.cdn.arn
+  source_arn             = module.cdn.cloudfront_distribution_arn
   function_url_auth_type = "AWS_IAM"
 }
 
@@ -181,29 +216,39 @@ resource "aws_lambda_permission" "allow_cloudfront_invoke" {
   action        = "lambda:InvokeFunction"
   function_name = module.fn.lambda_function_name
   principal     = "cloudfront.amazonaws.com"
-  source_arn    = aws_cloudfront_distribution.cdn.arn
+  source_arn    = module.cdn.cloudfront_distribution_arn
 }
 
-resource "aws_route53_record" "app_a" {
-  zone_id = data.aws_route53_zone.zone.zone_id
-  name    = var.app_domain
-  type    = "A"
+module "dns_records" {
+  source  = "terraform-aws-modules/route53/aws"
+  version = "6.1.0"
 
-  alias {
-    name                   = aws_cloudfront_distribution.cdn.domain_name
-    zone_id                = aws_cloudfront_distribution.cdn.hosted_zone_id
-    evaluate_target_health = false
+  create_zone = false
+  name        = var.parent_domain
+
+  records = {
+    app_a = {
+      full_name       = var.app_domain
+      type            = "A"
+      allow_overwrite = true
+      alias = {
+        name    = module.cdn.cloudfront_distribution_domain_name
+        zone_id = module.cdn.cloudfront_distribution_hosted_zone_id
+      }
+    }
+
+    app_aaaa = {
+      full_name       = var.app_domain
+      type            = "AAAA"
+      allow_overwrite = true
+      alias = {
+        name    = module.cdn.cloudfront_distribution_domain_name
+        zone_id = module.cdn.cloudfront_distribution_hosted_zone_id
+      }
+    }
   }
-}
 
-resource "aws_route53_record" "app_aaaa" {
-  zone_id = data.aws_route53_zone.zone.zone_id
-  name    = var.app_domain
-  type    = "AAAA"
+  tags = local.default_tags
 
-  alias {
-    name                   = aws_cloudfront_distribution.cdn.domain_name
-    zone_id                = aws_cloudfront_distribution.cdn.hosted_zone_id
-    evaluate_target_health = false
-  }
+  depends_on = [module.cdn]
 }
