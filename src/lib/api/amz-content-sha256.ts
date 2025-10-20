@@ -1,3 +1,5 @@
+import type { BetterFetchPlugin } from "@better-fetch/fetch";
+
 const EMPTY_PAYLOAD_HASH =
   "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855";
 
@@ -12,10 +14,9 @@ async function hashToHex(data: Uint8Array): Promise<string> {
     data.byteOffset === 0 && data.byteLength === data.buffer.byteLength
       ? data.buffer
       : data.buffer.slice(data.byteOffset, data.byteOffset + data.byteLength);
-  const digest = await crypto.subtle.digest(
-    "SHA-256",
-    sourceBuffer instanceof ArrayBuffer ? sourceBuffer : data.slice().buffer,
-  );
+  const digestSource =
+    sourceBuffer instanceof ArrayBuffer ? sourceBuffer : data.slice().buffer;
+  const digest = await crypto.subtle.digest("SHA-256", digestSource);
   const bytes = new Uint8Array(digest);
 
   let hex = "";
@@ -92,3 +93,23 @@ export async function withAmzContentSha256Header(
     body,
   };
 }
+
+export const amzContentSha256FetchPlugin: BetterFetchPlugin = {
+  id: "amz-content-sha256",
+  name: "amz-content-sha256",
+  hooks: {
+    async onRequest(context) {
+      const hashedInit = await withAmzContentSha256Header({
+        method: context.method,
+        headers: context.headers,
+        body: context.body,
+      });
+
+      return {
+        ...context,
+        headers: new Headers(hashedInit.headers ?? context.headers),
+        body: hashedInit.body ?? context.body,
+      };
+    },
+  },
+};
