@@ -10,8 +10,15 @@ import {
   listRecentRounds,
   NotFoundError,
 } from "@/lib/db-client";
+import {
+  getErrorLogContext,
+  getRequestLogContext,
+} from "@/lib/observability/logging";
+import { logger } from "@/lib/observability/powertools";
 
 export async function GET(req: NextRequest) {
+  const requestContext = getRequestLogContext(req);
+  logger.info("Received request to list rounds", requestContext);
   const { searchParams } = new URL(req.url);
   const query = Object.fromEntries(searchParams.entries());
 
@@ -19,20 +26,38 @@ export async function GET(req: NextRequest) {
   if (!validation.success) {
     const detail =
       validation.error.issues.at(0)?.message ?? "Query parameters are invalid.";
+    logger.warn("Invalid query parameters for rounds list", {
+      ...requestContext,
+      query,
+    });
     return badRequest(detail);
   }
 
   try {
     const rounds = await listRecentRounds({ limit: validation.data.limit });
+    logger.info("Returning rounds", {
+      ...requestContext,
+      count: rounds.length,
+      limit: validation.data.limit,
+    });
     return NextResponse.json(rounds.map(toRoundResponse));
   } catch (error) {
     if (error instanceof ConflictError) {
+      logger.warn("Conflict while listing rounds", {
+        ...requestContext,
+        error: getErrorLogContext(error),
+      });
       return createProblemResponse({
         status: 409,
         title: "Conflict",
         detail: error.message,
       });
     }
+
+    logger.error("Failed to list rounds", {
+      ...requestContext,
+      error: getErrorLogContext(error),
+    });
 
     return createProblemResponse({
       status: 500,
@@ -47,8 +72,11 @@ export async function GET(req: NextRequest) {
  * Creates a new round.
  */
 export async function POST(req: NextRequest) {
+  const requestContext = getRequestLogContext(req);
+  logger.info("Received request to create round", requestContext);
   const userId = await resolveRequestUserId(req.headers);
   if (!userId) {
+    logger.warn("Unauthorized request to create round", requestContext);
     return createProblemResponse({
       status: 401,
       title: "Unauthorized",
@@ -60,7 +88,12 @@ export async function POST(req: NextRequest) {
     let body: unknown;
     try {
       body = await req.json();
-    } catch {
+    } catch (error) {
+      logger.warn("Malformed JSON in rounds create request", {
+        ...requestContext,
+        error: getErrorLogContext(error),
+        userId,
+      });
       return badRequest("Malformed JSON in request body.");
     }
 
@@ -70,6 +103,11 @@ export async function POST(req: NextRequest) {
       const detail =
         validatedData.error.issues.at(0)?.message ??
         "Request body validation failed.";
+      logger.warn("Validation failed for round creation", {
+        ...requestContext,
+        error: getErrorLogContext(validatedData.error),
+        userId,
+      });
       return badRequest(detail);
     }
 
@@ -81,9 +119,21 @@ export async function POST(req: NextRequest) {
       createdBy: userId,
     });
 
+    logger.info("Round created", {
+      ...requestContext,
+      roundId: newRound.id,
+      userId,
+      participantCount: participant_ids.length,
+    });
+
     return NextResponse.json(toRoundResponse(newRound), { status: 201 });
   } catch (error) {
     if (error instanceof NotFoundError) {
+      logger.warn("Round creation failed due to missing resource", {
+        ...requestContext,
+        error: getErrorLogContext(error),
+        userId,
+      });
       return createProblemResponse({
         status: 404,
         title: "Not Found",
@@ -92,12 +142,23 @@ export async function POST(req: NextRequest) {
     }
 
     if (error instanceof ConflictError) {
+      logger.warn("Conflict while creating round", {
+        ...requestContext,
+        error: getErrorLogContext(error),
+        userId,
+      });
       return createProblemResponse({
         status: 409,
         title: "Conflict",
         detail: error.message,
       });
     }
+
+    logger.error("Failed to create round", {
+      ...requestContext,
+      error: getErrorLogContext(error),
+      userId,
+    });
 
     return createProblemResponse({
       status: 500,
