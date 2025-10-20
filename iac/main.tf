@@ -176,14 +176,6 @@ resource "aws_lambda_permission" "allow_cloudfront" {
   function_url_auth_type = "AWS_IAM"
 }
 
-resource "aws_lambda_permission" "allow_cloudfront_invoke" {
-  statement_id  = "AllowCloudFrontInvokeFunctionURLExecution"
-  action        = "lambda:InvokeFunction"
-  function_name = module.fn.lambda_function_name
-  principal     = "cloudfront.amazonaws.com"
-  source_arn    = aws_cloudfront_distribution.cdn.arn
-}
-
 resource "aws_route53_record" "app_a" {
   zone_id = data.aws_route53_zone.zone.zone_id
   name    = var.app_domain
