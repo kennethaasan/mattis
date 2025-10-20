@@ -93,49 +93,84 @@ export function Leaderboard() {
     );
   } else {
     regularContent = (
-      <div className="overflow-x-auto">
-        <Table>
-          <TableHeader>
-            <TableRow>
-              <TableHead className="w-16">Plass</TableHead>
-              <TableHead>Spiller</TableHead>
-              <TableHead className="text-right">Tap %</TableHead>
-              <TableHead className="text-right">Tap</TableHead>
-              <TableHead className="text-right">Runder</TableHead>
-            </TableRow>
-          </TableHeader>
-          <TableBody>
-            {regular.map((entry) => (
-              <TableRow key={entry.playerId}>
-                <TableCell className="font-semibold">#{entry.rank}</TableCell>
-                <TableCell className="flex items-center gap-3">
-                  <div className="flex flex-col">
+      <div className="space-y-4">
+        <div className="md:hidden space-y-1">
+          {regular.map((entry) => (
+            <article
+              key={entry.playerId}
+              className="border-border/60 bg-card text-card-foreground rounded-xl border px-3 py-2 shadow-xs"
+            >
+              <div className="flex items-center justify-between gap-2">
+                <div className="flex items-baseline gap-2">
+                  <span className="text-muted-foreground text-[10px] font-semibold uppercase tracking-[0.2em]">
+                    #{entry.rank}
+                  </span>
+                  <p className="text-foreground text-sm font-semibold leading-snug">
+                    {entry.playerName}
+                  </p>
+                </div>
+                <Badge
+                  variant={entry.lossPercentage < 30 ? "success" : "outline"}
+                  className="min-w-[3.5rem] justify-center px-1.5 py-0 text-[10px] font-semibold"
+                >
+                  {entry.lossPercentage.toFixed(1)}%
+                </Badge>
+              </div>
+              <dl className="text-muted-foreground mt-1.5 flex items-center gap-2.5 text-[10px] leading-tight">
+                <div className="flex items-center gap-1.5">
+                  <dt className="text-[9px] font-semibold uppercase tracking-[0.16em]">
+                    Tap
+                  </dt>
+                  <dd className="text-foreground text-[13px] font-semibold leading-none">
+                    {entry.totalLosses}
+                  </dd>
+                </div>
+                <div className="flex items-center gap-1.5">
+                  <dt className="text-[9px] font-semibold uppercase tracking-[0.16em]">
+                    Runder
+                  </dt>
+                  <dd className="text-foreground text-[13px] font-semibold leading-none">
+                    {entry.roundsPlayed}
+                  </dd>
+                </div>
+              </dl>
+            </article>
+          ))}
+        </div>
+        <div className="hidden overflow-x-auto md:block">
+          <Table>
+            <TableHeader>
+              <TableRow>
+                <TableHead className="w-16">Plass</TableHead>
+                <TableHead>Spiller</TableHead>
+                <TableHead className="text-right">Tap %</TableHead>
+                <TableHead className="text-right">Tap</TableHead>
+                <TableHead className="text-right">Runder</TableHead>
+              </TableRow>
+            </TableHeader>
+            <TableBody>
+              {regular.map((entry) => (
+                <TableRow key={entry.playerId}>
+                  <TableCell className="font-semibold">#{entry.rank}</TableCell>
+                  <TableCell>
                     <span className="text-foreground font-medium">
                       {entry.playerName}
                     </span>
-                    <span className="text-muted-foreground text-xs">
-                      {entry.roundsPlayed} runder spilt
-                    </span>
-                  </div>
-                  <Badge
-                    variant={entry.lossPercentage < 30 ? "success" : "outline"}
-                  >
+                  </TableCell>
+                  <TableCell className="text-right font-semibold">
                     {entry.lossPercentage.toFixed(1)}%
-                  </Badge>
-                </TableCell>
-                <TableCell className="text-right font-semibold">
-                  {entry.lossPercentage.toFixed(1)}%
-                </TableCell>
-                <TableCell className="text-muted-foreground text-right">
-                  {entry.totalLosses}
-                </TableCell>
-                <TableCell className="text-muted-foreground text-right">
-                  {entry.roundsPlayed}
-                </TableCell>
-              </TableRow>
-            ))}
-          </TableBody>
-        </Table>
+                  </TableCell>
+                  <TableCell className="text-muted-foreground text-right">
+                    {entry.totalLosses}
+                  </TableCell>
+                  <TableCell className="text-muted-foreground text-right">
+                    {entry.roundsPlayed}
+                  </TableCell>
+                </TableRow>
+              ))}
+            </TableBody>
+          </Table>
+        </div>
       </div>
     );
   }
@@ -159,32 +194,64 @@ export function Leaderboard() {
     );
   } else {
     fettmattisContent = (
-      <div className="overflow-x-auto">
-        <Table>
-          <TableHeader>
-            <TableRow>
-              <TableHead className="w-16">Plass</TableHead>
-              <TableHead>Spiller</TableHead>
-              <TableHead className="text-right">FettMattis</TableHead>
-            </TableRow>
-          </TableHeader>
-          <TableBody>
-            {fettmattis.map((entry) => (
-              <TableRow key={entry.playerId}>
-                <TableCell className="font-semibold">#{entry.rank}</TableCell>
-                <TableCell className="flex items-center gap-3">
-                  <span className="text-foreground font-medium">
-                    {entry.playerName}
+      <div className="space-y-4">
+        <div className="md:hidden space-y-1">
+          {fettmattis.map((entry) => (
+            <article
+              key={entry.playerId}
+              className="border-border/60 bg-card text-card-foreground rounded-xl border px-3 py-2 shadow-xs"
+            >
+              <div className="flex items-center justify-between gap-2">
+                <div className="flex items-baseline gap-2">
+                  <span className="text-muted-foreground text-[10px] font-semibold uppercase tracking-[0.2em]">
+                    #{entry.rank}
                   </span>
-                  <Badge variant="secondary">Fettmattis-helt</Badge>
-                </TableCell>
-                <TableCell className="text-muted-foreground text-right">
+                  <p className="text-foreground text-sm font-semibold leading-snug">
+                    {entry.playerName}
+                  </p>
+                </div>
+                <Badge
+                  variant="secondary"
+                  className="min-w-[5.5rem] justify-center px-1.5 py-0 text-[10px] font-semibold"
+                >
+                  Fettmattis-helt
+                </Badge>
+              </div>
+              <div className="text-muted-foreground mt-1.5 flex items-center gap-1.5 text-[10px] leading-tight">
+                <span className="text-foreground text-[13px] font-semibold leading-none">
                   {entry.fettmattisCount}
-                </TableCell>
+                </span>
+                tildelinger
+              </div>
+            </article>
+          ))}
+        </div>
+        <div className="hidden overflow-x-auto md:block">
+          <Table>
+            <TableHeader>
+              <TableRow>
+                <TableHead className="w-16">Plass</TableHead>
+                <TableHead>Spiller</TableHead>
+                <TableHead className="text-right">FettMattis</TableHead>
               </TableRow>
-            ))}
-          </TableBody>
-        </Table>
+            </TableHeader>
+            <TableBody>
+              {fettmattis.map((entry) => (
+                <TableRow key={entry.playerId}>
+                  <TableCell className="font-semibold">#{entry.rank}</TableCell>
+                  <TableCell>
+                    <span className="text-foreground font-medium">
+                      {entry.playerName}
+                    </span>
+                  </TableCell>
+                  <TableCell className="text-muted-foreground text-right">
+                    {entry.fettmattisCount}
+                  </TableCell>
+                </TableRow>
+              ))}
+            </TableBody>
+          </Table>
+        </div>
       </div>
     );
   }
