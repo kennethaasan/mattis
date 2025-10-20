@@ -3,6 +3,8 @@ import type { QueryKey } from "@tanstack/react-query";
 import { fetchJson, fetchWithProblemDetails } from "@/lib/api/fetch-json";
 import {
   type FettMattis,
+  type FettMattisCreate,
+  FettMattisCreateSchema,
   FettMattisListResponseSchema,
 } from "@/lib/api/schemas";
 
@@ -36,6 +38,23 @@ export async function fetchFettMattis(
 }
 
 export type { FettMattis } from "@/lib/api/schemas";
+
+export async function createFettMattis(payload: FettMattisCreate): Promise<void> {
+  const parsedPayload = FettMattisCreateSchema.parse(payload);
+
+  await fetchWithProblemDetails({
+    input: "/api/fettmattis",
+    init: {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+      },
+      credentials: "include",
+      body: JSON.stringify(parsedPayload),
+    },
+    errorMessage: "Kunne ikke tildele en Fettmattis.",
+  });
+}
 
 export async function revokeFettMattis(fettMattisId: string): Promise<void> {
   await fetchWithProblemDetails({

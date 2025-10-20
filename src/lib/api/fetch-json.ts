@@ -1,5 +1,6 @@
 import type { ZodTypeAny, z } from "zod";
 
+import { withAmzContentSha256Header } from "@/lib/api/amz-content-sha256";
 import { ProblemDetailsSchema } from "@/lib/api/schemas";
 
 interface FetchJsonOptions<TSchema extends ZodTypeAny> {
@@ -13,10 +14,12 @@ interface FetchJsonOptions<TSchema extends ZodTypeAny> {
 export async function fetchJson<TSchema extends ZodTypeAny>(
   options: FetchJsonOptions<TSchema>,
 ): Promise<z.infer<TSchema>> {
-  const response = await fetch(options.input, {
+  const init = await withAmzContentSha256Header({
     cache: "no-store",
     ...options.init,
   });
+
+  const response = await fetch(options.input, init);
 
   if (!response.ok) {
     throw new Error(options.requestErrorMessage);
@@ -36,10 +39,12 @@ export async function fetchWithProblemDetails({
   init,
   errorMessage,
 }: FetchWithProblemDetailsOptions): Promise<Response> {
-  const response = await fetch(input, {
+  const signedInit = await withAmzContentSha256Header({
     cache: "no-store",
     ...init,
   });
+
+  const response = await fetch(input, signedInit);
 
   if (!response.ok) {
     let detail: string | undefined;

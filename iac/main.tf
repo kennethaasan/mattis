@@ -70,7 +70,6 @@ module "fn" {
       AWS_LAMBDA_EXEC_WRAPPER        = "/opt/bootstrap"
       AWS_LWA_ASYNC_INIT             = "true"
       AWS_LWA_ENABLE_COMPRESSION     = "true"
-      AWS_LWA_AUTHORIZATION_SOURCE   = "X-Amzn-Original-Authorization"
       NODE_ENV                       = "production"
       PORT                           = "3000"
       DATABASE_URL                   = local.database_url
@@ -124,8 +123,8 @@ module "cdn" {
 
   origin = {
     lambda = {
-      domain_name          = local.lambda_origin_domain
-      origin_id            = "lambda-url"
+      domain_name           = local.lambda_origin_domain
+      origin_id             = "lambda-url"
       origin_access_control = "lambda"
       custom_origin_config = {
         http_port              = 443

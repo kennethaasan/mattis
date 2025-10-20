@@ -23,5 +23,9 @@ export const auth = betterAuth({
     cookieCache: {
       enabled: !config.IS_TEST,
     },
+    // Keep sessions active for as long as possible so users are not logged out.
+    // 365 days aligns with the maximum duration recommended in the Better Auth docs.
+    expiresIn: 60 * 60 * 24 * 365,
+    updateAge: 60 * 60 * 24,
   },
 });

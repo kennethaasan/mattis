@@ -24,23 +24,18 @@ export async function getRegularLeaderboard(
   scope: LeaderboardScope,
 ): Promise<RegularLeaderboard> {
   const query = createQuery(scope);
-  const response = await fetch(`/api/leaderboard/regular?${query.toString()}`, {
-    credentials: "include",
-    cache: "no-store",
+  const payload = await fetchJson({
+    input: `/api/leaderboard/regular?${query.toString()}`,
+    init: {
+      credentials: "include",
+    },
+    schema: RegularLeaderboardResponseSchema,
+    requestErrorMessage: "Failed to load regular leaderboard.",
+    parseErrorMessage:
+      "Received an invalid response when loading the leaderboard.",
   });
 
-  if (!response.ok) {
-    throw new Error("Failed to load regular leaderboard.");
-  }
-
-  const payload = (await response.json()) as unknown;
-  const parsed = RegularLeaderboardResponseSchema.safeParse(payload);
-
-  if (!parsed.success) {
-    throw new Error("Received an invalid response when loading the leaderboard.");
-  }
-
-  return parsed.data.map((entry, index) => ({
+  return payload.map((entry, index) => ({
     playerId: entry.player.id,
     playerName: entry.player.display_name,
     roundsPlayed: entry.participation_count,
@@ -54,26 +49,18 @@ export async function getFettmattisLeaderboard(
   scope: LeaderboardScope,
 ): Promise<FettmattisLeaderboard> {
   const query = createQuery(scope);
-  const response = await fetch(
-    `/api/leaderboard/fettmattis?${query.toString()}`,
-    {
+  const payload = await fetchJson({
+    input: `/api/leaderboard/fettmattis?${query.toString()}`,
+    init: {
       credentials: "include",
-      cache: "no-store",
     },
-  );
+    schema: FettmattisLeaderboardResponseSchema,
+    requestErrorMessage: "Failed to load Fettmattis leaderboard.",
+    parseErrorMessage:
+      "Received an invalid response when loading the leaderboard.",
+  });
 
-  if (!response.ok) {
-    throw new Error("Failed to load Fettmattis leaderboard.");
-  }
-
-  const payload = (await response.json()) as unknown;
-  const parsed = FettmattisLeaderboardResponseSchema.safeParse(payload);
-
-  if (!parsed.success) {
-    throw new Error("Received an invalid response when loading the leaderboard.");
-  }
-
-  return parsed.data.map((entry, index) => ({
+  return payload.map((entry, index) => ({
     playerId: entry.player.id,
     playerName: entry.player.display_name,
     fettmattisCount: entry.fettmattis_count,
