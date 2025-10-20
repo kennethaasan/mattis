@@ -70,7 +70,6 @@ module "fn" {
       AWS_LAMBDA_EXEC_WRAPPER        = "/opt/bootstrap"
       AWS_LWA_ASYNC_INIT             = "true"
       AWS_LWA_ENABLE_COMPRESSION     = "true"
-      AWS_LWA_AUTHORIZATION_SOURCE   = "X-Amzn-Original-Authorization"
       NODE_ENV                       = "production"
       PORT                           = "3000"
       DATABASE_URL                   = local.database_url
