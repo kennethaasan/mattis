@@ -19,7 +19,12 @@ const DEFAULT_PARTICIPANTS: Round["participants"] = [
 
 function createRound(overrides: Partial<Round> = {}): Round {
   const participants = overrides.participants ?? DEFAULT_PARTICIPANTS;
-  const loser = overrides.loser ?? participants[0] ?? DEFAULT_PARTICIPANTS[0]!;
+  const fallbackLoser = participants[0] ?? DEFAULT_PARTICIPANTS[0];
+  if (!fallbackLoser) {
+    throw new Error("Unable to create round without participants.");
+  }
+
+  const loser = overrides.loser ?? fallbackLoser;
 
   return {
     id: "round-1",
@@ -39,7 +44,6 @@ function createFettMattis(overrides: Partial<FettMattis> = {}): FettMattis {
     id: "fettmattis-1",
     created_at: new Date().toISOString(),
     player,
-    round_id: "round-1",
     ...overrides,
   } satisfies FettMattis;
 }
@@ -112,7 +116,6 @@ describe("Activity tables", () => {
   test("T193: FettMattis table exposes entry metadata when expanded", async () => {
     const entry = createFettMattis({
       created_at: new Date(Date.now() - 90 * 60 * 1000).toISOString(),
-      round_id: "round-42",
     });
 
     render(<FettmattisTable fettMattis={[entry]} />);
@@ -128,7 +131,7 @@ describe("Activity tables", () => {
     );
     expect(detailSection).toBeTruthy();
     expect(detailSection?.textContent).toContain("Aktiv");
-    expect(detailSection?.textContent).toContain("round-42");
+    expect(detailSection?.textContent).toContain("Endringsvindu");
   });
 
   test("T193: FettMattis table restricts deletion after 24 hours", () => {

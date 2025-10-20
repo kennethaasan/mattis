@@ -96,6 +96,11 @@ export function FettmattisTable({
               const deleting = deletingIds?.has(entry.id) ?? false;
               const canDelete = Boolean(onDelete) &&
                 Date.now() - createdAt.getTime() <= EDIT_WINDOW_MS;
+              const editWindowDeadline = new Date(
+                createdAt.getTime() + EDIT_WINDOW_MS,
+              );
+              const editWindowExpired = Date.now() >
+                editWindowDeadline.getTime();
 
               return (
                 <Fragment key={entry.id}>
@@ -159,12 +164,14 @@ export function FettmattisTable({
                             </div>
                             <div>
                               <p className="text-muted-foreground text-xs uppercase tracking-wide">
-                                Tilknyttet runde
+                                Endringsvindu
                               </p>
                               <p className="font-medium">
-                                {entry.round_id
-                                  ? `Runde ${entry.round_id.slice(0, 8)}…`
-                                  : "Ingen tilknyttet runde"}
+                                {editWindowExpired
+                                  ? "Låst for endringer"
+                                  : `Kan endres til ${DETAIL_DATETIME_FORMATTER.format(
+                                      editWindowDeadline,
+                                    )}`}
                               </p>
                             </div>
                           </div>

@@ -1,6 +1,6 @@
 import type { QueryKey } from "@tanstack/react-query";
 
-import { fetchJson } from "@/lib/api/fetch-json";
+import { fetchJson, fetchWithProblemDetails } from "@/lib/api/fetch-json";
 import {
   LatestRoundResponseSchema,
   type Round,
@@ -49,6 +49,17 @@ export async function fetchLatestRound(): Promise<Round | null> {
       "We couldn't load the most recent round right now. Please try again.",
     parseErrorMessage:
       "Received an invalid response when loading latest round.",
+  });
+}
+
+export async function deleteRound(roundId: string): Promise<void> {
+  await fetchWithProblemDetails({
+    input: `/api/rounds/${roundId}`,
+    init: {
+      method: "DELETE",
+      credentials: "include",
+    },
+    errorMessage: "Kunne ikke slette runden.",
   });
 }
 

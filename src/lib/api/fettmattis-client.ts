@@ -1,6 +1,6 @@
 import type { QueryKey } from "@tanstack/react-query";
 
-import { fetchJson } from "@/lib/api/fetch-json";
+import { fetchJson, fetchWithProblemDetails } from "@/lib/api/fetch-json";
 import {
   type FettMattis,
   FettMattisListResponseSchema,
@@ -36,3 +36,14 @@ export async function fetchFettMattis(
 }
 
 export type { FettMattis } from "@/lib/api/schemas";
+
+export async function revokeFettMattis(fettMattisId: string): Promise<void> {
+  await fetchWithProblemDetails({
+    input: `/api/fettmattis/${fettMattisId}`,
+    init: {
+      method: "DELETE",
+      credentials: "include",
+    },
+    errorMessage: "Kunne ikke slette Fettmattis.",
+  });
+}

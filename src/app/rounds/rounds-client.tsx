@@ -22,6 +22,7 @@ import {
   createFettMattisListQueryKey,
   type FettMattis,
   fetchFettMattis,
+  revokeFettMattis,
 } from "@/lib/api/fettmattis-client";
 import {
   fetchPlayers,
@@ -30,6 +31,7 @@ import {
 } from "@/lib/api/players-client";
 import {
   createRoundsListQueryKey,
+  deleteRound,
   fetchLatestRound,
   fetchRounds,
   LATEST_ROUND_QUERY_KEY,
@@ -223,24 +225,8 @@ export default function RoundsClientPage() {
     await fettMattisMutation.mutateAsync(data);
   };
 
-  const deleteRoundMutation = useMutation<undefined, Error, string>({
-    mutationFn: async (roundId) => {
-      const response = await fetch(`/api/rounds/${roundId}`, {
-        method: "DELETE",
-        credentials: "include",
-      });
-
-      if (!response.ok) {
-        let detail: string | undefined;
-        try {
-          const body: unknown = await response.json();
-          detail = resolveProblemDetail(body);
-        } catch {
-          detail = undefined;
-        }
-        throw new Error(detail ?? "Kunne ikke slette runden.");
-      }
-    },
+  const deleteRoundMutation = useMutation<void, Error, string>({
+    mutationFn: async (roundId) => deleteRound(roundId),
     onSuccess: () => {
       setStatus("Runde slettet. Tabellene er oppdatert!");
       setError(null);
@@ -256,25 +242,8 @@ export default function RoundsClientPage() {
     },
   });
 
-  const revokeFettMattisMutation = useMutation<undefined, Error, string>({
-    mutationFn: async (fettMattisId) => {
-      const response = await fetch(`/api/fettmattis/${fettMattisId}`, {
-        method: "DELETE",
-        credentials: "include",
-      });
-
-      if (!response.ok) {
-        let detail: string | undefined;
-        try {
-          const body: unknown = await response.json();
-          detail = resolveProblemDetail(body);
-        } catch {
-          detail = undefined;
-        }
-
-        throw new Error(detail ?? "Kunne ikke slette Fettmattis.");
-      }
-    },
+  const revokeFettMattisMutation = useMutation<void, Error, string>({
+    mutationFn: async (fettMattisId) => revokeFettMattis(fettMattisId),
     onSuccess: () => {
       setStatus("Fettmattis fjernet. Oversikten er oppdatert.");
       setError(null);
@@ -431,7 +400,7 @@ export default function RoundsClientPage() {
         <Card>
           <CardHeader className="flex flex-col gap-2 lg:flex-row lg:items-center lg:justify-between">
             <div className="space-y-1">
-              <CardTitle>FettMattis-øyeblikk</CardTitle>
+              <CardTitle>Fettmattis-øyeblikk</CardTitle>
               <CardDescription>
                 Feiringene som fortsatt kan justeres det siste døgnet.
               </CardDescription>

@@ -313,7 +313,6 @@ test("T193: rounds dashboard enforces 24-hour deletion window", async ({
       display_name: "Ada",
       active: true,
     },
-    round_id: recentRound.id,
   } as const;
   const archivedFettMattis = {
     id: "00000000-0000-7000-0000-000000000702",
@@ -323,7 +322,6 @@ test("T193: rounds dashboard enforces 24-hour deletion window", async ({
       display_name: "Erik",
       active: false,
     },
-    round_id: null,
   } as const;
 
   const rounds = [structuredClone(recentRound), structuredClone(archivedRound)];
@@ -443,6 +441,7 @@ test("T193: rounds dashboard enforces 24-hour deletion window", async ({
   await expect(recentFettMattisRow.getByRole("button", { name: "Slett" })).toBeVisible();
   await recentFettMattisRow.getByRole("button", { name: "Detaljer" }).click();
   await expect(page.getByText("Spillerstatus")).toBeVisible();
+  await expect(page.getByText("Endringsvindu")).toBeVisible();
 
   const archivedFettMattisRow = page.getByRole("row", { name: /Erik/ });
   await expect(

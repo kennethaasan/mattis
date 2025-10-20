@@ -46,7 +46,7 @@ export interface FettMattisRecord {
   createdAt: Date;
   createdBy: string;
   revokedAt: Date | null;
-  roundId: string | null;
+  roundId?: string | null;
 }
 
 export interface CreatePlayerInput {
@@ -463,18 +463,17 @@ export async function listRecentFettMattis(
     .orderBy(desc(fettmattis.createdAt))
     .limit(listLimit);
 
-  return rows.map((row) => ({
-    id: row.id,
-    createdAt: row.createdAt,
-    createdBy: row.createdBy,
-    revokedAt: row.revokedAt,
-    roundId: null,
-    player: mapParticipant({
-      id: row.playerId,
-      displayName: row.playerDisplayName,
-      active: row.playerActive,
-    }),
-  }));
+    return rows.map((row) => ({
+      id: row.id,
+      createdAt: row.createdAt,
+      createdBy: row.createdBy,
+      revokedAt: row.revokedAt,
+      player: mapParticipant({
+        id: row.playerId,
+        displayName: row.playerDisplayName,
+        active: row.playerActive,
+      }),
+    }));
 }
 
 export async function updateRound(
@@ -599,7 +598,6 @@ export async function createFettMattis(
       createdAt: row.createdAt,
       createdBy: row.createdBy,
       revokedAt: row.revokedAt,
-      roundId: null,
     };
   });
 }
