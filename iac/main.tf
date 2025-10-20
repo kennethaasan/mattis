@@ -75,6 +75,9 @@ module "fn" {
       PORT                         = "3000"
       DATABASE_URL                 = local.database_url
       BETTER_AUTH_SECRET           = var.better_auth_secret
+      POWERTOOLS_SERVICE_NAME      = lookup(var.lambda_environment, "POWERTOOLS_SERVICE_NAME", var.app_name)
+      POWERTOOLS_LOG_LEVEL         = lookup(var.lambda_environment, "POWERTOOLS_LOG_LEVEL", "INFO")
+      POWERTOOLS_TRACING_SAMPLE_RATE = lookup(var.lambda_environment, "POWERTOOLS_TRACING_SAMPLE_RATE", "0")
     }
   )
 
