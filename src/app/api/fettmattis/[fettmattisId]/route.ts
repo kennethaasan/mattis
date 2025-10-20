@@ -1,7 +1,7 @@
 import type { NextRequest } from "next/server";
 import { badRequest, createProblemResponse } from "@/lib/api/problem-details";
 import { uuidSchema } from "@/lib/api/schemas";
-import { resolveRequestUserId } from "@/lib/auth/request-user";
+import { requireAuthenticatedRequest } from "@/lib/auth/authorize";
 import {
   ForbiddenError,
   NotFoundError,
@@ -12,8 +12,8 @@ export async function DELETE(
   req: NextRequest,
   context: { params: Promise<{ fettmattisId: string }> }
 ) {
-  const userId = await resolveRequestUserId(req.headers);
-  if (!userId) {
+  const auth = await requireAuthenticatedRequest(req.headers);
+  if (!auth) {
     return createProblemResponse({
       status: 401,
       title: "Unauthorized",

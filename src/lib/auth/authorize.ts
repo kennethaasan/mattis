@@ -2,6 +2,7 @@ import { APIError } from "better-auth";
 import { NextResponse } from "next/server";
 
 import { auth } from "@/lib/auth/auth";
+import { logger } from "../observability/powertools";
 
 type ResolvedSession = NonNullable<
   Awaited<ReturnType<typeof getSessionFromCookies>>
@@ -63,10 +64,15 @@ export async function authenticateRequest(
 
 export async function requireAuthenticatedRequest(
   headers: Headers
-): Promise<AuthenticatedUser> {
+): Promise<AuthenticatedUser | undefined> {
   const result = await authenticateRequest(headers);
+
   if (!result.ok) {
-    throw result.response;
+    logger.warn("Unauthorized request", {
+      response: result.response,
+    });
+    return undefined;
   }
+
   return result.value;
 }

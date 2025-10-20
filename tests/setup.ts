@@ -8,6 +8,31 @@ vi.stubEnv("BASIC_AUTH_PASSWORD", "admin");
 vi.stubEnv("BASIC_AUTH_USER_ID", "00000000-0000-7000-8000-000000000000");
 vi.stubEnv("BETTER_AUTH_SECRET", "test-secret-test-secret-test-secret-123");
 
+const mockAuthenticatedUser = {
+  user: {
+    id: "00000000-0000-7000-8000-000000000000",
+    email: "admin@example.com",
+    name: "Admin User",
+  },
+  session: {
+    id: "mock-session-id",
+    expiresAt: new Date(Date.now() + 60 * 60 * 1000).toISOString(),
+  },
+};
+
+vi.mock("@/lib/auth/authorize", async () => {
+  const actual = await vi.importActual<typeof import("@/lib/auth/authorize")>(
+    "@/lib/auth/authorize"
+  );
+
+  return {
+    ...actual,
+    requireAuthenticatedRequest: vi
+      .fn()
+      .mockResolvedValue(mockAuthenticatedUser),
+  };
+});
+
 import { PGlite } from "@electric-sql/pglite";
 import { drizzle } from "drizzle-orm/pglite";
 import * as schema from "@/lib/db/schema";
