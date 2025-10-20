@@ -9,6 +9,16 @@ export const env = createEnv({
       .string()
       .min(32, "BETTER_AUTH_SECRET must be at least 32 characters long."),
     NODE_ENV: z.string().optional(),
+    POWERTOOLS_LOG_LEVEL: z
+      .enum(["TRACE", "DEBUG", "INFO", "WARN", "ERROR", "CRITICAL"])
+      .default("INFO"),
+    POWERTOOLS_TRACING_SAMPLE_RATE: z
+      .coerce
+      .number()
+      .min(0)
+      .max(1)
+      .default(0),
+    POWERTOOLS_SERVICE_NAME: z.string().min(1).default("mattis"),
   },
   experimental__runtimeEnv: {},
   emptyStringAsUndefined: true,
@@ -21,4 +31,9 @@ const IS_TEST = env.NODE_ENV === "test";
 export const config = {
   IS_DEVELOPMENT,
   IS_TEST,
+  POWERTOOLS: {
+    LOG_LEVEL: env.POWERTOOLS_LOG_LEVEL,
+    TRACING_SAMPLE_RATE: env.POWERTOOLS_TRACING_SAMPLE_RATE,
+    SERVICE_NAME: env.POWERTOOLS_SERVICE_NAME,
+  },
 };

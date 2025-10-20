@@ -103,7 +103,10 @@ variable "lambda_environment" {
   description = "Base environment variables for the Lambda function"
   type        = map(string)
   default = {
-    NODE_ENV = "production"
+    NODE_ENV                       = "production"
+    POWERTOOLS_LOG_LEVEL           = "INFO"
+    POWERTOOLS_TRACING_SAMPLE_RATE = "0"
+    POWERTOOLS_SERVICE_NAME        = "mattis"
   }
 }
 
