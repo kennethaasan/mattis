@@ -107,6 +107,44 @@ export default async function Home() {
             descriptionClassName="max-w-3xl"
           />
           <Leaderboard />
+          <div className="grid gap-6 lg:grid-cols-2">
+            <Card className="h-full">
+              <CardHeader className="flex flex-col gap-2 lg:flex-row lg:items-center lg:justify-between">
+                <div className="space-y-1">
+                  <CardTitle>De siste rundene</CardTitle>
+                  <CardDescription>
+                    Et lite utdrag av sesongens ferskeste registreringer.
+                  </CardDescription>
+                </div>
+                <Button variant="outline" size="sm" asChild>
+                  <Link href="/rounds">Se alle runder</Link>
+                </Button>
+              </CardHeader>
+              <CardContent>
+                <RoundsTable
+                  rounds={roundsForDisplay}
+                  emptyMessage="Ingen runder er registrert ennå."
+                />
+              </CardContent>
+            </Card>
+
+            <Card className="h-full">
+              <CardHeader className="flex flex-col gap-2 lg:flex-row lg:items-center lg:justify-between">
+                <div className="space-y-1">
+                  <CardTitle>Ferske FettMattis</CardTitle>
+                  <CardDescription>
+                    Hedringene som ble delt ut nylig.
+                  </CardDescription>
+                </div>
+                <Button variant="outline" size="sm" asChild>
+                  <Link href="/rounds">Se tildelinger</Link>
+                </Button>
+              </CardHeader>
+              <CardContent>
+                <FettmattisTable fettMattis={fettMattisForDisplay} />
+              </CardContent>
+            </Card>
+          </div>
         </div>
       </section>
 
@@ -141,47 +179,6 @@ export default async function Home() {
           </div>
         </div>
         <div className="from-primary/15 absolute inset-x-0 top-1/2 -z-10 h-[480px] bg-linear-to-b via-transparent to-transparent blur-3xl" />
-      </section>
-
-      <section className="border-border/60 bg-muted/30 py-16">
-        <div className="container grid gap-6 lg:grid-cols-2">
-          <Card className="h-full">
-            <CardHeader className="flex flex-col gap-2 lg:flex-row lg:items-center lg:justify-between">
-              <div className="space-y-1">
-                <CardTitle>De siste rundene</CardTitle>
-                <CardDescription>
-                  Et lite utdrag av sesongens ferskeste registreringer.
-                </CardDescription>
-              </div>
-              <Button variant="outline" size="sm" asChild>
-                <Link href="/rounds">Se alle runder</Link>
-              </Button>
-            </CardHeader>
-            <CardContent>
-              <RoundsTable
-                rounds={roundsForDisplay}
-                emptyMessage="Ingen runder er registrert ennå."
-              />
-            </CardContent>
-          </Card>
-
-          <Card className="h-full">
-            <CardHeader className="flex flex-col gap-2 lg:flex-row lg:items-center lg:justify-between">
-              <div className="space-y-1">
-                <CardTitle>Ferske FettMattis</CardTitle>
-                <CardDescription>
-                  Hedringene som ble delt ut nylig.
-                </CardDescription>
-              </div>
-              <Button variant="outline" size="sm" asChild>
-                <Link href="/rounds">Se tildelinger</Link>
-              </Button>
-            </CardHeader>
-            <CardContent>
-              <FettmattisTable fettMattis={fettMattisForDisplay} />
-            </CardContent>
-          </Card>
-        </div>
       </section>
 
       <section className="py-16">

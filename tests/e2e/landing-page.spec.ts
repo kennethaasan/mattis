@@ -23,4 +23,34 @@ test.describe("Landing Page", () => {
       await expect(nav.getByRole("link", { name: "Runder" })).toBeVisible();
     });
   });
+
+  test("T193: recent activity tables appear below the leaderboard", async ({
+    page,
+  }) => {
+    const leaderboardHeading = page
+      .getByRole("heading", { name: "Vanlig tabell", level: 3 })
+      .first();
+    const roundsHeading = page.getByRole("heading", {
+      name: "De siste rundene",
+      level: 3,
+    });
+    const fettMattisHeading = page.getByRole("heading", {
+      name: "Ferske FettMattis",
+      level: 3,
+    });
+
+    await expect(roundsHeading).toBeVisible();
+    await expect(fettMattisHeading).toBeVisible();
+
+    const leaderboardBox = await leaderboardHeading.boundingBox();
+    const roundsBox = await roundsHeading.boundingBox();
+    const fettMattisBox = await fettMattisHeading.boundingBox();
+
+    if (!leaderboardBox || !roundsBox || !fettMattisBox) {
+      throw new Error("Unable to determine layout for leaderboard or activity tables.");
+    }
+
+    expect(roundsBox.y).toBeGreaterThan(leaderboardBox.y);
+    expect(fettMattisBox.y).toBeGreaterThan(leaderboardBox.y);
+  });
 });

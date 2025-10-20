@@ -257,3 +257,203 @@ test("T037: leaderboard view surfaces regular and FettMattis standings", async (
     fettMattisTable.getByRole("row", { name: /Nova/ }),
   ).toBeVisible();
 });
+
+test("T193: rounds dashboard enforces 24-hour deletion window", async ({
+  page,
+}) => {
+  const now = Date.now();
+  const recentRound = {
+    id: "00000000-0000-7000-0000-000000000601",
+    created_at: new Date(now - 2 * 60 * 60 * 1000).toISOString(),
+    participants: [
+      {
+        id: "00000000-0000-7000-0000-000000000611",
+        display_name: "Linus",
+        active: true,
+      },
+      {
+        id: "00000000-0000-7000-0000-000000000612",
+        display_name: "Maren",
+        active: true,
+      },
+    ],
+    loser: {
+      id: "00000000-0000-7000-0000-000000000611",
+      display_name: "Linus",
+      active: true,
+    },
+  } as const;
+  const archivedRound = {
+    id: "00000000-0000-7000-0000-000000000602",
+    created_at: new Date(now - 4 * 24 * 60 * 60 * 1000).toISOString(),
+    participants: [
+      {
+        id: "00000000-0000-7000-0000-000000000613",
+        display_name: "Morgan",
+        active: true,
+      },
+      {
+        id: "00000000-0000-7000-0000-000000000614",
+        display_name: "Iris",
+        active: true,
+      },
+    ],
+    loser: {
+      id: "00000000-0000-7000-0000-000000000613",
+      display_name: "Morgan",
+      active: true,
+    },
+  } as const;
+
+  const recentFettMattis = {
+    id: "00000000-0000-7000-0000-000000000701",
+    created_at: new Date(now - 60 * 60 * 1000).toISOString(),
+    player: {
+      id: "00000000-0000-7000-0000-000000000711",
+      display_name: "Ada",
+      active: true,
+    },
+    round_id: recentRound.id,
+  } as const;
+  const archivedFettMattis = {
+    id: "00000000-0000-7000-0000-000000000702",
+    created_at: new Date(now - 5 * 24 * 60 * 60 * 1000).toISOString(),
+    player: {
+      id: "00000000-0000-7000-0000-000000000712",
+      display_name: "Erik",
+      active: false,
+    },
+    round_id: null,
+  } as const;
+
+  const rounds = [structuredClone(recentRound), structuredClone(archivedRound)];
+  const fettMattisEntries = [
+    structuredClone(recentFettMattis),
+    structuredClone(archivedFettMattis),
+  ];
+
+  let roundDeleteCalled = false;
+  let fettMattisDeleteCalled = false;
+
+  await page.route(/\/api\/players$/, async (route, request) => {
+    if (request.method() !== "GET") {
+      await route.fallback();
+      return;
+    }
+
+    await route.fulfill({
+      status: 200,
+      contentType: "application/json",
+      body: JSON.stringify([
+        { id: "00000000-0000-7000-0000-000000000611", display_name: "Linus", active: true },
+        { id: "00000000-0000-7000-0000-000000000612", display_name: "Maren", active: true },
+        { id: "00000000-0000-7000-0000-000000000613", display_name: "Morgan", active: true },
+        { id: "00000000-0000-7000-0000-000000000614", display_name: "Iris", active: true },
+        { id: "00000000-0000-7000-0000-000000000711", display_name: "Ada", active: true },
+        { id: "00000000-0000-7000-0000-000000000712", display_name: "Erik", active: false },
+      ]),
+    });
+  });
+
+  await page.route("**/api/rounds/latest", async (route) => {
+    await route.fulfill({
+      status: 200,
+      contentType: "application/json",
+      body: JSON.stringify(recentRound),
+    });
+  });
+
+  await page.route(/\/api\/rounds(\?.*)?$/, async (route, request) => {
+    if (request.method() !== "GET") {
+      await route.fallback();
+      return;
+    }
+
+    await route.fulfill({
+      status: 200,
+      contentType: "application/json",
+      body: JSON.stringify(rounds),
+    });
+  });
+
+  await page.route(
+    new RegExp(`/api/rounds/${recentRound.id.replaceAll("-", "\\-")}$`),
+    async (route, request) => {
+      expect(request.method()).toBe("DELETE");
+      roundDeleteCalled = true;
+      const index = rounds.findIndex((round) => round.id === recentRound.id);
+      if (index >= 0) {
+        rounds.splice(index, 1);
+      }
+
+      await route.fulfill({ status: 204, body: "" });
+    },
+  );
+
+  await page.route(/\/api\/fettmattis(\?.*)?$/, async (route, request) => {
+    if (request.method() !== "GET") {
+      await route.fallback();
+      return;
+    }
+
+    await route.fulfill({
+      status: 200,
+      contentType: "application/json",
+      body: JSON.stringify(fettMattisEntries),
+    });
+  });
+
+  await page.route(
+    new RegExp(`/api/fettmattis/${recentFettMattis.id.replaceAll("-", "\\-")}$`),
+    async (route, request) => {
+      expect(request.method()).toBe("DELETE");
+      fettMattisDeleteCalled = true;
+      const index = fettMattisEntries.findIndex(
+        (entry) => entry.id === recentFettMattis.id,
+      );
+      if (index >= 0) {
+        fettMattisEntries.splice(index, 1);
+      }
+
+      await route.fulfill({ status: 204, body: "" });
+    },
+  );
+
+  await page.goto("/rounds", { waitUntil: "networkidle" });
+
+  const recentRoundRow = page.getByRole("row", { name: /Linus/ });
+  await expect(recentRoundRow).toBeVisible();
+  await expect(recentRoundRow.getByRole("button", { name: "Slett" })).toBeVisible();
+
+  await recentRoundRow.getByRole("button", { name: "Detaljer" }).click();
+  await expect(page.getByText("Taper", { exact: false })).toBeVisible();
+
+  const archivedRoundRow = page.getByRole("row", { name: /Morgan/ });
+  await expect(archivedRoundRow.getByRole("button", { name: "Slett" })).toHaveCount(0);
+
+  await recentRoundRow.getByRole("button", { name: "Slett" }).click();
+  await expect(
+    page.getByText("Runde slettet. Tabellene er oppdatert!"),
+  ).toBeVisible();
+  await expect(page.getByRole("row", { name: /Linus/ })).toHaveCount(0);
+
+  expect(roundDeleteCalled).toBe(true);
+
+  const recentFettMattisRow = page.getByRole("row", { name: /Ada/ });
+  await expect(recentFettMattisRow.getByRole("button", { name: "Slett" })).toBeVisible();
+  await recentFettMattisRow.getByRole("button", { name: "Detaljer" }).click();
+  await expect(page.getByText("Spillerstatus")).toBeVisible();
+
+  const archivedFettMattisRow = page.getByRole("row", { name: /Erik/ });
+  await expect(
+    archivedFettMattisRow.getByRole("button", { name: "Slett" }),
+  ).toHaveCount(0);
+
+  await recentFettMattisRow.getByRole("button", { name: "Slett" }).click();
+  await expect(
+    page.getByText("Fettmattis fjernet. Oversikten er oppdatert."),
+  ).toBeVisible();
+  await expect(page.getByRole("row", { name: /Ada/ })).toHaveCount(0);
+
+  expect(fettMattisDeleteCalled).toBe(true);
+});
