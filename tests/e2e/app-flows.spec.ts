@@ -424,7 +424,9 @@ test("T193: rounds dashboard enforces 24-hour deletion window", async ({
   await expect(recentRoundRow.getByRole("button", { name: "Slett" })).toBeVisible();
 
   await recentRoundRow.getByRole("button", { name: "Detaljer" }).click();
-  await expect(page.getByText("Taper", { exact: false })).toBeVisible();
+  const roundDetails = page.locator(`#round-details-${recentRound.id}`);
+  await expect(roundDetails).toBeVisible();
+  await expect(roundDetails.getByText("Taper", { exact: false })).toBeVisible();
 
   const archivedRoundRow = page.getByRole("row", { name: /Morgan/ });
   await expect(archivedRoundRow.getByRole("button", { name: "Slett" })).toHaveCount(0);

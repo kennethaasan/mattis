@@ -11,7 +11,7 @@ test.describe("Landing Page", () => {
         page.getByRole("heading", {
           name: "Et vakkert hjem for hver Mattis-runde, hvert tap og hver Fettmattis-feiring.",
           level: 2,
-        }),
+        })
       ).toBeVisible();
     });
 
@@ -35,7 +35,7 @@ test.describe("Landing Page", () => {
       level: 3,
     });
     const fettMattisHeading = page.getByRole("heading", {
-      name: "Ferske FettMattis",
+      name: "Ferske Fettmattiser",
       level: 3,
     });
 
@@ -47,7 +47,9 @@ test.describe("Landing Page", () => {
     const fettMattisBox = await fettMattisHeading.boundingBox();
 
     if (!leaderboardBox || !roundsBox || !fettMattisBox) {
-      throw new Error("Unable to determine layout for leaderboard or activity tables.");
+      throw new Error(
+        "Unable to determine layout for leaderboard or activity tables."
+      );
     }
 
     expect(roundsBox.y).toBeGreaterThan(leaderboardBox.y);

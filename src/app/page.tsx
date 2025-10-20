@@ -14,8 +14,15 @@ import {
   CardHeader,
   CardTitle,
 } from "@/components/ui/card";
-import { toFettMattisResponse, toRoundResponse } from "@/lib/api/response-helpers";
-import { getOverviewStats, listRecentFettMattis, listRecentRounds } from "@/lib/db-client";
+import {
+  toFettMattisResponse,
+  toRoundResponse,
+} from "@/lib/api/response-helpers";
+import {
+  getOverviewStats,
+  listRecentFettMattis,
+  listRecentRounds,
+} from "@/lib/db-client";
 
 const featureCards = [
   {
@@ -131,7 +138,7 @@ export default async function Home() {
             <Card className="h-full">
               <CardHeader className="flex flex-col gap-2 lg:flex-row lg:items-center lg:justify-between">
                 <div className="space-y-1">
-                  <CardTitle>Ferske FettMattis</CardTitle>
+                  <CardTitle>Ferske Fettmattiser</CardTitle>
                   <CardDescription>
                     Hedringene som ble delt ut nylig.
                   </CardDescription>
