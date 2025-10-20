@@ -3,7 +3,7 @@ import { NextResponse } from "next/server";
 import { badRequest, createProblemResponse } from "@/lib/api/problem-details";
 import { toRoundResponse } from "@/lib/api/response-helpers";
 import { ListQuerySchema, RoundCreateSchema } from "@/lib/api/schemas";
-import { resolveRequestUserId } from "@/lib/auth/request-user";
+import { requireAuthenticatedRequest } from "@/lib/auth/authorize";
 import {
   ConflictError,
   createRound,
@@ -74,8 +74,8 @@ export async function GET(req: NextRequest) {
 export async function POST(req: NextRequest) {
   const requestContext = getRequestLogContext(req);
   logger.info("Received request to create round", requestContext);
-  const userId = await resolveRequestUserId(req.headers);
-  if (!userId) {
+  const auth = await requireAuthenticatedRequest(req.headers);
+  if (!auth) {
     logger.warn("Unauthorized request to create round", requestContext);
     return createProblemResponse({
       status: 401,
@@ -92,7 +92,7 @@ export async function POST(req: NextRequest) {
       logger.warn("Malformed JSON in rounds create request", {
         ...requestContext,
         error: getErrorLogContext(error),
-        userId,
+        auserId: auth.user.id,
       });
       return badRequest("Malformed JSON in request body.");
     }
@@ -106,7 +106,7 @@ export async function POST(req: NextRequest) {
       logger.warn("Validation failed for round creation", {
         ...requestContext,
         error: getErrorLogContext(validatedData.error),
-        userId,
+        userId: auth.user.id,
       });
       return badRequest(detail);
     }
@@ -116,13 +116,13 @@ export async function POST(req: NextRequest) {
     const newRound = await createRound({
       participantIds: participant_ids,
       loserId: loser_id,
-      createdBy: userId,
+      createdBy: auth.user.id,
     });
 
     logger.info("Round created", {
       ...requestContext,
       roundId: newRound.id,
-      userId,
+      userId: auth.user.id,
       participantCount: participant_ids.length,
     });
 
@@ -132,7 +132,7 @@ export async function POST(req: NextRequest) {
       logger.warn("Round creation failed due to missing resource", {
         ...requestContext,
         error: getErrorLogContext(error),
-        userId,
+        userId: auth.user.id,
       });
       return createProblemResponse({
         status: 404,
@@ -145,7 +145,7 @@ export async function POST(req: NextRequest) {
       logger.warn("Conflict while creating round", {
         ...requestContext,
         error: getErrorLogContext(error),
-        userId,
+        userId: auth.user.id,
       });
       return createProblemResponse({
         status: 409,
@@ -157,7 +157,7 @@ export async function POST(req: NextRequest) {
     logger.error("Failed to create round", {
       ...requestContext,
       error: getErrorLogContext(error),
-      userId,
+      userId: auth.user.id,
     });
 
     return createProblemResponse({

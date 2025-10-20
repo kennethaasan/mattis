@@ -3,7 +3,7 @@ import { NextResponse } from "next/server";
 import { badRequest, createProblemResponse } from "@/lib/api/problem-details";
 import { toFettMattisResponse } from "@/lib/api/response-helpers";
 import { FettMattisCreateSchema, ListQuerySchema } from "@/lib/api/schemas";
-import { resolveRequestUserId } from "@/lib/auth/request-user";
+import { requireAuthenticatedRequest } from "@/lib/auth/authorize";
 import {
   ConflictError,
   createFettMattis,
@@ -76,8 +76,8 @@ export async function GET(req: NextRequest) {
 export async function POST(req: NextRequest) {
   const requestContext = getRequestLogContext(req);
   logger.info("Received request to create fettmattis", requestContext);
-  const userId = await resolveRequestUserId(req.headers);
-  if (!userId) {
+  const auth = await requireAuthenticatedRequest(req.headers);
+  if (!auth) {
     logger.warn("Unauthorized request to create fettmattis", requestContext);
     return createProblemResponse({
       status: 401,
@@ -95,7 +95,7 @@ export async function POST(req: NextRequest) {
       logger.warn("Malformed JSON in fettmattis create request", {
         ...requestContext,
         error: getErrorLogContext(error),
-        userId,
+        userId: auth.user.id,
       });
       return badRequest("Malformed JSON in request body.");
     }
@@ -109,7 +109,7 @@ export async function POST(req: NextRequest) {
       logger.warn("Validation failed for fettmattis creation", {
         ...requestContext,
         error: getErrorLogContext(validatedData.error),
-        userId,
+        userId: auth.user.id,
       });
       return badRequest(detail);
     }
@@ -118,13 +118,13 @@ export async function POST(req: NextRequest) {
 
     const newFettmattis = await createFettMattis({
       playerId,
-      createdBy: userId,
+      createdBy: auth.user.id,
     });
 
     logger.info("Fettmattis created", {
       ...requestContext,
       fettMattisId: newFettmattis.id,
-      userId,
+      userId: auth.user.id,
       playerId,
     });
 
@@ -136,7 +136,7 @@ export async function POST(req: NextRequest) {
       logger.warn("Fettmattis creation failed due to missing resource", {
         ...requestContext,
         error: getErrorLogContext(error),
-        userId,
+        userId: auth.user.id,
         playerId,
       });
       return createProblemResponse({
@@ -149,7 +149,7 @@ export async function POST(req: NextRequest) {
       logger.warn("Conflict while creating fettmattis", {
         ...requestContext,
         error: getErrorLogContext(error),
-        userId,
+        userId: auth.user.id,
         playerId,
       });
       return createProblemResponse({
@@ -161,7 +161,7 @@ export async function POST(req: NextRequest) {
     logger.error("Failed to create fettmattis", {
       ...requestContext,
       error: getErrorLogContext(error),
-      userId,
+      userId: auth.user.id,
       playerId,
     });
     return createProblemResponse({

@@ -2,7 +2,7 @@ import { NextResponse } from "next/server";
 import { badRequest, createProblemResponse } from "@/lib/api/problem-details";
 import { toPlayerResponse } from "@/lib/api/response-helpers";
 import { PlayerUpdateSchema, uuidSchema } from "@/lib/api/schemas";
-import { resolveRequestUserId } from "@/lib/auth/request-user";
+import { requireAuthenticatedRequest } from "@/lib/auth/authorize";
 import {
   ConflictError,
   getPlayerById,
@@ -12,7 +12,7 @@ import {
 
 export async function GET(
   _req: Request,
-  context: { params: Promise<{ playerId: string }> },
+  context: { params: Promise<{ playerId: string }> }
 ) {
   const { playerId } = await context.params;
 
@@ -45,7 +45,7 @@ export async function GET(
 
 export async function PUT(
   req: Request,
-  context: { params: Promise<{ playerId: string }> },
+  context: { params: Promise<{ playerId: string }> }
 ) {
   const { playerId } = await context.params;
 
@@ -56,8 +56,8 @@ export async function PUT(
     return badRequest(detail);
   }
 
-  const userId = await resolveRequestUserId(req.headers);
-  if (!userId) {
+  const auth = await requireAuthenticatedRequest(req.headers);
+  if (!auth) {
     return createProblemResponse({
       status: 401,
       title: "Unauthorized",

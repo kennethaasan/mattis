@@ -3,7 +3,7 @@ import { NextResponse } from "next/server";
 import { badRequest, createProblemResponse } from "@/lib/api/problem-details";
 import { toPlayerResponse } from "@/lib/api/response-helpers";
 import { PlayerCreateSchema } from "@/lib/api/schemas";
-import { resolveRequestUserId } from "@/lib/auth/request-user";
+import { requireAuthenticatedRequest } from "@/lib/auth/authorize";
 import { ConflictError, createPlayer, listPlayers } from "@/lib/db-client";
 import {
   getErrorLogContext,
@@ -15,8 +15,8 @@ export async function POST(req: Request) {
   const requestContext = getRequestLogContext(req);
   logger.info("Received request to create player", requestContext);
 
-  const userId = await resolveRequestUserId(req.headers);
-  if (!userId) {
+  const auth = await requireAuthenticatedRequest(req.headers);
+  if (!auth) {
     logger.warn("Unauthorized request to create player", requestContext);
     return createProblemResponse({
       status: 401,
@@ -36,7 +36,7 @@ export async function POST(req: Request) {
       logger.warn("Validation failed for player creation", {
         ...requestContext,
         error: getErrorLogContext(validation.error),
-        userId,
+        userId: auth.user.id,
       });
       return badRequest(detail);
     }
@@ -45,13 +45,13 @@ export async function POST(req: Request) {
 
     const newPlayer = await createPlayer({
       displayName: display_name,
-      userId,
+      userId: auth.user.id,
     });
 
     logger.info("Player created", {
       ...requestContext,
       playerId: newPlayer.id,
-      userId,
+      userId: auth.user.id,
     });
 
     return NextResponse.json(toPlayerResponse(newPlayer), { status: 201 });
@@ -60,7 +60,7 @@ export async function POST(req: Request) {
       logger.warn("Conflict while creating player", {
         ...requestContext,
         error: getErrorLogContext(error),
-        userId,
+        userId: auth.user.id,
       });
       return createProblemResponse({
         status: 409,
@@ -72,7 +72,7 @@ export async function POST(req: Request) {
     logger.error("Failed to create player", {
       ...requestContext,
       error: getErrorLogContext(error),
-      userId,
+      userId: auth.user.id,
     });
 
     return createProblemResponse({

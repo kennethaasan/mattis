@@ -3,7 +3,7 @@ import { NextResponse } from "next/server";
 import { badRequest, createProblemResponse } from "@/lib/api/problem-details";
 import { toRoundResponse } from "@/lib/api/response-helpers";
 import { RoundUpdateSchema, uuidSchema } from "@/lib/api/schemas";
-import { resolveRequestUserId } from "@/lib/auth/request-user";
+import { requireAuthenticatedRequest } from "@/lib/auth/authorize";
 import {
   ConflictError,
   deleteRound,
@@ -50,8 +50,8 @@ export async function PUT(
   req: NextRequest,
   context: { params: Promise<{ roundId: string }> }
 ) {
-  const userId = await resolveRequestUserId(req.headers);
-  if (!userId) {
+  const auth = await requireAuthenticatedRequest(req.headers);
+  if (!auth) {
     return createProblemResponse({
       status: 401,
       title: "Unauthorized",
@@ -124,8 +124,8 @@ export async function DELETE(
   req: NextRequest,
   context: { params: Promise<{ roundId: string }> }
 ) {
-  const userId = await resolveRequestUserId(req.headers);
-  if (!userId) {
+  const auth = await requireAuthenticatedRequest(req.headers);
+  if (!auth) {
     return createProblemResponse({
       status: 401,
       title: "Unauthorized",
