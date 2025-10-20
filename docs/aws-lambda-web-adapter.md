@@ -16,8 +16,10 @@ distribution (principal `cloudfront.amazonaws.com` scoped to the distribution
 ARN) to invoke the URL, so the Lambda endpoint is still unreachable from the
 public internet. Because AWS now requires both `lambda:InvokeFunctionUrl` and
 `lambda:InvokeFunction` permissions for new Function URLs, we grant CloudFront
-the second action in `iac/main.tf:175-187` with a `lambda:InvokedViaFunctionUrl`
-condition so invocation is still limited to the URL path.
+the second action in `iac/main.tf:175-183`. Even without the explicit
+`lambda:InvokedViaFunctionUrl` condition (Terraform no longer supports
+expressing it), the statement remains limited to this distribution through the
+`source_arn`.
 
 If we need an additional safeguard in the future we can ask CloudFront to inject
 a shared secret header and verify it before processing the request, but it is

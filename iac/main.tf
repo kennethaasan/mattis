@@ -181,12 +181,6 @@ resource "aws_lambda_permission" "allow_cloudfront_invoke" {
   function_name = module.fn.lambda_function_name
   principal     = "cloudfront.amazonaws.com"
   source_arn    = aws_cloudfront_distribution.cdn.arn
-
-  condition {
-    test     = "Bool"
-    variable = "lambda:InvokedViaFunctionUrl"
-    values   = ["true"]
-  }
 }
 
 resource "aws_route53_record" "app_a" {
