@@ -116,7 +116,9 @@ resource "aws_cloudfront_origin_request_policy" "dynamic_requests" {
 
   headers_config {
     header_behavior = "allViewerAndWhitelistCloudFront"
-    headers         = ["x-amz-content-sha256"]
+    headers {
+      items = ["x-amz-content-sha256"]
+    }
   }
 
   query_strings_config {
