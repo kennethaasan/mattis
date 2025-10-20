@@ -25,14 +25,14 @@ import {
   TableRow,
 } from "@/components/ui/table";
 import {
+  createPlayer,
   fetchPlayers,
   PLAYERS_QUERY_KEY,
   type Player,
   type PlayerUpdate,
-  resolvePlayerError,
   updatePlayer,
 } from "@/lib/api/players-client";
-import { type PlayerCreate, PlayerSchema } from "@/lib/api/schemas";
+import type { PlayerCreate } from "@/lib/api/schemas";
 
 const ROSTER_SKELETON_KEYS = [
   "roster-row-1",
@@ -58,30 +58,7 @@ export default function PlayersClientPage() {
   const players: Player[] = playersQuery.data ?? [];
 
   const createPlayerMutation = useMutation<Player, Error, PlayerCreate>({
-    mutationFn: async (payload) => {
-      const response = await fetch("/api/players", {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        credentials: "include",
-        body: JSON.stringify(payload),
-      });
-
-      if (!response.ok) {
-        const detail = resolvePlayerError(await response.json());
-        throw new Error(detail ?? "Kunne ikke opprette spiller");
-      }
-
-      const responseBody = (await response.json()) as unknown;
-      const parsed = PlayerSchema.safeParse(responseBody);
-
-      if (!parsed.success) {
-        throw new Error("Kunne ikke bekrefte den nye spilleren.");
-      }
-
-      return parsed.data;
-    },
+    mutationFn: createPlayer,
     onSuccess: async () => {
       setMessage("Spiller lagt til i troppen. Velkommen!");
       setFormError(null);

@@ -19,6 +19,7 @@ import {
   CardTitle,
 } from "@/components/ui/card";
 import {
+  createFettMattis,
   createFettMattisListQueryKey,
   type FettMattis,
   fetchFettMattis,
@@ -30,6 +31,7 @@ import {
   type Player,
 } from "@/lib/api/players-client";
 import {
+  createRound,
   createRoundsListQueryKey,
   deleteRound,
   fetchLatestRound,
@@ -37,19 +39,7 @@ import {
   LATEST_ROUND_QUERY_KEY,
   type Round,
 } from "@/lib/api/rounds-client";
-import {
-  type FettMattisCreate,
-  ProblemDetailsSchema,
-  type RoundCreate,
-} from "@/lib/api/schemas";
-
-const resolveProblemDetail = (body: unknown): string | undefined => {
-  const parsed = ProblemDetailsSchema.safeParse(body);
-  if (!parsed.success) {
-    return undefined;
-  }
-  return parsed.data.detail;
-};
+import type { FettMattisCreate, RoundCreate } from "@/lib/api/schemas";
 
 const ROUND_FORM_SKELETON_KEYS = [
   "round-skeleton-1",
@@ -152,23 +142,8 @@ export default function RoundsClientPage() {
     [activePlayers, participantOrder]
   );
 
-  const roundMutation = useMutation<undefined, Error, RoundCreate>({
-    mutationFn: async (payload) => {
-      const response = await fetch("/api/rounds", {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        credentials: "include",
-        body: JSON.stringify(payload),
-      });
-
-      if (!response.ok) {
-        const body: unknown = await response.json();
-        const detail = resolveProblemDetail(body);
-        throw new Error(detail ?? "Kunne ikke lagre runden.");
-      }
-    },
+  const roundMutation = useMutation<void, Error, RoundCreate>({
+    mutationFn: createRound,
     onSuccess: () => {
       setStatus("Runde lagret. Tabellene er oppdatert!");
       setError(null);
@@ -186,23 +161,8 @@ export default function RoundsClientPage() {
     },
   });
 
-  const fettMattisMutation = useMutation<undefined, Error, FettMattisCreate>({
-    mutationFn: async (payload) => {
-      const response = await fetch("/api/fettmattis", {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        credentials: "include",
-        body: JSON.stringify(payload),
-      });
-
-      if (!response.ok) {
-        const body: unknown = await response.json();
-        const detail = resolveProblemDetail(body);
-        throw new Error(detail ?? "Kunne ikke tildele en Fettmattis.");
-      }
-    },
+  const fettMattisMutation = useMutation<void, Error, FettMattisCreate>({
+    mutationFn: createFettMattis,
     onSuccess: () => {
       setStatus("Fettmattis tildelt. Klar for feiring!");
       setError(null);

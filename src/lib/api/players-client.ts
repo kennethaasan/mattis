@@ -1,12 +1,11 @@
 import type { QueryKey } from "@tanstack/react-query";
-import { fetchJson, parseJsonResponse } from "./fetch-json";
+import { fetchJson, fetchWithProblemDetails, parseJsonResponse } from "./fetch-json";
+import type { Player, PlayerCreate, PlayerUpdate } from "./schemas";
 import {
-  type Player,
+  PlayerCreateSchema,
   PlayerSchema,
   PlayersResponseSchema,
-  type PlayerUpdate,
   PlayerUpdateSchema,
-  ProblemDetailsSchema,
 } from "./schemas";
 
 export const PLAYERS_QUERY_KEY = ["players"] as const satisfies QueryKey;
@@ -21,42 +20,47 @@ export async function fetchPlayers(): Promise<Player[]> {
   });
 }
 
-export const resolvePlayerError = (payload: unknown): string | undefined => {
-  const parsedProblem = ProblemDetailsSchema.safeParse(payload);
-
-  if (parsedProblem.success) {
-    return parsedProblem.data.detail;
-  }
-
-  return undefined;
-};
-
 export type { Player, PlayerUpdate } from "./schemas";
+
+export async function createPlayer(payload: PlayerCreate): Promise<Player> {
+  const parsedPayload = PlayerCreateSchema.parse(payload);
+  const response = await fetchWithProblemDetails({
+    input: "/api/players",
+    init: {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+      },
+      credentials: "include",
+      body: JSON.stringify(parsedPayload),
+    },
+    errorMessage: "Kunne ikke opprette spiller",
+  });
+
+  return parseJsonResponse(
+    response,
+    PlayerSchema,
+    "Kunne ikke bekrefte den nye spilleren.",
+  );
+}
 
 export async function updatePlayer(
   playerId: string,
   update: PlayerUpdate,
 ): Promise<Player> {
   const parsedPayload = PlayerUpdateSchema.parse(update);
-  const response = await fetch(`/api/players/${playerId}`, {
-    method: "PUT",
-    headers: {
-      "Content-Type": "application/json",
+  const response = await fetchWithProblemDetails({
+    input: `/api/players/${playerId}`,
+    init: {
+      method: "PUT",
+      headers: {
+        "Content-Type": "application/json",
+      },
+      credentials: "include",
+      body: JSON.stringify(parsedPayload),
     },
-    credentials: "include",
-    body: JSON.stringify(parsedPayload),
+    errorMessage: "We couldn't update the player right now.",
   });
-
-  if (!response.ok) {
-    let detail: string | undefined;
-    try {
-      detail = resolvePlayerError(await response.json());
-    } catch {
-      detail = undefined;
-    }
-
-    throw new Error(detail ?? "We couldn't update the player right now.");
-  }
 
   return parseJsonResponse(
     response,

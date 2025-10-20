@@ -4,6 +4,8 @@ import { fetchJson, fetchWithProblemDetails } from "@/lib/api/fetch-json";
 import {
   LatestRoundResponseSchema,
   type Round,
+  type RoundCreate,
+  RoundCreateSchema,
   RoundListResponseSchema,
 } from "@/lib/api/schemas";
 
@@ -49,6 +51,23 @@ export async function fetchLatestRound(): Promise<Round | null> {
       "We couldn't load the most recent round right now. Please try again.",
     parseErrorMessage:
       "Received an invalid response when loading latest round.",
+  });
+}
+
+export async function createRound(payload: RoundCreate): Promise<void> {
+  const parsedPayload = RoundCreateSchema.parse(payload);
+
+  await fetchWithProblemDetails({
+    input: "/api/rounds",
+    init: {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+      },
+      credentials: "include",
+      body: JSON.stringify(parsedPayload),
+    },
+    errorMessage: "Kunne ikke lagre runden.",
   });
 }
 
