@@ -184,14 +184,6 @@ resource "aws_lambda_permission" "allow_cloudfront" {
   function_url_auth_type = "AWS_IAM"
 }
 
-resource "aws_lambda_permission" "allow_cloudfront_invoke" {
-  statement_id  = "AllowCloudFrontInvokeFunctionURLExecution"
-  action        = "lambda:InvokeFunction"
-  function_name = module.fn.lambda_function_name
-  principal     = "cloudfront.amazonaws.com"
-  source_arn    = module.cdn.cloudfront_distribution_arn
-}
-
 module "dns_records" {
   source  = "terraform-aws-modules/route53/aws"
   version = "6.1.0"
