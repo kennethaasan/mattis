@@ -9,63 +9,68 @@ import {
   NotFoundError,
   updatePlayer,
 } from "@/lib/db-client";
+import { withObservability } from "@/lib/observability/middleware";
 
-export async function GET(
-  _req: Request,
-  context: { params: Promise<{ playerId: string }> },
-) {
-  const { playerId } = await context.params;
+export const GET = withObservability(
+  async (
+    _req: Request,
+    context: { params: Promise<{ playerId: string }> },
+  ) => {
+    const { playerId } = await context.params;
 
-  const validation = uuidSchema.safeParse(playerId);
-  if (!validation.success) {
-    const detail =
-      validation.error.issues.at(0)?.message ?? "Player id is invalid.";
-    return badRequest(detail);
-  }
+    const validation = uuidSchema.safeParse(playerId);
+    if (!validation.success) {
+      const detail =
+        validation.error.issues.at(0)?.message ?? "Player id is invalid.";
+      return badRequest(detail);
+    }
 
-  try {
     const player = await getPlayerById(playerId);
 
     return NextResponse.json(toPlayerResponse(player));
-  } catch (error) {
-    if (error instanceof NotFoundError) {
+  },
+  {
+    operationName: "GetPlayer",
+    onError: (error) => {
+      if (error instanceof NotFoundError) {
+        return createProblemResponse({
+          status: 404,
+          title: "Not Found",
+          detail: error.message,
+        });
+      }
       return createProblemResponse({
-        status: 404,
-        title: "Not Found",
-        detail: error.message,
+        status: 500,
+        title: "Internal Server Error",
+        detail: "Internal Server Error",
+      });
+    },
+  },
+);
+
+export const PUT = withObservability(
+  async (
+    req: Request,
+    context: { params: Promise<{ playerId: string }> },
+  ) => {
+    const { playerId } = await context.params;
+
+    const validation = uuidSchema.safeParse(playerId);
+    if (!validation.success) {
+      const detail =
+        validation.error.issues.at(0)?.message ?? "Player id is invalid.";
+      return badRequest(detail);
+    }
+
+    const userId = await resolveRequestUserId(req.headers);
+    if (!userId) {
+      return createProblemResponse({
+        status: 401,
+        title: "Unauthorized",
+        detail: "Authentication required.",
       });
     }
-    return createProblemResponse({
-      status: 500,
-      title: "Internal Server Error",
-      detail: "Internal Server Error",
-    });
-  }
-}
 
-export async function PUT(
-  req: Request,
-  context: { params: Promise<{ playerId: string }> },
-) {
-  const { playerId } = await context.params;
-
-  const validation = uuidSchema.safeParse(playerId);
-  if (!validation.success) {
-    const detail =
-      validation.error.issues.at(0)?.message ?? "Player id is invalid.";
-    return badRequest(detail);
-  }
-
-  const userId = await resolveRequestUserId(req.headers);
-  if (!userId) {
-    return createProblemResponse({
-      status: 401,
-      title: "Unauthorized",
-      detail: "Authentication required.",
-    });
-  }
-
-  try {
     const body = (await req.json()) as unknown;
     const bodyValidation = PlayerUpdateSchema.safeParse(body);
 
@@ -84,25 +89,29 @@ export async function PUT(
     });
 
     return NextResponse.json(toPlayerResponse(updatedPlayer));
-  } catch (error) {
-    if (error instanceof NotFoundError) {
+  },
+  {
+    operationName: "UpdatePlayer",
+    onError: (error) => {
+      if (error instanceof NotFoundError) {
+        return createProblemResponse({
+          status: 404,
+          title: "Not Found",
+          detail: error.message,
+        });
+      }
+      if (error instanceof ConflictError) {
+        return createProblemResponse({
+          status: 409,
+          title: "Conflict",
+          detail: error.message,
+        });
+      }
       return createProblemResponse({
-        status: 404,
-        title: "Not Found",
-        detail: error.message,
+        status: 500,
+        title: "Internal Server Error",
+        detail: "Internal Server Error",
       });
-    }
-    if (error instanceof ConflictError) {
-      return createProblemResponse({
-        status: 409,
-        title: "Conflict",
-        detail: error.message,
-      });
-    }
-    return createProblemResponse({
-      status: 500,
-      title: "Internal Server Error",
-      detail: "Internal Server Error",
-    });
-  }
-}
+    },
+  },
+);

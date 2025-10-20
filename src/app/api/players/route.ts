@@ -5,18 +5,19 @@ import { toPlayerResponse } from "@/lib/api/response-helpers";
 import { PlayerCreateSchema } from "@/lib/api/schemas";
 import { resolveRequestUserId } from "@/lib/auth/request-user";
 import { ConflictError, createPlayer, listPlayers } from "@/lib/db-client";
+import { withObservability } from "@/lib/observability/middleware";
 
-export async function POST(req: Request) {
-  const userId = await resolveRequestUserId(req.headers);
-  if (!userId) {
-    return createProblemResponse({
-      status: 401,
-      title: "Unauthorized",
-      detail: "Authentication required.",
-    });
-  }
+export const POST = withObservability(
+  async (req: Request) => {
+    const userId = await resolveRequestUserId(req.headers);
+    if (!userId) {
+      return createProblemResponse({
+        status: 401,
+        title: "Unauthorized",
+        detail: "Authentication required.",
+      });
+    }
 
-  try {
     const body = (await req.json()) as unknown;
     const validation = PlayerCreateSchema.safeParse(body);
 
@@ -35,32 +36,39 @@ export async function POST(req: Request) {
     });
 
     return NextResponse.json(toPlayerResponse(newPlayer), { status: 201 });
-  } catch (error) {
-    if (error instanceof ConflictError) {
+  },
+  {
+    operationName: "CreatePlayer",
+    onError: (error) => {
+      if (error instanceof ConflictError) {
+        return createProblemResponse({
+          status: 409,
+          title: "Conflict",
+          detail: error.message,
+        });
+      }
+
       return createProblemResponse({
-        status: 409,
-        title: "Conflict",
-        detail: error.message,
+        status: 500,
+        title: "Internal Server Error",
+        detail: error instanceof Error ? error.message : undefined,
       });
-    }
+    },
+  },
+);
 
-    return createProblemResponse({
-      status: 500,
-      title: "Internal Server Error",
-      detail: error instanceof Error ? error.message : undefined,
-    });
-  }
-}
-
-export async function GET(_req: Request) {
-  try {
+export const GET = withObservability(
+  async (_req: Request) => {
     const allPlayers = await listPlayers();
     return NextResponse.json(allPlayers.map(toPlayerResponse));
-  } catch (error) {
-    return createProblemResponse({
-      status: 500,
-      title: "Internal Server Error",
-      detail: error instanceof Error ? error.message : undefined,
-    });
-  }
-}
+  },
+  {
+    operationName: "ListPlayers",
+    onError: (error) =>
+      createProblemResponse({
+        status: 500,
+        title: "Internal Server Error",
+        detail: error instanceof Error ? error.message : undefined,
+      }),
+  },
+);

@@ -12,158 +12,171 @@ import {
   NotFoundError,
   updateRound,
 } from "@/lib/db-client";
+import { withObservability } from "@/lib/observability/middleware";
 
-export async function GET(
-  _req: Request,
-  context: { params: Promise<{ roundId: string }> }
-) {
-  const { roundId } = await context.params;
+export const GET = withObservability(
+  async (
+    _req: Request,
+    context: { params: Promise<{ roundId: string }> },
+  ) => {
+    const { roundId } = await context.params;
 
-  const validation = uuidSchema.safeParse(roundId);
-  if (!validation.success) {
-    const detail =
-      validation.error.issues.at(0)?.message ?? "Round id is invalid.";
-    return badRequest(detail);
-  }
+    const validation = uuidSchema.safeParse(roundId);
+    if (!validation.success) {
+      const detail =
+        validation.error.issues.at(0)?.message ?? "Round id is invalid.";
+      return badRequest(detail);
+    }
 
-  try {
     const round = await getRoundById(roundId);
 
     return NextResponse.json(toRoundResponse(round));
-  } catch (error) {
-    if (error instanceof NotFoundError) {
+  },
+  {
+    operationName: "GetRound",
+    onError: (error) => {
+      if (error instanceof NotFoundError) {
+        return createProblemResponse({
+          status: 404,
+          title: "Not Found",
+          detail: error.message,
+        });
+      }
       return createProblemResponse({
-        status: 404,
-        title: "Not Found",
-        detail: error.message,
+        status: 500,
+        title: "Internal Server Error",
+        detail: "Internal Server Error",
+      });
+    },
+  },
+);
+
+export const PUT = withObservability(
+  async (
+    req: NextRequest,
+    context: { params: Promise<{ roundId: string }> },
+  ) => {
+    const userId = await resolveRequestUserId(req.headers);
+    if (!userId) {
+      return createProblemResponse({
+        status: 401,
+        title: "Unauthorized",
+        detail: "Authentication required.",
       });
     }
-    return createProblemResponse({
-      status: 500,
-      title: "Internal Server Error",
-      detail: "Internal Server Error",
-    });
-  }
-}
 
-export async function PUT(
-  req: NextRequest,
-  context: { params: Promise<{ roundId: string }> }
-) {
-  const userId = await resolveRequestUserId(req.headers);
-  if (!userId) {
-    return createProblemResponse({
-      status: 401,
-      title: "Unauthorized",
-      detail: "Authentication required.",
-    });
-  }
+    const { roundId } = await context.params;
 
-  const { roundId } = await context.params;
+    const validation = uuidSchema.safeParse(roundId);
+    if (!validation.success) {
+      const detail =
+        validation.error.issues.at(0)?.message ?? "Round id is invalid.";
+      return badRequest(detail);
+    }
 
-  const validation = uuidSchema.safeParse(roundId);
-  if (!validation.success) {
-    const detail =
-      validation.error.issues.at(0)?.message ?? "Round id is invalid.";
-    return badRequest(detail);
-  }
+    let body: unknown;
+    try {
+      body = await req.json();
+    } catch {
+      return badRequest("Malformed JSON in request body.");
+    }
 
-  let body: unknown;
-  try {
-    body = await req.json();
-  } catch {
-    return badRequest("Malformed JSON in request body.");
-  }
+    const parsedBody = RoundUpdateSchema.safeParse(body);
+    if (!parsedBody.success) {
+      const detail =
+        parsedBody.error.issues.at(0)?.message ??
+        "Request body validation failed.";
+      return badRequest(detail);
+    }
 
-  const parsedBody = RoundUpdateSchema.safeParse(body);
-  if (!parsedBody.success) {
-    const detail =
-      parsedBody.error.issues.at(0)?.message ??
-      "Request body validation failed.";
-    return badRequest(detail);
-  }
-
-  try {
     const updatedRound = await updateRound(roundId, {
       participantIds: parsedBody.data.participant_ids,
       loserId: parsedBody.data.loser_id,
     });
 
     return NextResponse.json(toRoundResponse(updatedRound));
-  } catch (error) {
-    if (error instanceof NotFoundError) {
+  },
+  {
+    operationName: "UpdateRound",
+    onError: (error) => {
+      if (error instanceof NotFoundError) {
+        return createProblemResponse({
+          status: 404,
+          title: "Not Found",
+          detail: error.message,
+        });
+      }
+      if (error instanceof ConflictError) {
+        return createProblemResponse({
+          status: 409,
+          title: "Conflict",
+          detail: error.message,
+        });
+      }
+      if (error instanceof ForbiddenError) {
+        return createProblemResponse({
+          status: 403,
+          title: "Forbidden",
+          detail: error.message,
+        });
+      }
       return createProblemResponse({
-        status: 404,
-        title: "Not Found",
-        detail: error.message,
+        status: 500,
+        title: "Internal Server Error",
+        detail: "Internal Server Error",
+      });
+    },
+  },
+);
+
+export const DELETE = withObservability(
+  async (
+    req: NextRequest,
+    context: { params: Promise<{ roundId: string }> },
+  ) => {
+    const userId = await resolveRequestUserId(req.headers);
+    if (!userId) {
+      return createProblemResponse({
+        status: 401,
+        title: "Unauthorized",
+        detail: "Authentication required.",
       });
     }
-    if (error instanceof ConflictError) {
-      return createProblemResponse({
-        status: 409,
-        title: "Conflict",
-        detail: error.message,
-      });
+
+    const { roundId } = await context.params;
+
+    const validation = uuidSchema.safeParse(roundId);
+    if (!validation.success) {
+      const detail =
+        validation.error.issues.at(0)?.message ?? "Round id is invalid.";
+      return badRequest(detail);
     }
-    if (error instanceof ForbiddenError) {
-      return createProblemResponse({
-        status: 403,
-        title: "Forbidden",
-        detail: error.message,
-      });
-    }
-    return createProblemResponse({
-      status: 500,
-      title: "Internal Server Error",
-      detail: "Internal Server Error",
-    });
-  }
-}
 
-export async function DELETE(
-  req: NextRequest,
-  context: { params: Promise<{ roundId: string }> }
-) {
-  const userId = await resolveRequestUserId(req.headers);
-  if (!userId) {
-    return createProblemResponse({
-      status: 401,
-      title: "Unauthorized",
-      detail: "Authentication required.",
-    });
-  }
-
-  const { roundId } = await context.params;
-
-  const validation = uuidSchema.safeParse(roundId);
-  if (!validation.success) {
-    const detail =
-      validation.error.issues.at(0)?.message ?? "Round id is invalid.";
-    return badRequest(detail);
-  }
-
-  try {
     await deleteRound(roundId);
     return new Response(null, { status: 204 });
-  } catch (error) {
-    if (error instanceof NotFoundError) {
+  },
+  {
+    operationName: "DeleteRound",
+    onError: (error) => {
+      if (error instanceof NotFoundError) {
+        return createProblemResponse({
+          status: 404,
+          title: "Not Found",
+          detail: error.message,
+        });
+      }
+      if (error instanceof ForbiddenError) {
+        return createProblemResponse({
+          status: 403,
+          title: "Forbidden",
+          detail: error.message,
+        });
+      }
       return createProblemResponse({
-        status: 404,
-        title: "Not Found",
-        detail: error.message,
+        status: 500,
+        title: "Internal Server Error",
+        detail: "Internal Server Error",
       });
-    }
-    if (error instanceof ForbiddenError) {
-      return createProblemResponse({
-        status: 403,
-        title: "Forbidden",
-        detail: error.message,
-      });
-    }
-    return createProblemResponse({
-      status: 500,
-      title: "Internal Server Error",
-      detail: "Internal Server Error",
-    });
-  }
-}
+    },
+  },
+);

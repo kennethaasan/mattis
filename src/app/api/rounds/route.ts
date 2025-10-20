@@ -10,53 +10,58 @@ import {
   listRecentRounds,
   NotFoundError,
 } from "@/lib/db-client";
+import { withObservability } from "@/lib/observability/middleware";
 
-export async function GET(req: NextRequest) {
-  const { searchParams } = new URL(req.url);
-  const query = Object.fromEntries(searchParams.entries());
+export const GET = withObservability(
+  async (req: NextRequest) => {
+    const { searchParams } = new URL(req.url);
+    const query = Object.fromEntries(searchParams.entries());
 
-  const validation = ListQuerySchema.safeParse(query);
-  if (!validation.success) {
-    const detail =
-      validation.error.issues.at(0)?.message ?? "Query parameters are invalid.";
-    return badRequest(detail);
-  }
-
-  try {
-    const rounds = await listRecentRounds({ limit: validation.data.limit });
-    return NextResponse.json(rounds.map(toRoundResponse));
-  } catch (error) {
-    if (error instanceof ConflictError) {
-      return createProblemResponse({
-        status: 409,
-        title: "Conflict",
-        detail: error.message,
-      });
+    const validation = ListQuerySchema.safeParse(query);
+    if (!validation.success) {
+      const detail =
+        validation.error.issues.at(0)?.message ?? "Query parameters are invalid.";
+      return badRequest(detail);
     }
 
-    return createProblemResponse({
-      status: 500,
-      title: "Internal Server Error",
-      detail: "Internal Server Error",
-    });
-  }
-}
+    const rounds = await listRecentRounds({ limit: validation.data.limit });
+    return NextResponse.json(rounds.map(toRoundResponse));
+  },
+  {
+    operationName: "ListRecentRounds",
+    onError: (error) => {
+      if (error instanceof ConflictError) {
+        return createProblemResponse({
+          status: 409,
+          title: "Conflict",
+          detail: error.message,
+        });
+      }
+
+      return createProblemResponse({
+        status: 500,
+        title: "Internal Server Error",
+        detail: "Internal Server Error",
+      });
+    },
+  },
+);
 
 /**
  * POST /api/rounds
  * Creates a new round.
  */
-export async function POST(req: NextRequest) {
-  const userId = await resolveRequestUserId(req.headers);
-  if (!userId) {
-    return createProblemResponse({
-      status: 401,
-      title: "Unauthorized",
-      detail: "Authentication required.",
-    });
-  }
+export const POST = withObservability(
+  async (req: NextRequest) => {
+    const userId = await resolveRequestUserId(req.headers);
+    if (!userId) {
+      return createProblemResponse({
+        status: 401,
+        title: "Unauthorized",
+        detail: "Authentication required.",
+      });
+    }
 
-  try {
     let body: unknown;
     try {
       body = await req.json();
@@ -82,27 +87,31 @@ export async function POST(req: NextRequest) {
     });
 
     return NextResponse.json(toRoundResponse(newRound), { status: 201 });
-  } catch (error) {
-    if (error instanceof NotFoundError) {
-      return createProblemResponse({
-        status: 404,
-        title: "Not Found",
-        detail: error.message,
-      });
-    }
+  },
+  {
+    operationName: "CreateRound",
+    onError: (error) => {
+      if (error instanceof NotFoundError) {
+        return createProblemResponse({
+          status: 404,
+          title: "Not Found",
+          detail: error.message,
+        });
+      }
 
-    if (error instanceof ConflictError) {
-      return createProblemResponse({
-        status: 409,
-        title: "Conflict",
-        detail: error.message,
-      });
-    }
+      if (error instanceof ConflictError) {
+        return createProblemResponse({
+          status: 409,
+          title: "Conflict",
+          detail: error.message,
+        });
+      }
 
-    return createProblemResponse({
-      status: 500,
-      title: "Internal Server Error",
-      detail: "Internal Server Error",
-    });
-  }
-}
+      return createProblemResponse({
+        status: 500,
+        title: "Internal Server Error",
+        detail: "Internal Server Error",
+      });
+    },
+  },
+);
