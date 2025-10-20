@@ -69,7 +69,6 @@ export async function requireAuthenticatedRequest(
 
   if (!result.ok) {
     logger.warn("Unauthorized request", {
-      headers: Object.fromEntries(headers),
       response: result.response,
     });
     return undefined;
