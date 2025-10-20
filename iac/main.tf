@@ -70,6 +70,7 @@ module "fn" {
       AWS_LAMBDA_EXEC_WRAPPER        = "/opt/bootstrap"
       AWS_LWA_ASYNC_INIT             = "true"
       AWS_LWA_ENABLE_COMPRESSION     = "true"
+      AWS_LWA_AUTHORIZATION_SOURCE   = "X-Amzn-Original-Authorization"
       NODE_ENV                       = "production"
       PORT                           = "3000"
       DATABASE_URL                   = local.database_url
@@ -81,7 +82,7 @@ module "fn" {
   )
 
   create_lambda_function_url        = true
-  authorization_type                = "NONE"
+  authorization_type                = "AWS_IAM"
   cloudwatch_logs_retention_in_days = var.lambda_log_retention_days
   tags                              = local.default_tags
 }
@@ -172,7 +173,7 @@ resource "aws_lambda_permission" "allow_cloudfront" {
   function_name          = module.fn.lambda_function_name
   principal              = "cloudfront.amazonaws.com"
   source_arn             = aws_cloudfront_distribution.cdn.arn
-  function_url_auth_type = "NONE"
+  function_url_auth_type = "AWS_IAM"
 }
 
 resource "aws_lambda_permission" "allow_cloudfront_invoke" {
