@@ -83,11 +83,11 @@ export function RoundsTable({
       <TableHeader>
         <TableRow>
           <TableHead>Registrert</TableHead>
-          <TableHead>Mattis</TableHead>
+          <TableHead className="hidden sm:table-cell">Mattis</TableHead>
           <TableHead className="hidden text-right sm:table-cell">
             Deltakere
           </TableHead>
-          <TableHead className="text-right">Handling</TableHead>
+          <TableHead className="text-left sm:text-right">Handling</TableHead>
         </TableRow>
       </TableHeader>
       <TableBody>
@@ -105,23 +105,26 @@ export function RoundsTable({
 
               return (
                 <Fragment key={round.id}>
-                  <TableRow>
+                  <TableRow className="sm:align-middle">
                     <TableCell>
-                      <div className="flex flex-col">
+                      <div className="flex flex-col gap-1">
                         <span className="font-medium">{formattedDate}</span>
+                        <span className="text-muted-foreground text-xs sm:hidden">
+                          {round.loser.display_name}
+                        </span>
                         <span className="text-muted-foreground text-xs sm:hidden">
                           {participantCount} deltakere
                         </span>
                       </div>
                     </TableCell>
-                    <TableCell>
+                    <TableCell className="hidden sm:table-cell">
                       <span className="font-medium">{round.loser.display_name}</span>
                     </TableCell>
                     <TableCell className="hidden text-right sm:table-cell">
                       {participantCount}
                     </TableCell>
-                    <TableCell className="text-right">
-                      <div className="flex justify-end gap-2">
+                    <TableCell className="text-left sm:text-right">
+                      <div className="flex flex-wrap justify-start gap-2 sm:justify-end">
                         <Button
                           variant="ghost"
                           size="sm"

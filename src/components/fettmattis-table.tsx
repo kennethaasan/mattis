@@ -81,8 +81,8 @@ export function FettmattisTable({
       <TableHeader>
         <TableRow>
           <TableHead>Tildelt</TableHead>
-          <TableHead>Spiller</TableHead>
-          <TableHead className="text-right">Handling</TableHead>
+          <TableHead className="hidden sm:table-cell">Spiller</TableHead>
+          <TableHead className="text-left sm:text-right">Handling</TableHead>
         </TableRow>
       </TableHeader>
       <TableBody>
@@ -106,18 +106,18 @@ export function FettmattisTable({
                 <Fragment key={entry.id}>
                   <TableRow>
                     <TableCell>
-                      <div className="flex flex-col">
+                      <div className="flex flex-col gap-1">
                         <span className="font-medium">{formattedDate}</span>
-                        <span className="text-muted-foreground text-xs">
-                          {entry.player.display_name}
-                        </span>
+                        <div className="flex flex-wrap items-center gap-2 sm:hidden">
+                          <Badge>{entry.player.display_name}</Badge>
+                        </div>
                       </div>
                     </TableCell>
-                    <TableCell>
+                    <TableCell className="hidden sm:table-cell">
                       <Badge className="w-fit">{entry.player.display_name}</Badge>
                     </TableCell>
-                    <TableCell className="text-right">
-                      <div className="flex justify-end gap-2">
+                    <TableCell className="text-left sm:text-right">
+                      <div className="flex flex-wrap justify-start gap-2 sm:justify-end">
                         <Button
                           variant="ghost"
                           size="sm"

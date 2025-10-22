@@ -127,7 +127,7 @@ export default async function Home() {
                   <Link href="/rounds">Se alle runder</Link>
                 </Button>
               </CardHeader>
-              <CardContent>
+              <CardContent className="p-4 pt-2 sm:p-6 sm:pt-4">
                 <RoundsTable
                   rounds={roundsForDisplay}
                   emptyMessage="Ingen runder er registrert ennå."
@@ -147,7 +147,7 @@ export default async function Home() {
                   <Link href="/rounds">Se tildelinger</Link>
                 </Button>
               </CardHeader>
-              <CardContent>
+              <CardContent className="p-4 pt-2 sm:p-6 sm:pt-4">
                 <FettmattisTable fettMattis={fettMattisForDisplay} />
               </CardContent>
             </Card>
