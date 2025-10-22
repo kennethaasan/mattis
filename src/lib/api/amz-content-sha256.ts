@@ -94,6 +94,36 @@ export async function withAmzContentSha256Header(
   };
 }
 
+export async function withAmzContentSha256Request(request: Request): Promise<Request> {
+  const method = request.method.toUpperCase();
+  if (!METHODS_REQUIRING_HASH.has(method)) {
+    return request;
+  }
+
+  const clone = request.clone();
+  const buffer = await clone.arrayBuffer();
+  const baseBody: RequestInit["body"] = buffer.byteLength > 0 ? buffer : null;
+
+  const hashedInit = await withAmzContentSha256Header({
+    cache: "no-store",
+    method,
+    headers: request.headers,
+    body: baseBody,
+  });
+
+  const requestInit: RequestInit = {
+    ...hashedInit,
+    headers: new Headers(hashedInit.headers ?? undefined),
+  };
+
+  const resolvedBody = hashedInit.body ?? baseBody;
+  if (typeof resolvedBody !== "undefined") {
+    requestInit.body = resolvedBody;
+  }
+
+  return new Request(request, requestInit);
+}
+
 export const amzContentSha256FetchPlugin: BetterFetchPlugin = {
   id: "amz-content-sha256",
   name: "amz-content-sha256",
