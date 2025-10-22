@@ -1,12 +1,10 @@
 import type { QueryKey } from "@tanstack/react-query";
 
-import { fetchJson, fetchWithProblemDetails } from "@/lib/api/fetch-json";
+import { apiClient, problemToError } from "@/lib/api/client";
 import {
-  LatestRoundResponseSchema,
   type Round,
   type RoundCreate,
   RoundCreateSchema,
-  RoundListResponseSchema,
 } from "@/lib/api/schemas";
 
 export const LATEST_ROUND_QUERY_KEY = [
@@ -25,61 +23,59 @@ interface FetchRoundsOptions {
 export async function fetchRounds(
   options: FetchRoundsOptions = {},
 ): Promise<Round[]> {
-  const params = new URLSearchParams();
-  if (options.limit) {
-    params.set("limit", options.limit.toString());
+  const { data } = await apiClient.GET("/rounds", {
+    params: {
+      query: options.limit ? { limit: options.limit } : undefined,
+    },
+  });
+
+  if (!data) {
+    throw new Error(
+      "Vi mottok et ugyldig svar da rundelisten ble lastet.",
+    );
   }
 
-  const query = params.toString();
-  const url = query ? `/api/rounds?${query}` : "/api/rounds";
-
-  return fetchJson({
-    input: url,
-    schema: RoundListResponseSchema,
-    requestErrorMessage:
-      "Vi klarte ikke å laste rundeoversikten nå. Prøv igjen litt senere.",
-    parseErrorMessage:
-      "Vi mottok et ugyldig svar da rundelisten ble lastet.",
-  });
+  return data;
 }
 
 export async function fetchLatestRound(): Promise<Round | null> {
-  return fetchJson({
-    input: "/api/rounds/latest",
-    schema: LatestRoundResponseSchema,
-    requestErrorMessage:
-      "We couldn't load the most recent round right now. Please try again.",
-    parseErrorMessage:
-      "Received an invalid response when loading latest round.",
-  });
+  const { data } = await apiClient.GET("/rounds/latest");
+
+  if (typeof data === "undefined") {
+    throw new Error("Received an invalid response when loading latest round.");
+  }
+
+  return data;
 }
 
 export async function createRound(payload: RoundCreate): Promise<void> {
   const parsedPayload = RoundCreateSchema.parse(payload);
-
-  await fetchWithProblemDetails({
-    input: "/api/rounds",
-    init: {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-      },
-      credentials: "include",
-      body: JSON.stringify(parsedPayload),
+  const { error } = await apiClient.POST("/rounds", {
+    body: parsedPayload,
+    headers: {
+      "Content-Type": "application/json",
     },
-    errorMessage: "Kunne ikke lagre runden.",
+    credentials: "include",
   });
+
+  if (error) {
+    throw problemToError(error, "Kunne ikke lagre runden.");
+  }
 }
 
 export async function deleteRound(roundId: string): Promise<void> {
-  await fetchWithProblemDetails({
-    input: `/api/rounds/${roundId}`,
-    init: {
-      method: "DELETE",
-      credentials: "include",
+  const { error } = await apiClient.DELETE("/rounds/{roundId}", {
+    params: {
+      path: {
+        roundId,
+      },
     },
-    errorMessage: "Kunne ikke slette runden.",
+    credentials: "include",
   });
+
+  if (error) {
+    throw problemToError(error, "Kunne ikke slette runden.");
+  }
 }
 
 export type { Round } from "@/lib/api/schemas";

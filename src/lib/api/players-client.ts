@@ -1,47 +1,42 @@
 import type { QueryKey } from "@tanstack/react-query";
-import { fetchJson, fetchWithProblemDetails, parseJsonResponse } from "./fetch-json";
-import type { Player, PlayerCreate, PlayerUpdate } from "./schemas";
-import {
-  PlayerCreateSchema,
-  PlayerSchema,
-  PlayersResponseSchema,
-  PlayerUpdateSchema,
-} from "./schemas";
+
+import { apiClient, problemToError } from "@/lib/api/client";
+import type { Player, PlayerCreate, PlayerUpdate } from "@/lib/api/schemas";
+import { PlayerCreateSchema, PlayerUpdateSchema } from "@/lib/api/schemas";
 
 export const PLAYERS_QUERY_KEY = ["players"] as const satisfies QueryKey;
 
 export async function fetchPlayers(): Promise<Player[]> {
-  return fetchJson({
-    input: "/api/players",
-    schema: PlayersResponseSchema,
-    requestErrorMessage:
-      "We couldn't load the players right now. Please try again.",
-    parseErrorMessage: "Received an invalid response when loading players.",
-  });
+  const { data } = await apiClient.GET("/players");
+
+  if (!data) {
+    throw new Error("Received an invalid response when loading players.");
+  }
+
+  return data;
 }
 
-export type { Player, PlayerUpdate } from "./schemas";
+export type { Player, PlayerUpdate } from "@/lib/api/schemas";
 
 export async function createPlayer(payload: PlayerCreate): Promise<Player> {
   const parsedPayload = PlayerCreateSchema.parse(payload);
-  const response = await fetchWithProblemDetails({
-    input: "/api/players",
-    init: {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-      },
-      credentials: "include",
-      body: JSON.stringify(parsedPayload),
+  const { data, error } = await apiClient.POST("/players", {
+    body: parsedPayload,
+    headers: {
+      "Content-Type": "application/json",
     },
-    errorMessage: "Kunne ikke opprette spiller",
+    credentials: "include",
   });
 
-  return parseJsonResponse(
-    response,
-    PlayerSchema,
-    "Kunne ikke bekrefte den nye spilleren.",
-  );
+  if (error) {
+    throw problemToError(error, "Kunne ikke opprette spiller");
+  }
+
+  if (!data) {
+    throw new Error("Kunne ikke bekrefte den nye spilleren.");
+  }
+
+  return data;
 }
 
 export async function updatePlayer(
@@ -49,22 +44,28 @@ export async function updatePlayer(
   update: PlayerUpdate,
 ): Promise<Player> {
   const parsedPayload = PlayerUpdateSchema.parse(update);
-  const response = await fetchWithProblemDetails({
-    input: `/api/players/${playerId}`,
-    init: {
-      method: "PUT",
-      headers: {
-        "Content-Type": "application/json",
+  const { data, error } = await apiClient.PUT("/players/{playerId}", {
+    params: {
+      path: {
+        playerId,
       },
-      credentials: "include",
-      body: JSON.stringify(parsedPayload),
     },
-    errorMessage: "We couldn't update the player right now.",
+    body: parsedPayload,
+    headers: {
+      "Content-Type": "application/json",
+    },
+    credentials: "include",
   });
 
-  return parseJsonResponse(
-    response,
-    PlayerSchema,
-    "Received an invalid response when updating the player.",
-  );
+  if (error) {
+    throw problemToError(error, "We couldn't update the player right now.");
+  }
+
+  if (!data) {
+    throw new Error(
+      "Received an invalid response when updating the player.",
+    );
+  }
+
+  return data;
 }
