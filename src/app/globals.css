@@ -9,7 +9,7 @@
   padding-inline: 1rem;
   /* biome-ignore lint/correctness/noUnknownFunction: Tailwind CSS theme breakpoint lookup. */
   @media (width >= theme(--breakpoint-sm)) {
-    padding-inline: 1.5rem;
+    padding-inline: 2rem;
   }
   /* biome-ignore lint/correctness/noUnknownFunction: Tailwind CSS theme breakpoint lookup. */
   @media (width >= theme(--breakpoint-lg)) {
@@ -155,9 +155,7 @@
     color: hsl(var(--foreground));
     -webkit-font-smoothing: antialiased;
     -moz-osx-font-smoothing: grayscale;
-    font-feature-settings:
-      "rlig" 1,
-      "calt" 1;
+    font-feature-settings: "rlig" 1, "calt" 1;
   }
 
   ::selection {
