@@ -7,14 +7,7 @@ import { PlayerCreateSchema, PlayerUpdateSchema } from "@/lib/api/schemas";
 export const PLAYERS_QUERY_KEY = ["players"] as const satisfies QueryKey;
 
 export async function fetchPlayers(): Promise<Player[]> {
-  const { data, error } = await apiClient.GET("/players");
-
-  if (error) {
-    throw problemToError(
-      error.data,
-      "We couldn't load the players right now. Please try again.",
-    );
-  }
+  const { data } = await apiClient.GET("/players");
 
   if (!data) {
     throw new Error("Received an invalid response when loading players.");
@@ -36,7 +29,7 @@ export async function createPlayer(payload: PlayerCreate): Promise<Player> {
   });
 
   if (error) {
-    throw problemToError(error.data, "Kunne ikke opprette spiller");
+    throw problemToError(error, "Kunne ikke opprette spiller");
   }
 
   if (!data) {
@@ -65,10 +58,7 @@ export async function updatePlayer(
   });
 
   if (error) {
-    throw problemToError(
-      error.data,
-      "We couldn't update the player right now.",
-    );
+    throw problemToError(error, "We couldn't update the player right now.");
   }
 
   if (!data) {

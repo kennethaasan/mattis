@@ -1,4 +1,4 @@
-import { apiClient, problemToError } from "@/lib/api/client";
+import { apiClient } from "@/lib/api/client";
 import type {
   FettmattisLeaderboard,
   LeaderboardScope,
@@ -16,19 +16,12 @@ function createQuery(scope: LeaderboardScope) {
 export async function getRegularLeaderboard(
   scope: LeaderboardScope,
 ): Promise<RegularLeaderboard> {
-  const { data, error } = await apiClient.GET("/leaderboard/regular", {
+  const { data } = await apiClient.GET("/leaderboard/regular", {
     params: {
       query: createQuery(scope),
     },
     credentials: "include",
   });
-
-  if (error) {
-    throw problemToError(
-      error.data,
-      "Failed to load regular leaderboard.",
-    );
-  }
 
   if (!data) {
     throw new Error(
@@ -49,19 +42,12 @@ export async function getRegularLeaderboard(
 export async function getFettmattisLeaderboard(
   scope: LeaderboardScope,
 ): Promise<FettmattisLeaderboard> {
-  const { data, error } = await apiClient.GET("/leaderboard/fettmattis", {
+  const { data } = await apiClient.GET("/leaderboard/fettmattis", {
     params: {
       query: createQuery(scope),
     },
     credentials: "include",
   });
-
-  if (error) {
-    throw problemToError(
-      error.data,
-      "Failed to load Fettmattis leaderboard.",
-    );
-  }
 
   if (!data) {
     throw new Error(
@@ -78,16 +64,9 @@ export async function getFettmattisLeaderboard(
 }
 
 export async function getLeaderboardSeasons(): Promise<number[]> {
-  const { data, error } = await apiClient.GET("/leaderboard/seasons", {
+  const { data } = await apiClient.GET("/leaderboard/seasons", {
     credentials: "include",
   });
-
-  if (error) {
-    throw problemToError(
-      error.data,
-      "Failed to load leaderboard seasons.",
-    );
-  }
 
   if (!data) {
     throw new Error(

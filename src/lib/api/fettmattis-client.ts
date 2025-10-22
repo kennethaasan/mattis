@@ -18,18 +18,11 @@ interface FetchFettMattisOptions {
 export async function fetchFettMattis(
   options: FetchFettMattisOptions = {},
 ): Promise<FettMattis[]> {
-  const { data, error } = await apiClient.GET("/fettmattis", {
+  const { data } = await apiClient.GET("/fettmattis", {
     params: {
       query: options.limit ? { limit: options.limit } : undefined,
     },
   });
-
-  if (error) {
-    throw problemToError(
-      error.data,
-      "Vi klarte ikke å laste FettMattis-oversikten nå. Prøv igjen litt senere.",
-    );
-  }
 
   if (!data) {
     throw new Error(
@@ -53,7 +46,7 @@ export async function createFettMattis(payload: FettMattisCreate): Promise<void>
   });
 
   if (error) {
-    throw problemToError(error.data, "Kunne ikke tildele en Fettmattis.");
+    throw problemToError(error, "Kunne ikke tildele en Fettmattis.");
   }
 }
 
@@ -68,6 +61,6 @@ export async function revokeFettMattis(fettMattisId: string): Promise<void> {
   });
 
   if (error) {
-    throw problemToError(error.data, "Kunne ikke slette Fettmattis.");
+    throw problemToError(error, "Kunne ikke slette Fettmattis.");
   }
 }

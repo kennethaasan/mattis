@@ -23,18 +23,11 @@ interface FetchRoundsOptions {
 export async function fetchRounds(
   options: FetchRoundsOptions = {},
 ): Promise<Round[]> {
-  const { data, error } = await apiClient.GET("/rounds", {
+  const { data } = await apiClient.GET("/rounds", {
     params: {
       query: options.limit ? { limit: options.limit } : undefined,
     },
   });
-
-  if (error) {
-    throw problemToError(
-      error.data,
-      "Vi klarte ikke å laste rundeoversikten nå. Prøv igjen litt senere.",
-    );
-  }
 
   if (!data) {
     throw new Error(
@@ -46,14 +39,7 @@ export async function fetchRounds(
 }
 
 export async function fetchLatestRound(): Promise<Round | null> {
-  const { data, error } = await apiClient.GET("/rounds/latest");
-
-  if (error) {
-    throw problemToError(
-      error.data,
-      "We couldn't load the most recent round right now. Please try again.",
-    );
-  }
+  const { data } = await apiClient.GET("/rounds/latest");
 
   if (typeof data === "undefined") {
     throw new Error("Received an invalid response when loading latest round.");
@@ -73,7 +59,7 @@ export async function createRound(payload: RoundCreate): Promise<void> {
   });
 
   if (error) {
-    throw problemToError(error.data, "Kunne ikke lagre runden.");
+    throw problemToError(error, "Kunne ikke lagre runden.");
   }
 }
 
@@ -88,7 +74,7 @@ export async function deleteRound(roundId: string): Promise<void> {
   });
 
   if (error) {
-    throw problemToError(error.data, "Kunne ikke slette runden.");
+    throw problemToError(error, "Kunne ikke slette runden.");
   }
 }
 
