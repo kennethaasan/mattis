@@ -195,6 +195,29 @@ paths:
           $ref: "#/components/responses/Unauthorized"
 
   /rounds:
+    get:
+      summary: List Rounds
+      operationId: listRounds
+      tags:
+        - Rounds
+      security: []
+      parameters:
+        - name: limit
+          in: query
+          schema:
+            type: integer
+            minimum: 1
+            maximum: 100
+          description: Limit the number of rounds returned. Defaults to 20 when omitted.
+      responses:
+        "200":
+          description: A list of recent rounds.
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/Round"
     post:
       summary: Record a Round
       operationId: createRound
@@ -326,6 +349,29 @@ paths:
           $ref: "#/components/responses/Unauthorized"
 
   /fettmattis:
+    get:
+      summary: List FettMattis Entries
+      operationId: listFettmattis
+      tags:
+        - FettMattis
+      security: []
+      parameters:
+        - name: limit
+          in: query
+          schema:
+            type: integer
+            minimum: 1
+            maximum: 100
+          description: Limit the number of FettMattis entries returned. Defaults to 20 when omitted.
+      responses:
+        "200":
+          description: A list of recent FettMattis entries.
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/FettMattis"
     post:
       summary: Create FettMattis
       operationId: createFettmattis

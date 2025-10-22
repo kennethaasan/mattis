@@ -1,5 +1,7 @@
 import { z } from "zod";
 
+import type { components } from "@/lib/api/generated";
+
 // --- Base Schemas ---
 
 export const uuidSchema = z.string().refine(
@@ -78,8 +80,6 @@ export const PlayerUpdateSchema = z.object({
   active: z.boolean().optional(),
 });
 
-export const PlayersResponseSchema = PlayerSchema.array();
-
 // --- Round Schemas ---
 
 export const RoundSchema = z.object({
@@ -122,9 +122,6 @@ export const RoundUpdateSchema = z
     },
   );
 
-export const RoundListResponseSchema = RoundSchema.array();
-export const LatestRoundResponseSchema = RoundSchema.nullable();
-
 export const ListQuerySchema = z.object({
   limit: z.coerce.number().int().min(1).max(100).optional(),
 });
@@ -142,8 +139,6 @@ export const FettMattisCreateSchema = z.object({
   player_id: uuidSchema,
   round_id: uuidSchema.optional(),
 });
-
-export const FettMattisListResponseSchema = FettMattisSchema.array();
 
 // --- Leaderboard Schemas ---
 
@@ -172,11 +167,6 @@ export const FettmattisLeaderboardItemSchema = z.object({
   fettmattis_count: z.coerce.number().int(),
 });
 
-export const RegularLeaderboardResponseSchema =
-  RegularLeaderboardItemSchema.array();
-export const FettmattisLeaderboardResponseSchema =
-  FettmattisLeaderboardItemSchema.array();
-
 export const LeaderboardSeasonsResponseSchema = z.object({
   seasons: z
     .array(z.coerce.number().int().min(2000).max(CURRENT_YEAR))
@@ -195,32 +185,25 @@ export const ProblemDetailsSchema = z.object({
 
 // --- Exported Types ---
 
-export type AuthUser = z.infer<typeof AuthUserSchema>;
-export type AuthSessionData = z.infer<typeof AuthSessionDataSchema>;
-export type AuthSession = z.infer<typeof AuthSessionSchema>;
-export type EmailPasswordSignInRequest = z.infer<
-  typeof EmailPasswordSignInRequestSchema
->;
-export type EmailPasswordSignInResponse = z.infer<
-  typeof EmailPasswordSignInResponseSchema
->;
-export type SignOutResponse = z.infer<typeof SignOutResponseSchema>;
-export type Player = z.infer<typeof PlayerSchema>;
-export type PlayerCreate = z.infer<typeof PlayerCreateSchema>;
-export type PlayerUpdate = z.infer<typeof PlayerUpdateSchema>;
-export type LeaderboardSeasonsResponse = z.infer<
-  typeof LeaderboardSeasonsResponseSchema
->;
-export type Round = z.infer<typeof RoundSchema>;
-export type RoundCreate = z.infer<typeof RoundCreateSchema>;
-export type RoundUpdate = z.infer<typeof RoundUpdateSchema>;
-export type FettMattis = z.infer<typeof FettMattisSchema>;
-export type FettMattisCreate = z.infer<typeof FettMattisCreateSchema>;
+type ApiSchemas = components["schemas"];
+
+export type AuthUser = ApiSchemas["AuthUser"];
+export type AuthSessionData = ApiSchemas["AuthSessionData"];
+export type AuthSession = ApiSchemas["AuthSession"];
+export type AuthSessionResponse = AuthSession | null;
+export type EmailPasswordSignInRequest = ApiSchemas["EmailPasswordSignInRequest"];
+export type EmailPasswordSignInResponse = ApiSchemas["EmailPasswordSignInResponse"];
+export type SignOutResponse = ApiSchemas["SignOutResponse"];
+export type Player = ApiSchemas["Player"];
+export type PlayerCreate = ApiSchemas["PlayerCreate"];
+export type PlayerUpdate = ApiSchemas["PlayerUpdate"];
+export type LeaderboardSeasonsResponse = ApiSchemas["LeaderboardSeasonsResponse"];
+export type Round = ApiSchemas["Round"];
+export type RoundCreate = ApiSchemas["RoundCreate"];
+export type RoundUpdate = ApiSchemas["RoundUpdate"];
+export type FettMattis = ApiSchemas["FettMattis"];
+export type FettMattisCreate = ApiSchemas["FettMattisCreate"];
+export type RegularLeaderboardItem = ApiSchemas["RegularLeaderboardItem"];
+export type FettmattisLeaderboardItem = ApiSchemas["FettmattisLeaderboardItem"];
+export type ProblemDetails = ApiSchemas["Problem"];
 export type ListQuery = z.infer<typeof ListQuerySchema>;
-export type RegularLeaderboardItem = z.infer<
-  typeof RegularLeaderboardItemSchema
->;
-export type FettmattisLeaderboardItem = z.infer<
-  typeof FettmattisLeaderboardItemSchema
->;
-export type ProblemDetails = z.infer<typeof ProblemDetailsSchema>;

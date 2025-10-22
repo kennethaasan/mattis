@@ -18,3 +18,4 @@ AGENT QUICK REFERENCE
 16. Never modify generated or ignored paths (dist/, reports/, migrations/, .next/). Commit messages follow Conventional Commits (feat|fix|docs|refactor|test|chore|build|ci|perf|revert).
 17. Use git mv when moving/renaming files to preserve git history
 18. The canonical API contract lives at /openapi.yaml — keep it in sync when backend behaviour changes.
+19. Regenerate OpenAPI typings with `npm run openapi:generate` after editing the contract, and use `apiClient` from `@/lib/api/client` (powered by openapi-fetch) for typed requests. Prefer pulling API-facing TS types from the generated OpenAPI components instead of `z.infer`.

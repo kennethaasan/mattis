@@ -21,3 +21,11 @@ This repository uses [pre-commit](https://pre-commit.com/) to run formatting, li
 3. Enable the hooks with `pre-commit install`.
 
 You can run all hooks on demand with `pre-commit run -a`.
+
+### OpenAPI-driven client
+
+The TypeScript app consumes the API contract defined in [`openapi.yaml`](./openapi.yaml).
+
+* Run `npm run openapi:generate` whenever the contract changes to refresh the generated typings in [`src/lib/api/generated.ts`](./src/lib/api/generated.ts).
+* Use the shared `apiClient` from [`src/lib/api/client.ts`](./src/lib/api/client.ts) for HTTP requests. It wraps [`openapi-fetch`](https://github.com/drwpow/openapi-fetch) so every `GET`, `POST`, `PUT`, etc. call is type-safe out of the box.
+* Prefer deriving API-facing TypeScript types from the generated OpenAPI components (see [`src/lib/api/schemas.ts`](./src/lib/api/schemas.ts)) instead of `z.infer`, so we do not have to manually synchronize type aliases with the schema.

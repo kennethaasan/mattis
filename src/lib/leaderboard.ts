@@ -1,9 +1,4 @@
-import { fetchJson } from "@/lib/api/fetch-json";
-import {
-  FettmattisLeaderboardResponseSchema,
-  LeaderboardSeasonsResponseSchema,
-  RegularLeaderboardResponseSchema,
-} from "@/lib/api/schemas";
+import { apiClient, problemToError } from "@/lib/api/client";
 import type {
   FettmattisLeaderboard,
   LeaderboardScope,
@@ -11,31 +6,37 @@ import type {
 } from "@/lib/leaderboard-types";
 
 function createQuery(scope: LeaderboardScope) {
-  const params = new URLSearchParams();
   if (scope === "all") {
-    params.set("year", "all");
-  } else {
-    params.set("year", scope.toString());
+    return { year: "all" as const };
   }
-  return params;
+
+  return { year: scope };
 }
 
 export async function getRegularLeaderboard(
   scope: LeaderboardScope,
 ): Promise<RegularLeaderboard> {
-  const query = createQuery(scope);
-  const payload = await fetchJson({
-    input: `/api/leaderboard/regular?${query.toString()}`,
-    init: {
-      credentials: "include",
+  const { data, error } = await apiClient.GET("/leaderboard/regular", {
+    params: {
+      query: createQuery(scope),
     },
-    schema: RegularLeaderboardResponseSchema,
-    requestErrorMessage: "Failed to load regular leaderboard.",
-    parseErrorMessage:
-      "Received an invalid response when loading the leaderboard.",
+    credentials: "include",
   });
 
-  return payload.map((entry, index) => ({
+  if (error) {
+    throw problemToError(
+      error.data,
+      "Failed to load regular leaderboard.",
+    );
+  }
+
+  if (!data) {
+    throw new Error(
+      "Received an invalid response when loading the leaderboard.",
+    );
+  }
+
+  return data.map((entry, index) => ({
     playerId: entry.player.id,
     playerName: entry.player.display_name,
     roundsPlayed: entry.participation_count,
@@ -48,19 +49,27 @@ export async function getRegularLeaderboard(
 export async function getFettmattisLeaderboard(
   scope: LeaderboardScope,
 ): Promise<FettmattisLeaderboard> {
-  const query = createQuery(scope);
-  const payload = await fetchJson({
-    input: `/api/leaderboard/fettmattis?${query.toString()}`,
-    init: {
-      credentials: "include",
+  const { data, error } = await apiClient.GET("/leaderboard/fettmattis", {
+    params: {
+      query: createQuery(scope),
     },
-    schema: FettmattisLeaderboardResponseSchema,
-    requestErrorMessage: "Failed to load Fettmattis leaderboard.",
-    parseErrorMessage:
-      "Received an invalid response when loading the leaderboard.",
+    credentials: "include",
   });
 
-  return payload.map((entry, index) => ({
+  if (error) {
+    throw problemToError(
+      error.data,
+      "Failed to load Fettmattis leaderboard.",
+    );
+  }
+
+  if (!data) {
+    throw new Error(
+      "Received an invalid response when loading the leaderboard.",
+    );
+  }
+
+  return data.map((entry, index) => ({
     playerId: entry.player.id,
     playerName: entry.player.display_name,
     fettmattisCount: entry.fettmattis_count,
@@ -69,16 +78,22 @@ export async function getFettmattisLeaderboard(
 }
 
 export async function getLeaderboardSeasons(): Promise<number[]> {
-  const payload = await fetchJson({
-    input: `/api/leaderboard/seasons`,
-    init: {
-      credentials: "include",
-    },
-    schema: LeaderboardSeasonsResponseSchema,
-    requestErrorMessage: "Failed to load leaderboard seasons.",
-    parseErrorMessage:
-      "Received an invalid response when loading leaderboard seasons.",
+  const { data, error } = await apiClient.GET("/leaderboard/seasons", {
+    credentials: "include",
   });
 
-  return payload.seasons;
+  if (error) {
+    throw problemToError(
+      error.data,
+      "Failed to load leaderboard seasons.",
+    );
+  }
+
+  if (!data) {
+    throw new Error(
+      "Received an invalid response when loading leaderboard seasons.",
+    );
+  }
+
+  return data.seasons;
 }

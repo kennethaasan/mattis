@@ -1,11 +1,10 @@
 import type { QueryKey } from "@tanstack/react-query";
 
-import { fetchJson, fetchWithProblemDetails } from "@/lib/api/fetch-json";
+import { apiClient, problemToError } from "@/lib/api/client";
 import {
   type FettMattis,
   type FettMattisCreate,
   FettMattisCreateSchema,
-  FettMattisListResponseSchema,
 } from "@/lib/api/schemas";
 
 export function createFettMattisListQueryKey(limit?: number) {
@@ -19,50 +18,56 @@ interface FetchFettMattisOptions {
 export async function fetchFettMattis(
   options: FetchFettMattisOptions = {},
 ): Promise<FettMattis[]> {
-  const params = new URLSearchParams();
-  if (options.limit) {
-    params.set("limit", options.limit.toString());
+  const { data, error } = await apiClient.GET("/fettmattis", {
+    params: {
+      query: options.limit ? { limit: options.limit } : undefined,
+    },
+  });
+
+  if (error) {
+    throw problemToError(
+      error.data,
+      "Vi klarte ikke å laste FettMattis-oversikten nå. Prøv igjen litt senere.",
+    );
   }
 
-  const query = params.toString();
-  const url = query ? `/api/fettmattis?${query}` : "/api/fettmattis";
-
-  return fetchJson({
-    input: url,
-    schema: FettMattisListResponseSchema,
-    requestErrorMessage:
-      "Vi klarte ikke å laste FettMattis-oversikten nå. Prøv igjen litt senere.",
-    parseErrorMessage:
+  if (!data) {
+    throw new Error(
       "Vi mottok et ugyldig svar da FettMattis-listen ble lastet.",
-  });
+    );
+  }
+
+  return data;
 }
 
 export type { FettMattis } from "@/lib/api/schemas";
 
 export async function createFettMattis(payload: FettMattisCreate): Promise<void> {
   const parsedPayload = FettMattisCreateSchema.parse(payload);
-
-  await fetchWithProblemDetails({
-    input: "/api/fettmattis",
-    init: {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-      },
-      credentials: "include",
-      body: JSON.stringify(parsedPayload),
+  const { error } = await apiClient.POST("/fettmattis", {
+    body: parsedPayload,
+    headers: {
+      "Content-Type": "application/json",
     },
-    errorMessage: "Kunne ikke tildele en Fettmattis.",
+    credentials: "include",
   });
+
+  if (error) {
+    throw problemToError(error.data, "Kunne ikke tildele en Fettmattis.");
+  }
 }
 
 export async function revokeFettMattis(fettMattisId: string): Promise<void> {
-  await fetchWithProblemDetails({
-    input: `/api/fettmattis/${fettMattisId}`,
-    init: {
-      method: "DELETE",
-      credentials: "include",
+  const { error } = await apiClient.DELETE("/fettmattis/{fettmattisId}", {
+    params: {
+      path: {
+        fettmattisId: fettMattisId,
+      },
     },
-    errorMessage: "Kunne ikke slette Fettmattis.",
+    credentials: "include",
   });
+
+  if (error) {
+    throw problemToError(error.data, "Kunne ikke slette Fettmattis.");
+  }
 }
