@@ -184,32 +184,46 @@ resource "aws_lambda_permission" "allow_cloudfront" {
   function_url_auth_type = "AWS_IAM"
 }
 
-resource "aws_route53_record" "app_a" {
-  name            = var.app_domain
-  type            = "A"
-  zone_id         = data.aws_route53_zone.zone.zone_id
-  allow_overwrite = true
+module "dns_records" {
+  source  = "terraform-aws-modules/route53/aws"
+  version = "6.1.0"
 
-  alias {
-    name                   = module.cdn.cloudfront_distribution_domain_name
-    zone_id                = module.cdn.cloudfront_distribution_hosted_zone_id
-    evaluate_target_health = false
+  create      = true
+  create_zone = false
+  name        = data.aws_route53_zone.zone.name
+  private_zone = false
+
+  records = {
+    app_a = {
+      full_name                        = var.app_domain
+      type                             = "A"
+      allow_overwrite                  = true
+      multivalue_answer_routing_policy = false
+      ttl                              = 0
+      records                          = []
+      alias = {
+        name                   = module.cdn.cloudfront_distribution_domain_name
+        zone_id                = module.cdn.cloudfront_distribution_hosted_zone_id
+        evaluate_target_health = false
+      }
+    }
+
+    app_aaaa = {
+      full_name                        = var.app_domain
+      type                             = "AAAA"
+      allow_overwrite                  = true
+      multivalue_answer_routing_policy = false
+      ttl                              = 0
+      records                          = []
+      alias = {
+        name                   = module.cdn.cloudfront_distribution_domain_name
+        zone_id                = module.cdn.cloudfront_distribution_hosted_zone_id
+        evaluate_target_health = false
+      }
+    }
   }
 
-  depends_on = [module.cdn]
-}
-
-resource "aws_route53_record" "app_aaaa" {
-  name            = var.app_domain
-  type            = "AAAA"
-  zone_id         = data.aws_route53_zone.zone.zone_id
-  allow_overwrite = true
-
-  alias {
-    name                   = module.cdn.cloudfront_distribution_domain_name
-    zone_id                = module.cdn.cloudfront_distribution_hosted_zone_id
-    evaluate_target_health = false
-  }
+  tags = local.default_tags
 
   depends_on = [module.cdn]
 }
