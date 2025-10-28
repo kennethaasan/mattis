@@ -190,6 +190,7 @@ module "dns_records" {
 
   create_zone = false
   name        = var.parent_domain
+  zone_id     = data.aws_route53_zone.zone.zone_id
 
   records = {
     app_a = {
