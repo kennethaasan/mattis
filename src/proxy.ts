@@ -21,7 +21,7 @@ const ALLOWED_METHODS = [
 
 const UNPROTECTED_PATHS = [/^\/api\/auth(?:\/|$)/];
 
-export async function middleware(request: NextRequest) {
+export async function proxy(request: NextRequest) {
   const responseHeaders = new Headers();
   const trustedOrigins = getTrustedOrigins(request);
   const origin = request.headers.get("origin");
@@ -89,5 +89,4 @@ export async function middleware(request: NextRequest) {
 
 export const config = {
   matcher: ["/api/:path*"],
-  runtime: "nodejs",
 };
