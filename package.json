@@ -11,7 +11,7 @@
     "build": "SKIP_ENV_VALIDATION=true next build",
     "package:lambda": "./scripts/package-lambda.sh",
     "build:lambda": "npm run build && npm run package:lambda",
-    "start": "node .next/standalone/server.js",
+    "start": "next start",
     "typegen": "next typegen",
     "lint": "npm run typegen && biome check .",
     "openapi:generate": "openapi-typescript openapi.yaml --output src/lib/api/generated.ts",

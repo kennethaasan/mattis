@@ -10,12 +10,12 @@ export async function loginAsTestUser(page: Page): Promise<void> {
     );
   }
 
-  await page.goto("/login");
-  
+  await page.goto("/login", { waitUntil: "domcontentloaded" });
+
   await page.getByLabel("E-post").fill(username);
   await page.getByLabel("Passord").fill(password);
-  
+
   await page.getByRole("button", { name: "Logg inn" }).click();
-  
+
   await page.waitForURL("/rounds");
 }

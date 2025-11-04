@@ -1,9 +1,7 @@
 import "dotenv/config";
 import { defineConfig, devices } from "@playwright/test";
 
-const PORT = process.env.PORT ?? "3000";
-const HOST = process.env.HOST ?? "127.0.0.1";
-const baseURL = process.env.PLAYWRIGHT_BASE_URL ?? `http://${HOST}:${PORT}`;
+const BASE_URL = "http://localhost:3000";
 
 export default defineConfig({
   testDir: "./tests/e2e",
@@ -26,7 +24,7 @@ export default defineConfig({
     ],
   ],
   use: {
-    baseURL,
+    baseURL: BASE_URL,
     trace: "retain-on-failure",
     screenshot: "only-on-failure",
     video: "retain-on-failure",
@@ -38,9 +36,9 @@ export default defineConfig({
     },
   ],
   webServer: {
-    command: `npm run start -- --hostname ${HOST} --port ${PORT}`,
-    url: baseURL,
+    command: "npm run start",
+    url: BASE_URL,
     reuseExistingServer: !process.env.CI,
-    timeout: 120_000,
+    timeout: 10_000,
   },
 });
