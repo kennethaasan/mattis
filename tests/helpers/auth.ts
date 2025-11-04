@@ -21,11 +21,13 @@ export async function loginAsTestUser(page: Page): Promise<void> {
   await page.getByLabel("E-post").fill(username);
   await page.getByLabel("Passord").fill(password);
 
-  const signInResponsePromise = page.waitForResponse((response) => {
-    return (
-      response.url().includes("/api/auth/sign-in/email") && response.status() === 200
-    );
-  });
+  const signInResponsePromise = page.waitForResponse(
+    (response) =>
+      response.url().includes("/api/auth/sign-in/email") &&
+      response.request().method() === "POST" &&
+      response.status() < 400,
+    { timeout: 30_000 },
+  );
 
   const loginButton = page.getByRole("button", { name: "Logg inn" });
 
@@ -38,7 +40,11 @@ export async function loginAsTestUser(page: Page): Promise<void> {
   );
 
   await loginButton.click();
-  await signInResponsePromise;
+  const signInResponse = await signInResponsePromise;
+
+  if (!signInResponse.ok()) {
+    throw new Error(`Login failed with status ${signInResponse.status()}`);
+  }
 
   await page.waitForURL("/rounds", { waitUntil: "domcontentloaded" });
 }
