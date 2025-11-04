@@ -79,7 +79,7 @@ The [`iac/`](./iac/) directory contains Terraform configuration for provisioning
 - **Database**: Neon PostgreSQL project in `aws-eu-central-1` with 7 days PITR retention
 - **Compute**: AWS Lambda function (ZIP runtime) in `eu-north-1` running Next.js standalone server via Lambda Web Adapter
 - **CDN**: CloudFront distribution with Origin Access Control (OAC) secured to the Lambda Function URL
-- **DNS**: Route53 records and ACM certificate for `mattis.aasan.dev`
+- **DNS**: Route53 records and ACM certificate for `mattis.aws.aasan.dev`
 
 See [`iac/README.md`](./iac/README.md) for detailed infrastructure documentation, required variables, and deployment instructions.
 
