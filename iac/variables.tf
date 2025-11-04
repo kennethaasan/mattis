@@ -19,13 +19,13 @@ variable "aws_region" {
 variable "parent_domain" {
   description = "Base Route53 hosted zone domain name"
   type        = string
-  default     = "aasan.dev"
+  default     = "aws.aasan.dev"
 }
 
 variable "app_domain" {
   description = "Fully qualified domain name for the application"
   type        = string
-  default     = "mattis.aasan.dev"
+  default     = "mattis.aws.aasan.dev"
 }
 
 variable "neon_api_key" {

@@ -3,7 +3,7 @@ import type { NextRequest } from "next/server";
 import { config } from "@/env";
 
 const STATIC_TRUSTED_ORIGINS = [
-  "https://mattis.aasan.dev",
+  "https://mattis.aws.aasan.dev",
   "https://mattis.vanvikil.no",
 ] as const;
 
@@ -21,7 +21,8 @@ export function getTrustedOrigins(request?: Request | NextRequest): string[] {
       origins.add(originHeader);
     }
 
-    const requestUrl = "nextUrl" in request ? request.nextUrl : new URL(request.url);
+    const requestUrl =
+      "nextUrl" in request ? request.nextUrl : new URL(request.url);
     origins.add(`${requestUrl.protocol}//${requestUrl.host}`);
   }
 
