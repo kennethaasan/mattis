@@ -152,6 +152,9 @@ jobs:
       - name: Seed database
         run: npm run seed
 
+      - name: Build application
+        run: npm run build
+
       - name: Run Playwright tests
         run: npm run test:e2e
 
