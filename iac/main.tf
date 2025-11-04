@@ -195,9 +195,9 @@ module "dns_records" {
 
   records = {
     app_a = {
-      full_name                        = var.app_domain
-      type                             = "A"
-      allow_overwrite                  = true
+      full_name       = var.app_domain
+      type            = "A"
+      allow_overwrite = true
       alias = {
         name                   = module.cdn.cloudfront_distribution_domain_name
         zone_id                = module.cdn.cloudfront_distribution_hosted_zone_id
@@ -206,9 +206,9 @@ module "dns_records" {
     }
 
     app_aaaa = {
-      full_name                        = var.app_domain
-      type                             = "AAAA"
-      allow_overwrite                  = true
+      full_name       = var.app_domain
+      type            = "AAAA"
+      allow_overwrite = true
       alias = {
         name                   = module.cdn.cloudfront_distribution_domain_name
         zone_id                = module.cdn.cloudfront_distribution_hosted_zone_id
