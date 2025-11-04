@@ -188,8 +188,10 @@ module "dns_records" {
   source  = "terraform-aws-modules/route53/aws"
   version = "6.1.0"
 
-  create_zone = false
-  name        = var.parent_domain
+  create       = true
+  create_zone  = false
+  name         = data.aws_route53_zone.zone.name
+  private_zone = false
 
   records = {
     app_a = {
@@ -197,8 +199,9 @@ module "dns_records" {
       type            = "A"
       allow_overwrite = true
       alias = {
-        name    = module.cdn.cloudfront_distribution_domain_name
-        zone_id = module.cdn.cloudfront_distribution_hosted_zone_id
+        name                   = module.cdn.cloudfront_distribution_domain_name
+        zone_id                = module.cdn.cloudfront_distribution_hosted_zone_id
+        evaluate_target_health = false
       }
     }
 
@@ -207,8 +210,9 @@ module "dns_records" {
       type            = "AAAA"
       allow_overwrite = true
       alias = {
-        name    = module.cdn.cloudfront_distribution_domain_name
-        zone_id = module.cdn.cloudfront_distribution_hosted_zone_id
+        name                   = module.cdn.cloudfront_distribution_domain_name
+        zone_id                = module.cdn.cloudfront_distribution_hosted_zone_id
+        evaluate_target_health = false
       }
     }
   }
