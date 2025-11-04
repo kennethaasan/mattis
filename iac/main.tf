@@ -188,9 +188,9 @@ module "dns_records" {
   source  = "terraform-aws-modules/route53/aws"
   version = "6.1.0"
 
-  create      = true
-  create_zone = false
-  name        = data.aws_route53_zone.zone.name
+  create       = true
+  create_zone  = false
+  name         = data.aws_route53_zone.zone.name
   private_zone = false
 
   records = {
