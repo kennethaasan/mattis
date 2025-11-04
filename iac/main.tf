@@ -198,9 +198,6 @@ module "dns_records" {
       full_name                        = var.app_domain
       type                             = "A"
       allow_overwrite                  = true
-      multivalue_answer_routing_policy = false
-      ttl                              = 0
-      records                          = []
       alias = {
         name                   = module.cdn.cloudfront_distribution_domain_name
         zone_id                = module.cdn.cloudfront_distribution_hosted_zone_id
@@ -212,9 +209,6 @@ module "dns_records" {
       full_name                        = var.app_domain
       type                             = "AAAA"
       allow_overwrite                  = true
-      multivalue_answer_routing_policy = false
-      ttl                              = 0
-      records                          = []
       alias = {
         name                   = module.cdn.cloudfront_distribution_domain_name
         zone_id                = module.cdn.cloudfront_distribution_hosted_zone_id
