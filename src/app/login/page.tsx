@@ -10,7 +10,7 @@ import { useAuth } from "@/contexts/AuthContext";
 
 export default function LoginPage() {
   const router = useRouter();
-  const { login, user, error } = useAuth();
+  const { login, user, loading, error } = useAuth();
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [formError, setFormError] = useState<string | null>(null);
@@ -44,7 +44,7 @@ export default function LoginPage() {
     [email, login, password, router],
   );
 
-  const submitDisabled = isSubmitting || email.length === 0 || password.length === 0;
+  const submitDisabled = loading || isSubmitting || email.length === 0 || password.length === 0;
 
   return (
     <div className="container flex min-h-[60vh] items-center justify-center py-16">

@@ -2,57 +2,6 @@ import { expect, test } from "@playwright/test";
 import { loginAsTestUser } from "../helpers/auth";
 
 test.beforeEach(async ({ page }) => {
-  await page.route(/\/api\/rounds(\?.*)?$/, async (route, request) => {
-    if (request.method() !== "GET") {
-      await route.fallback();
-      return;
-    }
-
-    await route.fulfill({
-      status: 200,
-      contentType: "application/json",
-      body: JSON.stringify([]),
-    });
-  });
-
-  await page.route("**/api/rounds/latest**", async (route) => {
-    await route.fulfill({
-      status: 200,
-      contentType: "application/json",
-      body: "null",
-    });
-  });
-
-  await page.route(/\/api\/fettmattis(\?.*)?$/, async (route, request) => {
-    if (request.method() !== "GET") {
-      await route.fallback();
-      return;
-    }
-
-    await route.fulfill({
-      status: 200,
-      contentType: "application/json",
-      body: JSON.stringify([]),
-    });
-  });
-
-  await page.route(
-    "**/api/players",
-    async (route, request) => {
-      if (request.method() !== "GET") {
-        await route.fallback();
-        return;
-      }
-
-      await route.fulfill({
-        status: 200,
-        contentType: "application/json",
-        body: JSON.stringify([]),
-      });
-    },
-    { times: 1 },
-  );
-
   await loginAsTestUser(page);
 });
 

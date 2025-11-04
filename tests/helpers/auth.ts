@@ -10,35 +10,12 @@ export async function loginAsTestUser(page: Page): Promise<void> {
     );
   }
 
-  await page.goto("/login", { waitUntil: "domcontentloaded" });
-
-  await page.waitForResponse(
-    (response) =>
-      response.url().includes("/api/auth/get-session") && response.request().method() === "GET",
-    { timeout: 30_000 },
-  );
-
+  await page.goto("/login");
+  
   await page.getByLabel("E-post").fill(username);
   await page.getByLabel("Passord").fill(password);
-
-  const signInResponsePromise = page.waitForResponse((response) => {
-    return (
-      response.url().includes("/api/auth/sign-in/email") && response.status() === 200
-    );
-  });
-
-  const loginButton = page.getByRole("button", { name: "Logg inn" });
-
-  await page.waitForFunction(
-    () => {
-      const candidate = document.querySelector("form button[type='submit']");
-      return candidate instanceof HTMLButtonElement && candidate.disabled === false;
-    },
-    { timeout: 30_000 },
-  );
-
-  await loginButton.click();
-  await signInResponsePromise;
-
-  await page.waitForURL("/rounds", { waitUntil: "domcontentloaded" });
+  
+  await page.getByRole("button", { name: "Logg inn" }).click();
+  
+  await page.waitForURL("/rounds");
 }
