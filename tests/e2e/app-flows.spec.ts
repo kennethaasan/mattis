@@ -238,21 +238,29 @@ test("T037: leaderboard view surfaces regular and FettMattis standings", async (
     });
   });
 
-  await page.goto("/leaderboard", { waitUntil: "networkidle" });
+  await page.goto("/leaderboard", { waitUntil: "domcontentloaded" });
 
-  const tables = await page.getByRole("table").all();
-
-  const regularTable = tables.at(0);
-  if (!regularTable) {
-    throw new Error("Could not find the regular leaderboard table.");
-  }
+  const regularTable = page
+    .getByRole("table")
+    .filter({
+      has: page.getByRole("columnheader", {
+        name: "Tap %",
+        exact: true,
+      }),
+    });
+  await expect(regularTable).toBeVisible();
   await expect(regularTable.getByRole("row", { name: /Aria/ })).toBeVisible();
   await expect(regularTable.getByRole("row", { name: /Cato/ })).toBeVisible();
 
-  const fettMattisTable = tables.at(1);
-  if (!fettMattisTable) {
-    throw new Error("Could not find the FettMattis leaderboard table.");
-  }
+  const fettMattisTable = page
+    .getByRole("table")
+    .filter({
+      has: page.getByRole("columnheader", {
+        name: "FettMattis",
+        exact: true,
+      }),
+    });
+  await expect(fettMattisTable).toBeVisible();
   await expect(
     fettMattisTable.getByRole("row", { name: /Nova/ }),
   ).toBeVisible();
