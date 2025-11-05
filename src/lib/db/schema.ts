@@ -109,7 +109,7 @@ export const roundParticipants = pgTable(
       columns: [table.roundId, table.playerId],
       name: "round_participants_pk",
     }),
-  ]
+  ],
 );
 
 export const roundLoser = pgTable("round_loser", {
@@ -169,7 +169,7 @@ export const roundParticipantsRelations = relations(
       fields: [roundParticipants.playerId],
       references: [players.id],
     }),
-  })
+  }),
 );
 
 export const roundLoserRelations = relations(roundLoser, ({ one }) => ({

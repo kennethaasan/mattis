@@ -22,7 +22,9 @@ export function getRequestLogContext(request: RequestLike): RequestLogContext {
   };
 }
 
-export function getErrorLogContext(error: unknown): ErrorLogContext | { raw: unknown } {
+export function getErrorLogContext(
+  error: unknown,
+): ErrorLogContext | { raw: unknown } {
   if (error instanceof Error) {
     return {
       name: error.name,

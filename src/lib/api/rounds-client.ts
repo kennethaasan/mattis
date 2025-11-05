@@ -30,9 +30,7 @@ export async function fetchRounds(
   });
 
   if (!data) {
-    throw new Error(
-      "Vi mottok et ugyldig svar da rundelisten ble lastet.",
-    );
+    throw new Error("Vi mottok et ugyldig svar da rundelisten ble lastet.");
   }
 
   return data;

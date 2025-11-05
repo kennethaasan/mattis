@@ -77,8 +77,9 @@ export default function RoundsClientPage() {
   });
 
   const roundsListQueryKey = createRoundsListQueryKey(ROUNDS_LIST_LIMIT);
-  const fettMattisListQueryKey =
-    createFettMattisListQueryKey(FETTMATTIS_LIST_LIMIT);
+  const fettMattisListQueryKey = createFettMattisListQueryKey(
+    FETTMATTIS_LIST_LIMIT,
+  );
 
   const roundsQuery = useQuery<Round[], Error>({
     queryKey: roundsListQueryKey,
@@ -99,7 +100,7 @@ export default function RoundsClientPage() {
 
   const activePlayers = useMemo(
     () => players.filter((player) => player.active),
-    [players]
+    [players],
   );
 
   const latestRoundParticipants = latestRoundQuery.data?.participants ?? [];
@@ -107,10 +108,10 @@ export default function RoundsClientPage() {
     () =>
       new Map(
         latestRoundParticipants.map(
-          (participant, index) => [participant.id, index] as const
-        )
+          (participant, index) => [participant.id, index] as const,
+        ),
       ),
-    [latestRoundParticipants]
+    [latestRoundParticipants],
   );
 
   const hydratablePlayers = useMemo(
@@ -139,7 +140,7 @@ export default function RoundsClientPage() {
 
           return a.displayName.localeCompare(b.displayName);
         }),
-    [activePlayers, participantOrder]
+    [activePlayers, participantOrder],
   );
 
   const roundMutation = useMutation<void, Error, RoundCreate>({
@@ -230,8 +231,7 @@ export default function RoundsClientPage() {
       : undefined;
 
   const deletingFettMattisIds =
-    revokeFettMattisMutation.isPending &&
-    revokeFettMattisMutation.variables
+    revokeFettMattisMutation.isPending && revokeFettMattisMutation.variables
       ? new Set([revokeFettMattisMutation.variables])
       : undefined;
 

@@ -22,7 +22,7 @@ const mockAuthenticatedUser = {
 
 vi.mock("@/lib/auth/authorize", async () => {
   const actual = await vi.importActual<typeof import("@/lib/auth/authorize")>(
-    "@/lib/auth/authorize"
+    "@/lib/auth/authorize",
   );
 
   return {
@@ -60,10 +60,9 @@ vi.mock("@/lib/db/db", async () => {
   await apply();
 
   // now we can seed some data
-  const { ensureBasicAuthUser } =
-    (await import("@/scripts/utils/ensure-basic-user")) as typeof import(
-      "@/scripts/utils/ensure-basic-user"
-    );
+  const { ensureBasicAuthUser } = (await import(
+    "@/scripts/utils/ensure-basic-user"
+  )) as typeof import("@/scripts/utils/ensure-basic-user");
 
   await ensureBasicAuthUser(db as unknown as SeedDb);
 

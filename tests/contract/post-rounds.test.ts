@@ -123,7 +123,7 @@ test("T010: POST /api/rounds returns 400 when validation fails", async () => {
 
 test("T010: POST /api/rounds returns 404 when a participant is missing", async () => {
   mocks.createRound.mockRejectedValueOnce(
-    new mocks.MockNotFoundError("Missing participant")
+    new mocks.MockNotFoundError("Missing participant"),
   );
 
   const request = createRequest({
@@ -143,7 +143,7 @@ test("T010: POST /api/rounds returns 404 when a participant is missing", async (
 
 test("T010: POST /api/rounds returns 409 when there is a conflict", async () => {
   mocks.createRound.mockRejectedValueOnce(
-    new mocks.MockConflictError("Conflict")
+    new mocks.MockConflictError("Conflict"),
   );
 
   const request = createRequest({

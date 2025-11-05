@@ -41,7 +41,7 @@ export async function proxy(request: NextRequest) {
 
   const pathname = request.nextUrl.pathname;
   const isUnprotectedPath = UNPROTECTED_PATHS.some((pattern) =>
-    pattern.test(pathname)
+    pattern.test(pathname),
   );
 
   if (isUnprotectedPath) {

@@ -29,7 +29,7 @@ import type {
 
 export function Leaderboard() {
   const [scope, setScope] = useState<LeaderboardScope>(() =>
-    new Date().getFullYear()
+    new Date().getFullYear(),
   );
   const currentYear = useMemo(() => new Date().getFullYear(), []);
   const yearSelectId = useId();
@@ -50,8 +50,8 @@ export function Leaderboard() {
   const regularHasError = regularQuery.isError;
   const fettmattisHasError = fettmattisQuery.isError;
 
-  const regular = regularHasError ? [] : regularQuery.data ?? [];
-  const fettmattis = fettmattisHasError ? [] : fettmattisQuery.data ?? [];
+  const regular = regularHasError ? [] : (regularQuery.data ?? []);
+  const fettmattis = fettmattisHasError ? [] : (fettmattisQuery.data ?? []);
   const regularLoading = regularQuery.isLoading || regularQuery.isFetching;
   const fettmattisLoading =
     fettmattisQuery.isLoading || fettmattisQuery.isFetching;

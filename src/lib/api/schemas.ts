@@ -40,10 +40,7 @@ export const AuthSessionSchema = z.object({
   user: AuthUserSchema,
 });
 
-export const AuthSessionResponseSchema = z.union([
-  AuthSessionSchema,
-  z.null(),
-]);
+export const AuthSessionResponseSchema = z.union([AuthSessionSchema, z.null()]);
 
 export const EmailPasswordSignInRequestSchema = z.object({
   email: z.string().email(),
@@ -168,9 +165,7 @@ export const FettmattisLeaderboardItemSchema = z.object({
 });
 
 export const LeaderboardSeasonsResponseSchema = z.object({
-  seasons: z
-    .array(z.coerce.number().int().min(2000).max(CURRENT_YEAR))
-    .min(1),
+  seasons: z.array(z.coerce.number().int().min(2000).max(CURRENT_YEAR)).min(1),
 });
 
 // --- Utility Schemas ---
@@ -191,13 +186,16 @@ export type AuthUser = ApiSchemas["AuthUser"];
 export type AuthSessionData = ApiSchemas["AuthSessionData"];
 export type AuthSession = ApiSchemas["AuthSession"];
 export type AuthSessionResponse = AuthSession | null;
-export type EmailPasswordSignInRequest = ApiSchemas["EmailPasswordSignInRequest"];
-export type EmailPasswordSignInResponse = ApiSchemas["EmailPasswordSignInResponse"];
+export type EmailPasswordSignInRequest =
+  ApiSchemas["EmailPasswordSignInRequest"];
+export type EmailPasswordSignInResponse =
+  ApiSchemas["EmailPasswordSignInResponse"];
 export type SignOutResponse = ApiSchemas["SignOutResponse"];
 export type Player = ApiSchemas["Player"];
 export type PlayerCreate = ApiSchemas["PlayerCreate"];
 export type PlayerUpdate = ApiSchemas["PlayerUpdate"];
-export type LeaderboardSeasonsResponse = ApiSchemas["LeaderboardSeasonsResponse"];
+export type LeaderboardSeasonsResponse =
+  ApiSchemas["LeaderboardSeasonsResponse"];
 export type Round = ApiSchemas["Round"];
 export type RoundCreate = ApiSchemas["RoundCreate"];
 export type RoundUpdate = ApiSchemas["RoundUpdate"];

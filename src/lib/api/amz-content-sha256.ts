@@ -36,7 +36,9 @@ function isBlob(value: unknown): value is Blob {
 }
 
 function isUrlSearchParams(value: unknown): value is URLSearchParams {
-  return typeof URLSearchParams !== "undefined" && value instanceof URLSearchParams;
+  return (
+    typeof URLSearchParams !== "undefined" && value instanceof URLSearchParams
+  );
 }
 
 async function resolveBodyBytes(
@@ -70,7 +72,9 @@ async function resolveBodyBytes(
     return { bytes: new Uint8Array(buffer), body };
   }
 
-  throw new Error("Unsupported request body type for x-amz-content-sha256 header.");
+  throw new Error(
+    "Unsupported request body type for x-amz-content-sha256 header.",
+  );
 }
 
 export async function withAmzContentSha256Header(
@@ -94,7 +98,9 @@ export async function withAmzContentSha256Header(
   };
 }
 
-export async function withAmzContentSha256Request(request: Request): Promise<Request> {
+export async function withAmzContentSha256Request(
+  request: Request,
+): Promise<Request> {
   const method = request.method.toUpperCase();
   if (!METHODS_REQUIRING_HASH.has(method)) {
     return request;

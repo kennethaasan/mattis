@@ -10,7 +10,7 @@ export async function loginAsTestUser(page: Page): Promise<void> {
 
   if (!username || !password) {
     throw new Error(
-      "BASIC_AUTH_USERNAME and BASIC_AUTH_PASSWORD must be set in environment"
+      "BASIC_AUTH_USERNAME and BASIC_AUTH_PASSWORD must be set in environment",
     );
   }
 
@@ -51,7 +51,9 @@ export async function loginAsTestUser(page: Page): Promise<void> {
       return;
     } catch (error) {
       const rateLimitNotice = page.getByText(RATE_LIMIT_MESSAGE);
-      const isRateLimited = await rateLimitNotice.isVisible().catch(() => false);
+      const isRateLimited = await rateLimitNotice
+        .isVisible()
+        .catch(() => false);
 
       if (!isRateLimited || attempt === MAX_LOGIN_ATTEMPTS) {
         throw error;

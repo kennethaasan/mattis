@@ -8,16 +8,16 @@ test.describe("Leaderboard Page", () => {
   test("loads and displays leaderboard content", async ({ page }) => {
     await test.step("Verify page heading is visible", async () => {
       await expect(
-        page.getByRole("heading", { name: "Tabeller", level: 1 })
+        page.getByRole("heading", { name: "Tabeller", level: 1 }),
       ).toBeVisible();
     });
 
     await test.step("Verify both leaderboard sections exist", async () => {
       await expect(
-        page.getByRole("heading", { name: "Vanlig tabell" })
+        page.getByRole("heading", { name: "Vanlig tabell" }),
       ).toBeVisible();
       await expect(
-        page.getByRole("heading", { name: "Fettmattis-utdelinger" })
+        page.getByRole("heading", { name: "Fettmattis-utdelinger" }),
       ).toBeVisible();
     });
 
@@ -32,19 +32,19 @@ test.describe("Leaderboard Page", () => {
       await expect(regularTable).toBeVisible();
 
       await expect(
-        regularTable.getByRole("columnheader", { name: "Plass" })
+        regularTable.getByRole("columnheader", { name: "Plass" }),
       ).toBeVisible();
       await expect(
-        regularTable.getByRole("columnheader", { name: "Spiller" })
+        regularTable.getByRole("columnheader", { name: "Spiller" }),
       ).toBeVisible();
       await expect(
-        regularTable.getByRole("columnheader", { name: "Tap %" })
+        regularTable.getByRole("columnheader", { name: "Tap %" }),
       ).toBeVisible();
       await expect(
-        regularTable.getByRole("columnheader", { name: "Tap", exact: true })
+        regularTable.getByRole("columnheader", { name: "Tap", exact: true }),
       ).toBeVisible();
       await expect(
-        regularTable.getByRole("columnheader", { name: "Runder" })
+        regularTable.getByRole("columnheader", { name: "Runder" }),
       ).toBeVisible();
     });
   });
@@ -76,13 +76,13 @@ test.describe("Leaderboard Page", () => {
         const fettmattisTable = tables.nth(1);
         await expect(fettmattisTable).toBeVisible();
         await expect(
-          fettmattisTable.getByRole("columnheader", { name: "Plass" })
+          fettmattisTable.getByRole("columnheader", { name: "Plass" }),
         ).toBeVisible();
         await expect(
-          fettmattisTable.getByRole("columnheader", { name: "Spiller" })
+          fettmattisTable.getByRole("columnheader", { name: "Spiller" }),
         ).toBeVisible();
         await expect(
-          fettmattisTable.getByRole("columnheader", { name: "FettMattis" })
+          fettmattisTable.getByRole("columnheader", { name: "FettMattis" }),
         ).toBeVisible();
       } else {
         // Verify empty state message is shown
@@ -104,7 +104,7 @@ test.describe("Leaderboard Page", () => {
       await expect(
         page.getByRole("heading", {
           name: `Sesongoversikt for ${currentYear}`,
-        })
+        }),
       ).toBeVisible();
     });
 
@@ -155,7 +155,7 @@ test.describe("Leaderboard Page", () => {
 
       // The page should show something (either empty state or table)
       expect(hasRegularEmpty || hasFettmattisEmpty || hasRegularTable).toBe(
-        true
+        true,
       );
     });
   });

@@ -35,7 +35,9 @@ export async function fetchFettMattis(
 
 export type { FettMattis } from "@/lib/api/schemas";
 
-export async function createFettMattis(payload: FettMattisCreate): Promise<void> {
+export async function createFettMattis(
+  payload: FettMattisCreate,
+): Promise<void> {
   const parsedPayload = FettMattisCreateSchema.parse(payload);
   const { error } = await apiClient.POST("/fettmattis", {
     body: parsedPayload,

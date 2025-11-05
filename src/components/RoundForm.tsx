@@ -21,7 +21,7 @@ interface RoundFormProps {
 
 export function RoundForm({ onSubmit, players, initialData }: RoundFormProps) {
   const [participantIds, setParticipantIds] = useState<string[]>(
-    initialData?.participant_ids ?? []
+    initialData?.participant_ids ?? [],
   );
   const [loserId, setLoserId] = useState(initialData?.loser_id ?? "");
   const [error, setError] = useState<string | null>(null);
@@ -41,7 +41,7 @@ export function RoundForm({ onSubmit, players, initialData }: RoundFormProps) {
     const validPlayerIds = new Set(players.map((player) => player.id));
 
     setParticipantIds((current) =>
-      current.filter((participantId) => validPlayerIds.has(participantId))
+      current.filter((participantId) => validPlayerIds.has(participantId)),
     );
   }, [players]);
 
@@ -54,18 +54,18 @@ export function RoundForm({ onSubmit, players, initialData }: RoundFormProps) {
   const participantOptions = useMemo(
     () =>
       players.map((player) => ({ id: player.id, label: player.displayName })),
-    [players]
+    [players],
   );
 
   const loserOptions = participantOptions.filter((option) =>
-    participantIds.includes(option.id)
+    participantIds.includes(option.id),
   );
 
   const toggleParticipant = (playerId: string) => {
     setParticipantIds((current) =>
       current.includes(playerId)
         ? current.filter((id) => id !== playerId)
-        : [...current, playerId]
+        : [...current, playerId],
     );
   };
 
@@ -113,7 +113,7 @@ export function RoundForm({ onSubmit, players, initialData }: RoundFormProps) {
                   "hover:border-primary/40 flex items-center justify-between rounded-2xl border px-4 py-3 text-left text-sm transition",
                   isChecked
                     ? "border-primary/50 bg-primary/10 text-primary"
-                    : "border-border/70 text-muted-foreground"
+                    : "border-border/70 text-muted-foreground",
                 )}
               >
                 <span className="text-foreground font-medium">

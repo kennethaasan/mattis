@@ -63,7 +63,7 @@ export function AuthProvider({ children }: AuthProviderProps) {
               const message = ctx.error.message || "Feil e-post eller passord.";
               setError(message);
             },
-          }
+          },
         );
 
         if (result.error) {
@@ -78,7 +78,7 @@ export function AuthProvider({ children }: AuthProviderProps) {
         throw loginError;
       }
     },
-    []
+    [],
   );
 
   const logout = useCallback(async () => {
@@ -89,7 +89,7 @@ export function AuthProvider({ children }: AuthProviderProps) {
       setError(
         logoutError instanceof Error
           ? logoutError.message
-          : "Kunne ikke logge ut."
+          : "Kunne ikke logge ut.",
       );
     }
   }, []);
@@ -107,7 +107,7 @@ export function AuthProvider({ children }: AuthProviderProps) {
       logout,
       refresh,
     }),
-    [error, isPending, login, logout, refresh, sessionError, user]
+    [error, isPending, login, logout, refresh, sessionError, user],
   );
 
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;

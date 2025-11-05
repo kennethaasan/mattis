@@ -94,13 +94,14 @@ export function FettmattisTable({
               const detailDate = DETAIL_DATETIME_FORMATTER.format(createdAt);
               const isExpanded = expanded.has(entry.id);
               const deleting = deletingIds?.has(entry.id) ?? false;
-              const canDelete = Boolean(onDelete) &&
+              const canDelete =
+                Boolean(onDelete) &&
                 Date.now() - createdAt.getTime() <= EDIT_WINDOW_MS;
               const editWindowDeadline = new Date(
                 createdAt.getTime() + EDIT_WINDOW_MS,
               );
-              const editWindowExpired = Date.now() >
-                editWindowDeadline.getTime();
+              const editWindowExpired =
+                Date.now() > editWindowDeadline.getTime();
 
               return (
                 <Fragment key={entry.id}>
@@ -114,7 +115,9 @@ export function FettmattisTable({
                       </div>
                     </TableCell>
                     <TableCell className="hidden sm:table-cell">
-                      <Badge className="w-fit">{entry.player.display_name}</Badge>
+                      <Badge className="w-fit">
+                        {entry.player.display_name}
+                      </Badge>
                     </TableCell>
                     <TableCell className="text-left sm:text-right">
                       <div className="flex flex-wrap justify-start gap-2 sm:justify-end">

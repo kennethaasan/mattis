@@ -12,12 +12,7 @@ export const env = createEnv({
     POWERTOOLS_LOG_LEVEL: z
       .enum(["TRACE", "DEBUG", "INFO", "WARN", "ERROR", "CRITICAL"])
       .default("INFO"),
-    POWERTOOLS_TRACING_SAMPLE_RATE: z
-      .coerce
-      .number()
-      .min(0)
-      .max(1)
-      .default(0),
+    POWERTOOLS_TRACING_SAMPLE_RATE: z.coerce.number().min(0).max(1).default(0),
     POWERTOOLS_SERVICE_NAME: z.string().min(1).default("mattis"),
   },
   experimental__runtimeEnv: {},
