@@ -62,9 +62,7 @@ export async function updatePlayer(
   }
 
   if (!data) {
-    throw new Error(
-      "Received an invalid response when updating the player.",
-    );
+    throw new Error("Received an invalid response when updating the player.");
   }
 
   return data;

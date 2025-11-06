@@ -15,7 +15,7 @@ import {
 
 export async function GET(
   _req: Request,
-  context: { params: Promise<{ roundId: string }> }
+  context: { params: Promise<{ roundId: string }> },
 ) {
   const { roundId } = await context.params;
 
@@ -48,7 +48,7 @@ export async function GET(
 
 export async function PUT(
   req: NextRequest,
-  context: { params: Promise<{ roundId: string }> }
+  context: { params: Promise<{ roundId: string }> },
 ) {
   const auth = await requireAuthenticatedRequest(req.headers);
   if (!auth) {
@@ -122,7 +122,7 @@ export async function PUT(
 
 export async function DELETE(
   req: NextRequest,
-  context: { params: Promise<{ roundId: string }> }
+  context: { params: Promise<{ roundId: string }> },
 ) {
   const auth = await requireAuthenticatedRequest(req.headers);
   if (!auth) {

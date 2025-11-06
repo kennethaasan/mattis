@@ -168,7 +168,7 @@ async function seed(): Promise<void> {
       await ensureBasicAuthUser(tx);
       writeLine(
         process.stdout,
-        `Ensured basic auth user ${basicAuthUser.email}.`
+        `Ensured basic auth user ${basicAuthUser.email}.`,
       );
       const players = await insertPlayers(tx);
       const rounds = await insertRounds(tx, players);
@@ -198,7 +198,7 @@ async function resetTables(client: DbExecutor): Promise<void> {
 }
 
 async function insertPlayers(
-  client: DbExecutor
+  client: DbExecutor,
 ): Promise<Map<string, PlayerRecord>> {
   writeLine(process.stdout, "Inserting players...");
   const playerMap = new Map<string, PlayerRecord>();
@@ -234,7 +234,7 @@ async function insertPlayers(
 
 async function insertRounds(
   client: DbExecutor,
-  players: Map<string, PlayerRecord>
+  players: Map<string, PlayerRecord>,
 ): Promise<Map<string, RoundRecord>> {
   writeLine(process.stdout, "Recording rounds...");
   const roundsMap = new Map<string, RoundRecord>();
@@ -244,7 +244,7 @@ async function insertRounds(
       const record = players.get(key);
       if (!record) {
         throw new Error(
-          `Participant ${key} not found while seeding round ${round.key}.`
+          `Participant ${key} not found while seeding round ${round.key}.`,
         );
       }
       return record.id;
@@ -253,7 +253,7 @@ async function insertRounds(
     const loser = players.get(round.loser);
     if (!loser) {
       throw new Error(
-        `Loser ${round.loser} not found while seeding round ${round.key}.`
+        `Loser ${round.loser} not found while seeding round ${round.key}.`,
       );
     }
 
@@ -268,7 +268,7 @@ async function insertRounds(
       participantIds.map((participantId) => ({
         roundId: round.id,
         playerId: participantId,
-      }))
+      })),
     );
 
     await client.insert(schema.roundLoser).values({
@@ -286,7 +286,7 @@ async function insertRounds(
 async function insertFettMattis(
   client: DbExecutor,
   players: Map<string, PlayerRecord>,
-  rounds: Map<string, RoundRecord>
+  rounds: Map<string, RoundRecord>,
 ): Promise<void> {
   writeLine(process.stdout, "Awarding Fettmattis records...");
 

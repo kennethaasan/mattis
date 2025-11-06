@@ -9,12 +9,7 @@ interface PageShellProps {
 
 export function PageShell({ children, className }: PageShellProps) {
   return (
-    <div
-      className={cn(
-        "container flex flex-col gap-12 py-16",
-        className,
-      )}
-    >
+    <div className={cn("container flex flex-col gap-12 py-16", className)}>
       {children}
     </div>
   );

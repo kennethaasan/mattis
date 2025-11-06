@@ -463,17 +463,17 @@ export async function listRecentFettMattis(
     .orderBy(desc(fettmattis.createdAt))
     .limit(listLimit);
 
-    return rows.map((row) => ({
-      id: row.id,
-      createdAt: row.createdAt,
-      createdBy: row.createdBy,
-      revokedAt: row.revokedAt,
-      player: mapParticipant({
-        id: row.playerId,
-        displayName: row.playerDisplayName,
-        active: row.playerActive,
-      }),
-    }));
+  return rows.map((row) => ({
+    id: row.id,
+    createdAt: row.createdAt,
+    createdBy: row.createdBy,
+    revokedAt: row.revokedAt,
+    player: mapParticipant({
+      id: row.playerId,
+      displayName: row.playerDisplayName,
+      active: row.playerActive,
+    }),
+  }));
 }
 
 export async function updateRound(
@@ -756,7 +756,8 @@ export async function getLeaderboardSeasons(): Promise<number[]> {
   const fettmattisYear = extractYear(fettmattisResult.rows.at(0)?.created_at);
 
   const candidateYears = [roundYear, fettmattisYear].filter(
-    (value): value is number => typeof value === "number" && Number.isFinite(value),
+    (value): value is number =>
+      typeof value === "number" && Number.isFinite(value),
   );
 
   const earliestCandidate =

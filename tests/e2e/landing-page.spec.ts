@@ -11,7 +11,7 @@ test.describe("Landing Page", () => {
         page.getByRole("heading", {
           name: "Et vakkert hjem for hver Mattis-runde, hvert tap og hver Fettmattis-feiring.",
           level: 2,
-        })
+        }),
       ).toBeVisible();
     });
 
@@ -48,7 +48,7 @@ test.describe("Landing Page", () => {
 
     if (!leaderboardBox || !roundsBox || !fettMattisBox) {
       throw new Error(
-        "Unable to determine layout for leaderboard or activity tables."
+        "Unable to determine layout for leaderboard or activity tables.",
       );
     }
 

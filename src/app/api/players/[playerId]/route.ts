@@ -12,7 +12,7 @@ import {
 
 export async function GET(
   _req: Request,
-  context: { params: Promise<{ playerId: string }> }
+  context: { params: Promise<{ playerId: string }> },
 ) {
   const { playerId } = await context.params;
 
@@ -45,7 +45,7 @@ export async function GET(
 
 export async function PUT(
   req: Request,
-  context: { params: Promise<{ playerId: string }> }
+  context: { params: Promise<{ playerId: string }> },
 ) {
   const { playerId } = await context.params;
 

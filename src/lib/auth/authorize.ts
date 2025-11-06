@@ -49,7 +49,7 @@ function unauthorizedResponse(): NextResponse {
 }
 
 export async function authenticateRequest(
-  headers: Headers
+  headers: Headers,
 ): Promise<AuthResult> {
   const session = await getSessionFromCookies(headers);
   if (!session) {
@@ -63,7 +63,7 @@ export async function authenticateRequest(
 }
 
 export async function requireAuthenticatedRequest(
-  headers: Headers
+  headers: Headers,
 ): Promise<AuthenticatedUser | undefined> {
   const result = await authenticateRequest(headers);
 

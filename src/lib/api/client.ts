@@ -13,7 +13,9 @@ export const apiClient = createClient<paths>({
 
 export type Problem = components["schemas"]["Problem"];
 
-export function resolveProblemDetail(problem: Problem | undefined): string | undefined {
+export function resolveProblemDetail(
+  problem: Problem | undefined,
+): string | undefined {
   const detail = problem?.detail;
   if (typeof detail !== "string") {
     return undefined;

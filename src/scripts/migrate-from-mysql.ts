@@ -184,7 +184,10 @@ async function ensureTargetIsEmpty(db: TargetDatabase): Promise<void> {
       .from(schema.roundLoser)
       .limit(1),
     db.select({ id: schema.sessions.id }).from(schema.sessions).limit(1),
-    db.select({ id: schema.verifications.id }).from(schema.verifications).limit(1),
+    db
+      .select({ id: schema.verifications.id })
+      .from(schema.verifications)
+      .limit(1),
     db.select({ id: schema.accounts.id }).from(schema.accounts).limit(1),
     db.select({ id: schema.fettmattis.id }).from(schema.fettmattis).limit(1),
   ]);

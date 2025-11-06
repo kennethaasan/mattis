@@ -60,9 +60,7 @@ test("renders error panel for failed leaderboard queries", () => {
   const inlineErrors = screen.getAllByText(
     "Kunne ikke laste vanlige resultater. Prøv igjen senere.",
   );
-  const bannerError = screen.getByText(
-    "Kunne ikke hente vanlige resultater",
-  );
+  const bannerError = screen.getByText("Kunne ikke hente vanlige resultater");
 
   expect(inlineErrors.length).toBeGreaterThan(0);
   expect(bannerError).toBeDefined();

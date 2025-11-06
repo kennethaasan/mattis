@@ -100,7 +100,8 @@ export function RoundsTable({
               const isExpanded = expandedRounds.has(round.id);
               const participantCount = round.participants.length;
               const deleting = deletingRoundIds?.has(round.id) ?? false;
-              const canDelete = Boolean(onDeleteRound) &&
+              const canDelete =
+                Boolean(onDeleteRound) &&
                 Date.now() - createdAt.getTime() <= EDIT_WINDOW_MS;
 
               return (
@@ -118,7 +119,9 @@ export function RoundsTable({
                       </div>
                     </TableCell>
                     <TableCell className="hidden sm:table-cell">
-                      <span className="font-medium">{round.loser.display_name}</span>
+                      <span className="font-medium">
+                        {round.loser.display_name}
+                      </span>
                     </TableCell>
                     <TableCell className="hidden text-right sm:table-cell">
                       {participantCount}

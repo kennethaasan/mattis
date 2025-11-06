@@ -32,7 +32,9 @@ export function SectionHeader({
       )}
     >
       {badge ? (
-        <div className={cn("w-fit", align === "center" ? "mx-auto" : undefined)}>
+        <div
+          className={cn("w-fit", align === "center" ? "mx-auto" : undefined)}
+        >
           {badge}
         </div>
       ) : null}

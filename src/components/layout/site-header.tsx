@@ -88,7 +88,12 @@ export function SiteHeader() {
               Logg ut
             </Button>
           ) : (
-            <Button variant="default" size="sm" asChild className="hidden sm:inline-flex">
+            <Button
+              variant="default"
+              size="sm"
+              asChild
+              className="hidden sm:inline-flex"
+            >
               <Link href="/login">Logg inn</Link>
             </Button>
           )}

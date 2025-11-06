@@ -35,7 +35,9 @@ export default function LoginPage() {
         router.replace("/rounds");
       } catch (loginError) {
         const message =
-          loginError instanceof Error ? loginError.message : "Kunne ikke logge inn.";
+          loginError instanceof Error
+            ? loginError.message
+            : "Kunne ikke logge inn.";
         setFormError(message);
       } finally {
         setIsSubmitting(false);
@@ -44,7 +46,8 @@ export default function LoginPage() {
     [email, login, password, router],
   );
 
-  const submitDisabled = loading || isSubmitting || email.length === 0 || password.length === 0;
+  const submitDisabled =
+    loading || isSubmitting || email.length === 0 || password.length === 0;
 
   return (
     <div className="container flex min-h-[60vh] items-center justify-center py-16">
@@ -52,7 +55,8 @@ export default function LoginPage() {
         <div className="space-y-2 text-center">
           <h1 className="text-2xl font-semibold">Logg inn</h1>
           <p className="text-muted-foreground text-sm">
-            Skriv inn e-postadresse og passord for å få tilgang til administrasjonen.
+            Skriv inn e-postadresse og passord for å få tilgang til
+            administrasjonen.
           </p>
         </div>
         <form className="space-y-5" onSubmit={handleSubmit}>

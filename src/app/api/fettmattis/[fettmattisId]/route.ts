@@ -10,7 +10,7 @@ import {
 
 export async function DELETE(
   req: NextRequest,
-  context: { params: Promise<{ fettmattisId: string }> }
+  context: { params: Promise<{ fettmattisId: string }> },
 ) {
   const auth = await requireAuthenticatedRequest(req.headers);
   if (!auth) {

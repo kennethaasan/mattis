@@ -38,7 +38,11 @@ function createRound(overrides: Partial<Round> = {}): Round {
 function createFettMattis(overrides: Partial<FettMattis> = {}): FettMattis {
   const player =
     overrides.player ??
-    ({ id: "fett-1", display_name: "Ada", active: true } as FettMattis["player"]);
+    ({
+      id: "fett-1",
+      display_name: "Ada",
+      active: true,
+    } as FettMattis["player"]);
 
   return {
     id: "fettmattis-1",
@@ -68,9 +72,7 @@ describe("Activity tables", () => {
 
     const detailHeading = await screen.findByText("Taper");
     expect(detailHeading).toBeTruthy();
-    const detailSection = document.getElementById(
-      `round-details-${round.id}`,
-    );
+    const detailSection = document.getElementById(`round-details-${round.id}`);
     expect(detailSection).toBeTruthy();
     expect(detailSection?.textContent).toContain("Iben");
   });

@@ -36,7 +36,7 @@ test("T037: user can create a player from the roster page", async ({
   await createResponsePromise;
 
   await expect(
-    page.getByText("Spiller lagt til i troppen. Velkommen!")
+    page.getByText("Spiller lagt til i troppen. Velkommen!"),
   ).toBeVisible();
 
   const playerCell = page.getByRole("cell", {
@@ -49,7 +49,7 @@ test("T037: user can create a player from the roster page", async ({
   expect(playersResponse.ok()).toBeTruthy();
   const players = (await playersResponse.json()) as ApiPlayer[];
   const createdPlayer = players.find(
-    (player) => player.display_name === displayName
+    (player) => player.display_name === displayName,
   );
   expect(createdPlayer).toBeDefined();
 
@@ -58,7 +58,7 @@ test("T037: user can create a player from the roster page", async ({
       `/api/players/${createdPlayer.id}`,
       {
         data: { active: false },
-      }
+      },
     );
     expect(deactivateResponse.ok()).toBeTruthy();
   }
@@ -79,7 +79,7 @@ test("T037: recording a round confirms the success banner", async ({
   await page.getByRole("button", { name: "Lagre runde" }).click();
 
   await expect(
-    page.getByText("Runde lagret. Tabellene er oppdatert!")
+    page.getByText("Runde lagret. Tabellene er oppdatert!"),
   ).toBeVisible();
 
   const latestRoundResponse = await page.request.get("/api/rounds/latest");
@@ -91,7 +91,7 @@ test("T037: recording a round confirms the success banner", async ({
   }
 
   const roundButtons = page.locator(
-    `button[aria-controls="round-details-${latestRound.id}"]`
+    `button[aria-controls="round-details-${latestRound.id}"]`,
   );
   await expect(roundButtons).toBeVisible();
   await roundButtons.click();
@@ -107,7 +107,7 @@ test("T037: recording a round confirms the success banner", async ({
   await deleteButton.click();
 
   await expect(
-    page.getByText("Runde slettet. Tabellene er oppdatert!")
+    page.getByText("Runde slettet. Tabellene er oppdatert!"),
   ).toBeVisible();
   await expect(roundButtons).toHaveCount(0);
 });
@@ -127,7 +127,7 @@ test("T037: user can toggle player activity from the roster", async ({
 
   await expect(page.getByText(`${REX} er nå inaktiv.`)).toBeVisible();
   await expect(
-    targetRow.getByRole("cell", { name: "Inaktiv" }).first()
+    targetRow.getByRole("cell", { name: "Inaktiv" }).first(),
   ).toBeVisible();
 
   const activateButton = targetRow.getByRole("button", {
@@ -137,7 +137,7 @@ test("T037: user can toggle player activity from the roster", async ({
 
   await expect(page.getByText(`${REX} er nå aktiv.`)).toBeVisible();
   await expect(
-    targetRow.getByRole("cell", { name: "Aktiv" }).first()
+    targetRow.getByRole("cell", { name: "Aktiv" }).first(),
   ).toBeVisible();
 });
 
@@ -154,13 +154,13 @@ test("T037: leaderboard view surfaces regular and FettMattis standings", async (
   });
   await expect(regularTable).toBeVisible();
   await expect(
-    regularTable.getByRole("row", { name: new RegExp(EMIL, "i") })
+    regularTable.getByRole("row", { name: new RegExp(EMIL, "i") }),
   ).toBeVisible();
   await expect(
-    regularTable.getByRole("row", { name: new RegExp(REX, "i") })
+    regularTable.getByRole("row", { name: new RegExp(REX, "i") }),
   ).toBeVisible();
   await expect(
-    regularTable.getByRole("row", { name: new RegExp(LINA, "i") })
+    regularTable.getByRole("row", { name: new RegExp(LINA, "i") }),
   ).toBeVisible();
 
   const fettMattisTable = page.getByRole("table").filter({
@@ -171,10 +171,10 @@ test("T037: leaderboard view surfaces regular and FettMattis standings", async (
   });
   await expect(fettMattisTable).toBeVisible();
   await expect(
-    fettMattisTable.getByRole("row", { name: new RegExp(ASTRID, "i") })
+    fettMattisTable.getByRole("row", { name: new RegExp(ASTRID, "i") }),
   ).toBeVisible();
   await expect(
-    fettMattisTable.getByRole("row", { name: new RegExp(LINA, "i") })
+    fettMattisTable.getByRole("row", { name: new RegExp(LINA, "i") }),
   ).toBeVisible();
 });
 
@@ -184,7 +184,7 @@ test("T193: rounds dashboard enforces 24-hour deletion window", async ({
   await page.goto("/rounds", { waitUntil: "domcontentloaded" });
   await page.waitForSelector(`button:has-text("${ASTRID}")`);
   const archivedRoundButton = page.locator(
-    'button[aria-controls="round-details-20000000-0000-4000-8000-000000000201"]'
+    'button[aria-controls="round-details-20000000-0000-4000-8000-000000000201"]',
   );
   await expect(archivedRoundButton).toBeVisible();
 
@@ -193,7 +193,7 @@ test("T193: rounds dashboard enforces 24-hour deletion window", async ({
     .filter({ has: archivedRoundButton })
     .first();
   await expect(
-    archivedRoundRow.getByRole("button", { name: "Slett" })
+    archivedRoundRow.getByRole("button", { name: "Slett" }),
   ).toHaveCount(0);
 
   for (const participant of [ASTRID, EMIL, LINA]) {
@@ -205,7 +205,7 @@ test("T193: rounds dashboard enforces 24-hour deletion window", async ({
   await page.getByRole("button", { name: "Lagre runde" }).click();
 
   await expect(
-    page.getByText("Runde lagret. Tabellene er oppdatert!")
+    page.getByText("Runde lagret. Tabellene er oppdatert!"),
   ).toBeVisible();
 
   const latestRoundResponse = await page.request.get("/api/rounds/latest");
@@ -229,7 +229,7 @@ test("T193: rounds dashboard enforces 24-hour deletion window", async ({
     .locator("tr")
     .filter({
       has: page.locator(
-        `button[aria-controls="round-details-${latestRound.id}"]`
+        `button[aria-controls="round-details-${latestRound.id}"]`,
       ),
     })
     .first()
@@ -238,14 +238,14 @@ test("T193: rounds dashboard enforces 24-hour deletion window", async ({
   await latestRoundDeleteButton.click();
 
   await expect(
-    page.getByText("Runde slettet. Tabellene er oppdatert!")
+    page.getByText("Runde slettet. Tabellene er oppdatert!"),
   ).toBeVisible();
   await expect(
-    page.locator(`button[aria-controls="round-details-${latestRound.id}"]`)
+    page.locator(`button[aria-controls="round-details-${latestRound.id}"]`),
   ).toHaveCount(0);
 
   const archivedFettMattisButton = page.locator(
-    'button[aria-controls="fettmattis-details-30000000-0000-4000-8000-000000000302"]'
+    'button[aria-controls="fettmattis-details-30000000-0000-4000-8000-000000000302"]',
   );
   await expect(archivedFettMattisButton).toBeVisible();
 
@@ -254,13 +254,13 @@ test("T193: rounds dashboard enforces 24-hour deletion window", async ({
     .filter({ has: archivedFettMattisButton })
     .first();
   await expect(
-    archivedFettMattisRow.getByRole("button", { name: "Slett" })
+    archivedFettMattisRow.getByRole("button", { name: "Slett" }),
   ).toHaveCount(0);
 
   await page.getByLabel("Spiller").selectOption({ label: LINA });
   await page.getByRole("button", { name: "Tildel Fettmattis" }).click();
   await expect(
-    page.getByText("Fettmattis tildelt. Klar for feiring!")
+    page.getByText("Fettmattis tildelt. Klar for feiring!"),
   ).toBeVisible();
 
   const fettMattisResponse = await page.request.get("/api/fettmattis?limit=1");
@@ -273,7 +273,7 @@ test("T193: rounds dashboard enforces 24-hour deletion window", async ({
 
   const latestFettMattisDetailsButton = page
     .locator(
-      `button[aria-controls="fettmattis-details-${latestFettMattis.id}"]`
+      `button[aria-controls="fettmattis-details-${latestFettMattis.id}"]`,
     )
     .first();
   const latestFettMattisRow = page
@@ -283,14 +283,14 @@ test("T193: rounds dashboard enforces 24-hour deletion window", async ({
   await latestFettMattisDetailsButton.click();
 
   const latestFettMattisDetails = page.locator(
-    `#fettmattis-details-${latestFettMattis.id}`
+    `#fettmattis-details-${latestFettMattis.id}`,
   );
   await expect(latestFettMattisDetails).toBeVisible();
   await expect(
-    latestFettMattisDetails.getByText("Spillerstatus")
+    latestFettMattisDetails.getByText("Spillerstatus"),
   ).toBeVisible();
   await expect(
-    latestFettMattisDetails.getByText("Endringsvindu")
+    latestFettMattisDetails.getByText("Endringsvindu"),
   ).toBeVisible();
 
   const latestFettMattisDeleteButton = latestFettMattisRow.getByRole("button", {
@@ -300,11 +300,11 @@ test("T193: rounds dashboard enforces 24-hour deletion window", async ({
   await latestFettMattisDeleteButton.click();
 
   await expect(
-    page.getByText("Fettmattis fjernet. Oversikten er oppdatert.")
+    page.getByText("Fettmattis fjernet. Oversikten er oppdatert."),
   ).toBeVisible();
   await expect(
     page.locator(
-      `button[aria-controls="fettmattis-details-${latestFettMattis.id}"]`
-    )
+      `button[aria-controls="fettmattis-details-${latestFettMattis.id}"]`,
+    ),
   ).toHaveCount(0);
 });

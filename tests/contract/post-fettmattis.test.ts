@@ -88,7 +88,7 @@ test("T013: POST /api/fettmattis returns 400 when validation fails", async () =>
 
 test("T013: POST /api/fettmattis returns 404 when the player or round is missing", async () => {
   mocks.createFettMattis.mockRejectedValueOnce(
-    new mocks.MockNotFoundError("Missing player")
+    new mocks.MockNotFoundError("Missing player"),
   );
 
   const request = createRequest({
@@ -104,7 +104,7 @@ test("T013: POST /api/fettmattis returns 404 when the player or round is missing
 
 test("T013: POST /api/fettmattis returns 409 when a duplicate is detected", async () => {
   mocks.createFettMattis.mockRejectedValueOnce(
-    new mocks.MockConflictError("Duplicate")
+    new mocks.MockConflictError("Duplicate"),
   );
 
   const request = createRequest({
