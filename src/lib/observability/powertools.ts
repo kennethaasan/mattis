@@ -27,7 +27,7 @@ const tracer = new Tracer({
 });
 
 const metrics = new Metrics({
-  namespace: config.POWERTOOLS.SERVICE_NAME,
+  namespace: config.POWERTOOLS.METRICS_NAMESPACE,
   serviceName: config.POWERTOOLS.SERVICE_NAME,
 });
 

@@ -36,6 +36,9 @@ jobs:
           - name: Lint (Biome)
             command: npm run lint
             job-timeout: 15
+          - name: OpenAPI Lint (Spectral)
+            command: npm run spectral
+            job-timeout: 10
     steps:
       - &node-checkout
         name: Checkout repository
@@ -177,6 +180,53 @@ jobs:
         if: github.event_name == 'pull_request'
         uses: actions/dependency-review-action@v4
 
+  accessibility:
+    name: Accessibility
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    services:
+      postgres:
+        image: postgres:17
+        ports:
+          - 5432:5432
+        env:
+          POSTGRES_DB: mattis
+          POSTGRES_USER: mattis
+          POSTGRES_PASSWORD: mattis
+        options: >-
+          --health-cmd "pg_isready -U mattis -d mattis"
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
+    env:
+      DATABASE_URL: postgresql://mattis:mattis@postgres:5432/mattis
+      NEXT_PUBLIC_APP_URL: http://127.0.0.1:3000
+    steps:
+      - *node-checkout
+      - *node-setup
+      - *node-install-dependencies
+      - *copy-example-env
+      - name: Seed database
+        run: npm run seed
+      - name: Build application
+        run: npm run build
+      - name: Start application
+        run: |
+          PORT=3000 npm run start > /tmp/next.log 2>&1 &
+      - name: Wait for application
+        run: |
+          for i in {1..30}; do
+            if curl -fsS http://127.0.0.1:3000/ >/dev/null; then
+              exit 0
+            fi
+            sleep 2
+          done
+          echo "Application did not start in time"
+          cat /tmp/next.log
+          exit 1
+      - name: Run accessibility checks
+        run: npm run test:accessibility
+
   build:
     name: Build
     runs-on: ubuntu-latest
@@ -233,6 +283,7 @@ jobs:
       - unit-tests
       - infra
       - e2e
+      - accessibility
       - build
     if: github.event_name == 'push' && github.ref == 'refs/heads/main'
     environment: production
