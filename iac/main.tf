@@ -268,12 +268,6 @@ data "aws_iam_policy_document" "ses_events" {
       variable = "AWS:SourceAccount"
       values   = [data.aws_caller_identity.current.account_id]
     }
-
-    condition {
-      test     = "ArnLike"
-      variable = "AWS:SourceArn"
-      values   = [local.ses_configuration_set_arn]
-    }
   }
 }
 
@@ -289,7 +283,6 @@ resource "aws_ses_event_destination" "ses_events" {
   configuration_set_name = aws_ses_configuration_set.app[0].name
   enabled                = true
   matching_types         = ["bounce", "complaint", "delivery"]
-  depends_on             = [aws_sns_topic_policy.ses_events]
 
   sns_destination {
     topic_arn = aws_sns_topic.ses_events[0].arn
