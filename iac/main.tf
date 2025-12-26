@@ -257,14 +257,23 @@ data "aws_iam_policy_document" "ses_events" {
 
     principals {
       type        = "Service"
-      identifiers = [
-        "ses.amazonaws.com",
-        "ses.${local.ses_region}.amazonaws.com",
-      ]
+      identifiers = ["ses.amazonaws.com"]
     }
 
     actions   = ["sns:Publish"]
     resources = [aws_sns_topic.ses_events[0].arn]
+
+    condition {
+      test     = "StringEquals"
+      variable = "AWS:SourceAccount"
+      values   = [data.aws_caller_identity.current.account_id]
+    }
+
+    condition {
+      test     = "ArnLike"
+      variable = "AWS:SourceArn"
+      values   = [local.ses_configuration_set_arn]
+    }
   }
 }
 
