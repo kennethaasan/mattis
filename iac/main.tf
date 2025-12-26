@@ -305,6 +305,7 @@ resource "aws_ses_event_destination" "ses_events" {
   configuration_set_name = aws_ses_configuration_set.app[0].name
   enabled                = true
   matching_types         = ["bounce", "complaint", "delivery"]
+  depends_on             = [aws_sns_topic_policy.ses_events]
 
   sns_destination {
     topic_arn = aws_sns_topic.ses_events[0].arn
