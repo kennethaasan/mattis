@@ -7,6 +7,8 @@ vi.stubEnv("BASIC_AUTH_USERNAME", "admin@example.com");
 vi.stubEnv("BASIC_AUTH_PASSWORD", "admin");
 vi.stubEnv("BASIC_AUTH_USER_ID", "00000000-0000-7000-8000-000000000000");
 vi.stubEnv("BETTER_AUTH_SECRET", "test-secret-test-secret-test-secret-123");
+vi.stubEnv("BETTER_AUTH_EMAIL_SENDER", "no-reply@example.com");
+vi.stubEnv("NEXT_PUBLIC_APP_URL", "http://localhost:3000");
 
 const mockAuthenticatedUser = {
   user: {

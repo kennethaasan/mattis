@@ -28,6 +28,17 @@ variable "app_domain" {
   default     = "mattis.aws.aasan.dev"
 }
 
+variable "app_url" {
+  description = "Public base URL for the application (defaults to https://app_domain)"
+  type        = string
+  default     = null
+
+  validation {
+    condition     = var.app_url == null || trimspace(var.app_url) == "" || can(regex("^https?://", var.app_url))
+    error_message = "app_url must be a valid http(s) URL when provided."
+  }
+}
+
 variable "neon_api_key" {
   description = "Neon API key used by the Terraform provider"
   type        = string
@@ -99,15 +110,151 @@ variable "lambda_log_retention_days" {
   default     = 14
 }
 
+variable "enable_lambda_reliability" {
+  description = "Enable Lambda reliability features (DLQ, reserved concurrency, and X-Ray tracing)"
+  type        = bool
+  default     = true
+}
+
+variable "enable_lambda_alarms" {
+  description = "Create CloudWatch alarms for Lambda, DLQ, and CloudFront"
+  type        = bool
+  default     = true
+}
+
+variable "lambda_reserved_concurrency" {
+  description = "Reserved concurrent executions for Lambda (-1 = no reservation, prevents runaway scaling when set)"
+  type        = number
+  default     = -1
+}
+
+variable "lambda_xray_sample_rate" {
+  description = "X-Ray tracing sample rate (0-1, e.g., 0.05 = 5%)"
+  type        = string
+  default     = "0.05"
+}
+
 variable "lambda_environment" {
   description = "Base environment variables for the Lambda function"
   type        = map(string)
   default = {
     NODE_ENV                       = "production"
     POWERTOOLS_LOG_LEVEL           = "INFO"
+    POWERTOOLS_METRICS_NAMESPACE   = "mattis"
     POWERTOOLS_TRACING_SAMPLE_RATE = "0"
     POWERTOOLS_SERVICE_NAME        = "mattis"
   }
+}
+
+variable "better_auth_email_sender" {
+  description = "From-address for Better Auth emails (defaults to no-reply@app_domain)"
+  type        = string
+  default     = null
+
+  validation {
+    condition = var.better_auth_email_sender == null || trimspace(var.better_auth_email_sender) == "" || (
+      can(regex("^[^@]+@[^@]+$", var.better_auth_email_sender)) &&
+      endswith(
+        lower(var.better_auth_email_sender),
+        lower(coalesce(var.ses_domain, var.app_domain)),
+      )
+    )
+    error_message = "better_auth_email_sender must be an email address under ses_domain (or app_domain when ses_domain is unset)."
+  }
+}
+
+variable "ses_source_email" {
+  description = "From-address for SES invitations (defaults to better_auth_email_sender)"
+  type        = string
+  default     = null
+
+  validation {
+    condition = var.ses_source_email == null || trimspace(var.ses_source_email) == "" || (
+      can(regex("^[^@]+@[^@]+$", var.ses_source_email)) &&
+      endswith(
+        lower(var.ses_source_email),
+        lower(coalesce(var.ses_domain, var.app_domain)),
+      )
+    )
+    error_message = "ses_source_email must be an email address under ses_domain (or app_domain when ses_domain is unset)."
+  }
+}
+
+variable "ses_enabled" {
+  description = "Toggle invitation emails via SES"
+  type        = bool
+  default     = true
+}
+
+variable "ses_region" {
+  description = "SES region (defaults to aws_region)"
+  type        = string
+  default     = null
+
+  validation {
+    condition     = var.ses_region == null || trimspace(var.ses_region) == "" || var.ses_region == var.aws_region
+    error_message = "ses_region must match aws_region when set. SES should run in the same region as Lambda."
+  }
+}
+
+variable "ses_configuration_set" {
+  description = "Optional SES configuration set name"
+  type        = string
+  default     = null
+}
+
+variable "ses_create_configuration_set" {
+  description = "Create the SES configuration set if ses_configuration_set is provided"
+  type        = bool
+  default     = true
+}
+
+variable "ses_domain" {
+  description = "Domain to verify with SES (defaults to app_domain)"
+  type        = string
+  default     = null
+
+  validation {
+    condition     = var.ses_domain == null || trimspace(var.ses_domain) == "" || endswith(lower(var.ses_domain), lower(var.parent_domain))
+    error_message = "ses_domain must be within the parent_domain Route53 zone."
+  }
+}
+
+variable "ses_mail_from_domain" {
+  description = "MAIL FROM domain (defaults to mail.<ses_domain>)"
+  type        = string
+  default     = null
+
+  validation {
+    condition = var.ses_mail_from_domain == null || trimspace(var.ses_mail_from_domain) == "" || endswith(
+      lower(var.ses_mail_from_domain),
+      lower(coalesce(var.ses_domain, var.app_domain)),
+    )
+    error_message = "ses_mail_from_domain must be within ses_domain (or app_domain when ses_domain is unset)."
+  }
+}
+
+variable "ses_event_topic_name" {
+  description = "SNS topic name for SES event notifications"
+  type        = string
+  default     = null
+}
+
+variable "ses_dmarc_policy" {
+  description = "DMARC policy for the SES domain"
+  type        = string
+  default     = "none"
+
+  validation {
+    condition     = contains(["none", "quarantine", "reject"], var.ses_dmarc_policy)
+    error_message = "ses_dmarc_policy must be one of: none, quarantine, reject."
+  }
+}
+
+variable "ses_dmarc_rua_email" {
+  description = "Optional DMARC aggregate report email (rua)"
+  type        = string
+  default     = null
 }
 
 variable "package_path" {
@@ -138,4 +285,21 @@ variable "better_auth_secret" {
   description = "BetterAuth secret used for authentication"
   type        = string
   sensitive   = true
+}
+
+variable "better_auth_url" {
+  description = "Explicit Better Auth base URL (defaults to app_url)"
+  type        = string
+  default     = null
+
+  validation {
+    condition     = var.better_auth_url == null || trimspace(var.better_auth_url) == "" || can(regex("^https?://", var.better_auth_url))
+    error_message = "better_auth_url must be a valid http(s) URL when provided."
+  }
+}
+
+variable "better_auth_trusted_origins" {
+  description = "Comma-separated list of trusted origins for Better Auth (defaults to app_url plus https://mattis.vanvikil.no)"
+  type        = string
+  default     = null
 }

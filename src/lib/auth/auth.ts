@@ -8,6 +8,10 @@ import { getTrustedOrigins } from "./trusted-origins";
 
 export const auth = betterAuth({
   secret: env.BETTER_AUTH_SECRET,
+  baseURL: env.BETTER_AUTH_URL ?? env.NEXT_PUBLIC_APP_URL,
+  email: env.BETTER_AUTH_EMAIL_SENDER
+    ? { sender: env.BETTER_AUTH_EMAIL_SENDER }
+    : undefined,
   database: drizzleAdapter(db, {
     provider: "pg",
     schema,
