@@ -257,7 +257,10 @@ data "aws_iam_policy_document" "ses_events" {
 
     principals {
       type        = "Service"
-      identifiers = ["ses.amazonaws.com"]
+      identifiers = [
+        "ses.amazonaws.com",
+        "ses.${local.ses_region}.amazonaws.com",
+      ]
     }
 
     actions   = ["sns:Publish"]
