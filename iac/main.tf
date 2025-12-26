@@ -269,6 +269,28 @@ data "aws_iam_policy_document" "ses_events" {
       values   = [data.aws_caller_identity.current.account_id]
     }
   }
+
+  statement {
+    sid    = "AllowSesPublishFromSourceArn"
+    effect = "Allow"
+
+    principals {
+      type        = "Service"
+      identifiers = ["ses.amazonaws.com"]
+    }
+
+    actions   = ["sns:Publish"]
+    resources = [aws_sns_topic.ses_events[0].arn]
+
+    condition {
+      test     = "ArnLike"
+      variable = "AWS:SourceArn"
+      values = [
+        aws_ses_domain_identity.app[0].arn,
+        "arn:aws:ses:${local.ses_region}:${data.aws_caller_identity.current.account_id}:configuration-set/${local.ses_configuration_set_name}",
+      ]
+    }
+  }
 }
 
 resource "aws_sns_topic_policy" "ses_events" {
