@@ -36,6 +36,10 @@ locals {
     var.ses_create_configuration_set ? "${local.stack_name}-ses" : ""
   )
   ses_event_topic_name = local.ses_event_topic_input != "" ? local.ses_event_topic_input : "${local.stack_name}-ses-events"
+  # AWS best practice: use SourceArn to restrict to specific configuration set
+  ses_configuration_set_arn = local.ses_configuration_set_name != "" ? (
+    "arn:aws:ses:${local.ses_region}:${data.aws_caller_identity.current.account_id}:configuration-set/${local.ses_configuration_set_name}"
+  ) : ""
 
   dmarc_value = local.ses_dmarc_rua_input != "" ? "v=DMARC1; p=${var.ses_dmarc_policy}; rua=mailto:${local.ses_dmarc_rua_input}" : "v=DMARC1; p=${var.ses_dmarc_policy}"
 }

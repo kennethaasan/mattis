@@ -263,10 +263,18 @@ data "aws_iam_policy_document" "ses_events" {
     actions   = ["sns:Publish"]
     resources = [aws_sns_topic.ses_events[0].arn]
 
+    # AWS best practice: use both SourceAccount and SourceArn conditions
+    # https://docs.aws.amazon.com/ses/latest/dg/event-publishing-add-event-destination-sns.html
     condition {
       test     = "StringEquals"
       variable = "AWS:SourceAccount"
       values   = [data.aws_caller_identity.current.account_id]
+    }
+
+    condition {
+      test     = "StringEquals"
+      variable = "AWS:SourceArn"
+      values   = [local.ses_configuration_set_arn]
     }
   }
 }
@@ -277,12 +285,21 @@ resource "aws_sns_topic_policy" "ses_events" {
   policy = data.aws_iam_policy_document.ses_events[0].json
 }
 
+# Allow time for SNS topic policy to propagate before SES tries to test-publish
+# This addresses AWS eventual consistency for IAM/SNS policy propagation
+resource "time_sleep" "ses_sns_policy_propagation" {
+  count           = var.ses_enabled && local.ses_configuration_set_name != "" ? 1 : 0
+  depends_on      = [aws_sns_topic_policy.ses_events]
+  create_duration = "10s"
+}
+
 resource "aws_ses_event_destination" "ses_events" {
   count                  = var.ses_enabled && local.ses_configuration_set_name != "" ? 1 : 0
   name                   = "ses-events"
   configuration_set_name = aws_ses_configuration_set.app[0].name
   enabled                = true
   matching_types         = ["bounce", "complaint", "delivery"]
+  depends_on             = [time_sleep.ses_sns_policy_propagation]
 
   sns_destination {
     topic_arn = aws_sns_topic.ses_events[0].arn

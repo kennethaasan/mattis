@@ -19,5 +19,10 @@ terraform {
       source  = "kislerdm/neon"
       version = "~> 0.10"
     }
+
+    time = {
+      source  = "hashicorp/time"
+      version = "~> 0.12"
+    }
   }
 }
