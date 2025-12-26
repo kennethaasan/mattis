@@ -343,29 +343,29 @@ module "cdn" {
   }
 
   default_cache_behavior = {
-    target_origin_id         = "lambda-url"
-    viewer_protocol_policy   = "redirect-to-https"
-    compress                 = true
-    allowed_methods          = ["GET", "HEAD", "OPTIONS", "PUT", "POST", "PATCH", "DELETE"]
-    cached_methods           = ["GET", "HEAD"]
-    cache_policy_id          = data.aws_cloudfront_cache_policy.caching_disabled.id
-    origin_request_policy_id = data.aws_cloudfront_origin_request_policy.all_viewer_except_host.id
+    target_origin_id           = "lambda-url"
+    viewer_protocol_policy     = "redirect-to-https"
+    compress                   = true
+    allowed_methods            = ["GET", "HEAD", "OPTIONS", "PUT", "POST", "PATCH", "DELETE"]
+    cached_methods             = ["GET", "HEAD"]
+    cache_policy_id            = data.aws_cloudfront_cache_policy.caching_disabled.id
+    origin_request_policy_id   = data.aws_cloudfront_origin_request_policy.all_viewer_except_host.id
     response_headers_policy_id = data.aws_cloudfront_response_headers_policy.security_headers.id
-    use_forwarded_values     = false
+    use_forwarded_values       = false
   }
 
   ordered_cache_behavior = [
     {
-      path_pattern             = "/_next/static/*"
-      target_origin_id         = "lambda-url"
-      viewer_protocol_policy   = "redirect-to-https"
-      compress                 = true
-      allowed_methods          = ["GET", "HEAD", "OPTIONS"]
-      cached_methods           = ["GET", "HEAD"]
-      cache_policy_id          = data.aws_cloudfront_cache_policy.caching_optimized.id
-      origin_request_policy_id = data.aws_cloudfront_origin_request_policy.all_viewer_except_host.id
+      path_pattern               = "/_next/static/*"
+      target_origin_id           = "lambda-url"
+      viewer_protocol_policy     = "redirect-to-https"
+      compress                   = true
+      allowed_methods            = ["GET", "HEAD", "OPTIONS"]
+      cached_methods             = ["GET", "HEAD"]
+      cache_policy_id            = data.aws_cloudfront_cache_policy.caching_optimized.id
+      origin_request_policy_id   = data.aws_cloudfront_origin_request_policy.all_viewer_except_host.id
       response_headers_policy_id = data.aws_cloudfront_response_headers_policy.security_headers.id
-      use_forwarded_values     = false
+      use_forwarded_values       = false
     }
   ]
 
