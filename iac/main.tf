@@ -262,19 +262,6 @@ data "aws_iam_policy_document" "ses_events" {
 
     actions   = ["sns:Publish"]
     resources = [aws_sns_topic.ses_events[0].arn]
-
-    condition {
-      test     = "StringEquals"
-      variable = "AWS:SourceAccount"
-      values   = [data.aws_caller_identity.current.account_id]
-    }
-    condition {
-      test     = "StringEquals"
-      variable = "AWS:SourceArn"
-      values = [
-        "arn:aws:ses:${local.ses_region}:${data.aws_caller_identity.current.account_id}:configuration-set/${local.ses_configuration_set_name}",
-      ]
-    }
   }
 }
 
