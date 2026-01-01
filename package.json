@@ -32,7 +32,8 @@
     "docker:compose:down": "docker-compose down -v",
     "docker:compose:reset": "npm run docker:compose:down && npm run docker:compose:up",
     "seed": "npm run db:migrate && tsx ./src/scripts/seed.ts",
-    "seed:prod": "npm run docker:compose:down && docker-compose up -d && npm run db:migrate && tsx ./src/scripts/migrate-from-mysql.ts"
+    "seed:prod": "npm run docker:compose:down && docker-compose up -d && npm run db:migrate && tsx ./src/scripts/migrate-from-mysql.ts",
+    "admin:create": "tsx ./src/scripts/create-admin-user.ts"
   },
   "dependencies": {
     "@aws-lambda-powertools/logger": "^2.27.0",
