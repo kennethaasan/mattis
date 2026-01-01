@@ -39,6 +39,34 @@ variable "app_domain" {
   default     = "mattis.aasan.dev"
 }
 
+variable "extra_domains" {
+  description = "Additional FQDNs for CloudFront + ACM (no scheme, e.g., mattis.vanvikil.no)"
+  type        = list(string)
+  default     = ["mattis.vanvikil.no"]
+
+  validation {
+    condition = alltrue([
+      for domain in var.extra_domains :
+      trimspace(domain) != "" && !can(regex("://", trimspace(domain)))
+    ])
+    error_message = "extra_domains must be non-empty FQDNs without a scheme."
+  }
+}
+
+variable "extra_domain_zone_ids" {
+  description = "Cloudflare Zone IDs for ACM validation of extra_domains (map of FQDN -> zone ID)"
+  type        = map(string)
+  default     = {}
+
+  validation {
+    condition = alltrue([
+      for domain in keys(var.extra_domain_zone_ids) :
+      contains(var.extra_domains, domain)
+    ])
+    error_message = "extra_domain_zone_ids keys must be listed in extra_domains."
+  }
+}
+
 variable "app_url" {
   description = "Public base URL for the application (defaults to https://app_domain)"
   type        = string
@@ -268,7 +296,7 @@ variable "better_auth_url" {
 }
 
 variable "better_auth_trusted_origins" {
-  description = "Comma-separated list of trusted origins for Better Auth (defaults to app_url)"
+  description = "Comma-separated list of trusted origins for Better Auth (defaults to app_url and extra_domains over https)"
   type        = string
   default     = null
 }

@@ -21,10 +21,37 @@ locals {
   ses_event_topic_input       = var.ses_event_topic_name == null ? "" : trimspace(var.ses_event_topic_name)
   ses_dmarc_rua_input         = var.ses_dmarc_rua_email == null ? "" : trimspace(var.ses_dmarc_rua_email)
 
+  # Extra domains processing
+  extra_domains_input = [for domain in var.extra_domains : trimspace(domain)]
+  extra_domain_zone_ids_input = {
+    for domain, zone_id in var.extra_domain_zone_ids :
+    lower(trimspace(domain)) => trimspace(zone_id)
+    if trimspace(domain) != "" && trimspace(zone_id) != ""
+  }
+  app_domain_normalized = lower(var.app_domain)
+
+  # Managed Zones for ACM Validation (all on Cloudflare)
+  managed_validation_zones = merge(
+    { (local.app_domain_normalized) = var.cloudflare_zone_id },
+    local.extra_domain_zone_ids
+  )
+
+  acm_validation_records_by_domain = {
+    for dvo in module.acm.acm_certificate_domain_validation_options :
+    lower(dvo.domain_name) => {
+      name  = dvo.resource_record_name
+      type  = dvo.resource_record_type
+      value = dvo.resource_record_value
+    }
+  }
+
   better_auth_email_sender    = local.better_auth_email_sender_input != "" ? local.better_auth_email_sender_input : local.default_email_sender
   app_url                     = local.app_url_input != "" ? local.app_url_input : "https://${var.app_domain}"
   better_auth_url             = local.better_auth_url_input != "" ? local.better_auth_url_input : local.app_url
-  better_auth_trusted_origins = local.better_auth_trusted_origins_input != "" ? local.better_auth_trusted_origins_input : local.app_url
+  extra_domains               = distinct(compact(local.extra_domains_input))
+  extra_domain_zone_ids       = local.extra_domain_zone_ids_input
+  extra_trusted_origins       = [for domain in local.extra_domains : "https://${domain}"]
+  better_auth_trusted_origins = local.better_auth_trusted_origins_input != "" ? local.better_auth_trusted_origins_input : join(",", distinct(compact(concat([local.app_url], local.extra_trusted_origins))))
   ses_source_email            = local.ses_source_email_input != "" ? local.ses_source_email_input : local.better_auth_email_sender
   ses_region                  = var.aws_region
   ses_domain                  = local.ses_domain_input != "" ? local.ses_domain_input : var.app_domain
