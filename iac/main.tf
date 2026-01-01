@@ -26,13 +26,13 @@ locals {
   database_url      = strcontains(local.database_url_base, "sslmode=") ? local.database_url_base : (strcontains(local.database_url_base, "?") ? "${local.database_url_base}&sslmode=require" : "${local.database_url_base}?sslmode=require")
 }
 
-###########################
-# AWS Infrastructure
+# Cloudflare Infrastructure
 ###########################
 
-data "aws_route53_zone" "zone" {
-  name         = var.parent_domain
-  private_zone = false
+data "cloudflare_zone" "this" {
+  filter = {
+    name = var.parent_domain
+  }
 }
 
 data "aws_caller_identity" "current" {}
@@ -45,39 +45,40 @@ resource "aws_ses_domain_identity" "app" {
   domain = local.ses_domain
 }
 
-resource "aws_route53_record" "ses_verification" {
-  zone_id = data.aws_route53_zone.zone.zone_id
+resource "cloudflare_dns_record" "ses_verification" {
+  zone_id = var.cloudflare_zone_id
   name    = "_amazonses.${local.ses_domain}"
   type    = "TXT"
-  ttl     = 600
-  records = [aws_ses_domain_identity.app.verification_token]
+  content = aws_ses_domain_identity.app.verification_token
+  ttl     = 3600
 }
 
 resource "aws_ses_domain_identity_verification" "app" {
   domain     = aws_ses_domain_identity.app.domain
-  depends_on = [aws_route53_record.ses_verification]
+  depends_on = [cloudflare_dns_record.ses_verification]
 }
 
 resource "aws_ses_domain_dkim" "app" {
   domain = aws_ses_domain_identity.app.domain
 }
 
-resource "aws_route53_record" "ses_dkim" {
+resource "cloudflare_dns_record" "ses_dkim" {
   count = 3
 
-  zone_id = data.aws_route53_zone.zone.zone_id
+  zone_id = var.cloudflare_zone_id
   name    = "${aws_ses_domain_dkim.app.dkim_tokens[count.index]}._domainkey.${local.ses_domain}"
   type    = "CNAME"
-  ttl     = 600
-  records = ["${aws_ses_domain_dkim.app.dkim_tokens[count.index]}.dkim.amazonses.com"]
+  content = "${aws_ses_domain_dkim.app.dkim_tokens[count.index]}.dkim.amazonses.com"
+  ttl     = 3600
+  proxied = false
 }
 
-resource "aws_route53_record" "ses_dmarc" {
-  zone_id = data.aws_route53_zone.zone.zone_id
+resource "cloudflare_dns_record" "ses_dmarc" {
+  zone_id = var.cloudflare_zone_id
   name    = "_dmarc.${local.ses_domain}"
   type    = "TXT"
-  ttl     = 600
-  records = [local.dmarc_value]
+  content = local.dmarc_value
+  ttl     = 3600
 }
 
 resource "aws_ses_domain_mail_from" "app" {
@@ -86,20 +87,21 @@ resource "aws_ses_domain_mail_from" "app" {
   behavior_on_mx_failure = "UseDefaultValue"
 }
 
-resource "aws_route53_record" "ses_mail_from_mx" {
-  zone_id = data.aws_route53_zone.zone.zone_id
-  name    = local.ses_mail_from_domain
-  type    = "MX"
-  ttl     = 600
-  records = ["10 feedback-smtp.${local.ses_region}.amazonses.com"]
+resource "cloudflare_dns_record" "ses_mail_from_mx" {
+  zone_id  = var.cloudflare_zone_id
+  name     = local.ses_mail_from_domain
+  type     = "MX"
+  priority = 10
+  content  = "feedback-smtp.${local.ses_region}.amazonses.com"
+  ttl      = 3600
 }
 
-resource "aws_route53_record" "ses_mail_from_txt" {
-  zone_id = data.aws_route53_zone.zone.zone_id
+resource "cloudflare_dns_record" "ses_mail_from_txt" {
+  zone_id = var.cloudflare_zone_id
   name    = local.ses_mail_from_domain
   type    = "TXT"
-  ttl     = 600
-  records = ["v=spf1 include:amazonses.com -all"]
+  content = "v=spf1 include:amazonses.com -all"
+  ttl     = 3600
 }
 
 resource "aws_ses_configuration_set" "app" {
@@ -129,9 +131,35 @@ module "acm" {
 
   domain_name            = var.app_domain
   validation_method      = "DNS"
-  create_route53_records = true
-  zone_id                = data.aws_route53_zone.zone.zone_id
+  create_route53_records = false
   tags                   = local.default_tags
+}
+
+resource "cloudflare_dns_record" "acm_validation" {
+  for_each = {
+    for dvo in module.acm.acm_certificate_domain_validation_options : dvo.domain_name => {
+      name  = dvo.resource_record_name
+      type  = dvo.resource_record_type
+      value = dvo.resource_record_value
+    }
+  }
+
+  zone_id = var.cloudflare_zone_id
+  name    = each.value.name
+  type    = each.value.type
+  content = each.value.value
+  ttl     = 60
+  proxied = false
+}
+
+resource "aws_acm_certificate_validation" "app" {
+  provider        = aws.us_east_1
+  certificate_arn = module.acm.acm_certificate_arn
+  validation_record_fqdns = [
+    for dvo in module.acm.acm_certificate_domain_validation_options :
+    dvo.resource_record_name
+  ]
+  depends_on = [cloudflare_dns_record.acm_validation]
 }
 
 module "fn" {
@@ -379,7 +407,7 @@ module "cdn" {
 
   tags = local.default_tags
 
-  depends_on = [module.acm]
+  depends_on = [module.acm, aws_acm_certificate_validation.app]
 }
 
 resource "aws_lambda_permission" "allow_cloudfront" {
@@ -391,40 +419,13 @@ resource "aws_lambda_permission" "allow_cloudfront" {
   function_url_auth_type = "AWS_IAM"
 }
 
-resource "aws_route53_record" "app_a" {
-  zone_id         = data.aws_route53_zone.zone.zone_id
-  name            = var.app_domain
-  type            = "A"
-  allow_overwrite = true
-
-  alias {
-    name                   = module.cdn.cloudfront_distribution_domain_name
-    zone_id                = module.cdn.cloudfront_distribution_hosted_zone_id
-    evaluate_target_health = false
-  }
-}
-
-resource "aws_route53_record" "app_aaaa" {
-  zone_id         = data.aws_route53_zone.zone.zone_id
-  name            = var.app_domain
-  type            = "AAAA"
-  allow_overwrite = true
-
-  alias {
-    name                   = module.cdn.cloudfront_distribution_domain_name
-    zone_id                = module.cdn.cloudfront_distribution_hosted_zone_id
-    evaluate_target_health = false
-  }
-}
-
-moved {
-  from = module.dns_records.aws_route53_record.this["app_a"]
-  to   = aws_route53_record.app_a
-}
-
-moved {
-  from = module.dns_records.aws_route53_record.this["app_aaaa"]
-  to   = aws_route53_record.app_aaaa
+resource "cloudflare_dns_record" "app_a" {
+  zone_id = var.cloudflare_zone_id
+  name    = var.app_domain
+  type    = "CNAME"
+  content = module.cdn.cloudfront_distribution_domain_name
+  ttl     = 3600
+  proxied = false
 }
 
 ###########################

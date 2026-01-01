@@ -56,7 +56,14 @@ const formatError = (error: unknown): string => {
 };
 
 const currentYear = new Date().getUTCFullYear();
+const lastYear = currentYear - 1;
 const devUserId = basicAuthUser.id;
+
+// Date helpers for seeding: "old" records are from last year (>24h, no delete button)
+// "current year" records use explicit current year dates for leaderboard visibility
+
+// Explicit current year date that's always >24h ago (Jan 1st at midnight)
+const currentYearStart = new Date(Date.UTC(currentYear, 0, 1, 0, 0, 0));
 
 const playerSeeds: PlayerSeed[] = [
   {
@@ -93,11 +100,12 @@ const playerSeeds: PlayerSeed[] = [
 ];
 
 const roundSeeds: RoundSeed[] = [
+  // Last year rounds - for 24-hour deletion window test (no delete button)
   {
     key: "january_kickoff",
     id: "20000000-0000-4000-8000-000000000201",
     label: "January kickoff round",
-    createdAt: new Date(Date.UTC(currentYear, 0, 5, 19, 30, 0)),
+    createdAt: new Date(Date.UTC(lastYear, 0, 5, 19, 30, 0)),
     participants: ["astrid", "emil", "lina"],
     loser: "emil",
     createdBy: devUserId,
@@ -106,7 +114,7 @@ const roundSeeds: RoundSeed[] = [
     key: "midwinter_clash",
     id: "20000000-0000-4000-8000-000000000202",
     label: "Midwinter clash",
-    createdAt: new Date(Date.UTC(currentYear, 0, 12, 22, 15, 0)),
+    createdAt: new Date(Date.UTC(lastYear, 0, 12, 22, 15, 0)),
     participants: ["astrid", "lina", "rex"],
     loser: "rex",
     createdBy: devUserId,
@@ -115,33 +123,78 @@ const roundSeeds: RoundSeed[] = [
     key: "weekend_finale",
     id: "20000000-0000-4000-8000-000000000203",
     label: "Weekend finale",
-    createdAt: new Date(Date.UTC(currentYear, 0, 18, 18, 45, 0)),
+    createdAt: new Date(Date.UTC(lastYear, 0, 18, 18, 45, 0)),
     participants: ["emil", "lina", "rex"],
+    loser: "emil",
+    createdBy: devUserId,
+  },
+  // Current year rounds - for leaderboard visibility (uses explicit current year dates)
+  {
+    key: "new_year_opener",
+    id: "20000000-0000-4000-8000-000000000204",
+    label: "New year opener",
+    createdAt: currentYearStart,
+    participants: ["astrid", "emil", "rex"],
+    loser: "astrid",
+    createdBy: devUserId,
+  },
+  {
+    key: "winter_warmup",
+    id: "20000000-0000-4000-8000-000000000205",
+    label: "Winter warmup",
+    createdAt: new Date(Date.UTC(currentYear, 0, 1, 1, 0, 0)),
+    participants: ["lina", "rex", "zia"],
+    loser: "lina",
+    createdBy: devUserId,
+  },
+  {
+    key: "midweek_match",
+    id: "20000000-0000-4000-8000-000000000206",
+    label: "Midweek match",
+    createdAt: new Date(Date.UTC(currentYear, 0, 1, 2, 0, 0)),
+    participants: ["astrid", "emil", "lina"],
     loser: "emil",
     createdBy: devUserId,
   },
 ];
 
 const fettMattisSeeds: FettMattisSeed[] = [
+  // Last year fettmattis - for 24-hour deletion window test (no delete button)
   {
     id: "30000000-0000-4000-8000-000000000301",
     player: "lina",
     round: "january_kickoff",
-    createdAt: new Date(Date.UTC(currentYear, 0, 5, 20, 15, 0)),
+    createdAt: new Date(Date.UTC(lastYear, 0, 5, 20, 15, 0)),
     createdBy: devUserId,
   },
   {
     id: "30000000-0000-4000-8000-000000000302",
     player: "rex",
     round: "midwinter_clash",
-    createdAt: new Date(Date.UTC(currentYear, 0, 12, 22, 45, 0)),
+    createdAt: new Date(Date.UTC(lastYear, 0, 12, 22, 45, 0)),
     createdBy: devUserId,
   },
   {
     id: "30000000-0000-4000-8000-000000000303",
     player: "astrid",
     round: null,
-    createdAt: new Date(Date.UTC(currentYear, 0, 15, 18, 30, 0)),
+    createdAt: new Date(Date.UTC(lastYear, 0, 15, 18, 30, 0)),
+    createdBy: devUserId,
+  },
+  // Current year fettmattis - for leaderboard visibility (uses explicit current year dates)
+  // T037 expects Astrid and Lina in the FettMattis table
+  {
+    id: "30000000-0000-4000-8000-000000000304",
+    player: "astrid",
+    round: "new_year_opener",
+    createdAt: new Date(Date.UTC(currentYear, 0, 1, 0, 30, 0)),
+    createdBy: devUserId,
+  },
+  {
+    id: "30000000-0000-4000-8000-000000000305",
+    player: "lina",
+    round: "midweek_match",
+    createdAt: new Date(Date.UTC(currentYear, 0, 1, 2, 30, 0)),
     createdBy: devUserId,
   },
 ];
