@@ -59,6 +59,15 @@ const currentYear = new Date().getUTCFullYear();
 const lastYear = currentYear - 1;
 const devUserId = basicAuthUser.id;
 
+// Date helpers for seeding: "old" records are from last year (>24h, no delete button)
+// "current year" records are from earlier this year (>24h, for leaderboard visibility)
+const daysAgo = (days: number): Date => {
+  const date = new Date();
+  date.setUTCDate(date.getUTCDate() - days);
+  date.setUTCHours(12, 0, 0, 0);
+  return date;
+};
+
 const playerSeeds: PlayerSeed[] = [
   {
     key: "astrid",
@@ -94,6 +103,7 @@ const playerSeeds: PlayerSeed[] = [
 ];
 
 const roundSeeds: RoundSeed[] = [
+  // Last year rounds - for 24-hour deletion window test (no delete button)
   {
     key: "january_kickoff",
     id: "20000000-0000-4000-8000-000000000201",
@@ -121,9 +131,38 @@ const roundSeeds: RoundSeed[] = [
     loser: "emil",
     createdBy: devUserId,
   },
+  // Current year rounds - for leaderboard visibility (>24h ago, still no delete button)
+  {
+    key: "new_year_opener",
+    id: "20000000-0000-4000-8000-000000000204",
+    label: "New year opener",
+    createdAt: daysAgo(10),
+    participants: ["astrid", "emil", "rex"],
+    loser: "astrid",
+    createdBy: devUserId,
+  },
+  {
+    key: "winter_warmup",
+    id: "20000000-0000-4000-8000-000000000205",
+    label: "Winter warmup",
+    createdAt: daysAgo(7),
+    participants: ["lina", "rex", "zia"],
+    loser: "lina",
+    createdBy: devUserId,
+  },
+  {
+    key: "midweek_match",
+    id: "20000000-0000-4000-8000-000000000206",
+    label: "Midweek match",
+    createdAt: daysAgo(3),
+    participants: ["astrid", "emil", "lina"],
+    loser: "emil",
+    createdBy: devUserId,
+  },
 ];
 
 const fettMattisSeeds: FettMattisSeed[] = [
+  // Last year fettmattis - for 24-hour deletion window test (no delete button)
   {
     id: "30000000-0000-4000-8000-000000000301",
     player: "lina",
@@ -143,6 +182,21 @@ const fettMattisSeeds: FettMattisSeed[] = [
     player: "astrid",
     round: null,
     createdAt: new Date(Date.UTC(lastYear, 0, 15, 18, 30, 0)),
+    createdBy: devUserId,
+  },
+  // Current year fettmattis - for leaderboard visibility (>24h ago)
+  {
+    id: "30000000-0000-4000-8000-000000000304",
+    player: "emil",
+    round: "new_year_opener",
+    createdAt: daysAgo(10),
+    createdBy: devUserId,
+  },
+  {
+    id: "30000000-0000-4000-8000-000000000305",
+    player: "rex",
+    round: "midweek_match",
+    createdAt: daysAgo(3),
     createdBy: devUserId,
   },
 ];
