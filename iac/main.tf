@@ -129,25 +129,21 @@ module "acm" {
   version   = "6.1.0"
   providers = { aws = aws.us_east_1 }
 
-  domain_name            = var.app_domain
-  validation_method      = "DNS"
-  create_route53_records = false
-  tags                   = local.default_tags
+  domain_name               = var.app_domain
+  subject_alternative_names = local.extra_domains
+  validation_method         = "DNS"
+  create_route53_records    = false
+  validate_certificate      = false
+  tags                      = local.default_tags
 }
 
 resource "cloudflare_dns_record" "acm_validation" {
-  for_each = {
-    for dvo in module.acm.acm_certificate_domain_validation_options : dvo.domain_name => {
-      name  = dvo.resource_record_name
-      type  = dvo.resource_record_type
-      value = dvo.resource_record_value
-    }
-  }
+  for_each = local.managed_validation_zones
 
-  zone_id = var.cloudflare_zone_id
-  name    = each.value.name
-  type    = each.value.type
-  content = each.value.value
+  zone_id = each.value
+  name    = local.acm_validation_records_by_domain[each.key].name
+  type    = local.acm_validation_records_by_domain[each.key].type
+  content = local.acm_validation_records_by_domain[each.key].value
   ttl     = 60
   proxied = false
 }
@@ -339,7 +335,7 @@ module "cdn" {
   source  = "terraform-aws-modules/cloudfront/aws"
   version = "5.0.0"
 
-  aliases         = [var.app_domain]
+  aliases         = distinct(compact(concat([var.app_domain], local.extra_domains)))
   enabled         = true
   is_ipv6_enabled = true
   price_class     = var.cloudfront_price_class
