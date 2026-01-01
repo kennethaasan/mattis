@@ -182,16 +182,17 @@ const fettMattisSeeds: FettMattisSeed[] = [
     createdBy: devUserId,
   },
   // Current year fettmattis - for leaderboard visibility (uses explicit current year dates)
+  // T037 expects Astrid and Lina in the FettMattis table
   {
     id: "30000000-0000-4000-8000-000000000304",
-    player: "emil",
+    player: "astrid",
     round: "new_year_opener",
     createdAt: new Date(Date.UTC(currentYear, 0, 1, 0, 30, 0)),
     createdBy: devUserId,
   },
   {
     id: "30000000-0000-4000-8000-000000000305",
-    player: "rex",
+    player: "lina",
     round: "midweek_match",
     createdAt: new Date(Date.UTC(currentYear, 0, 1, 2, 30, 0)),
     createdBy: devUserId,
