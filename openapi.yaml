@@ -22,8 +22,22 @@ info:
 
     **Error Handling**:
     - The API uses RFC 9457 for problem details in error responses.
+  contact:
+    name: Mattis API Support
+    email: support@mattis.local
 servers:
   - url: /api
+tags:
+  - name: Authentication
+    description: Session and sign-in workflows.
+  - name: Players
+    description: Player roster management.
+  - name: Rounds
+    description: Round recording and history.
+  - name: FettMattis
+    description: FettMattis awards and revocations.
+  - name: Leaderboards
+    description: Leaderboard and season statistics.
 paths:
   /auth/get-session:
     get:
@@ -95,6 +109,7 @@ paths:
   /players:
     get:
       summary: List Players
+      description: Returns all players, ordered by display name.
       operationId: listPlayers
       tags:
         - Players
@@ -110,6 +125,7 @@ paths:
                   $ref: "#/components/schemas/Player"
     post:
       summary: Create Player
+      description: Creates a new player in the roster.
       operationId: createPlayer
       tags:
         - Players
@@ -138,6 +154,7 @@ paths:
   /players/{playerId}:
     get:
       summary: Get Player Details
+      description: Returns details for a single player.
       operationId: getPlayer
       tags:
         - Players
@@ -161,6 +178,7 @@ paths:
           $ref: "#/components/responses/NotFound"
     put:
       summary: Update Player
+      description: Updates player profile fields and status.
       operationId: updatePlayer
       tags:
         - Players
@@ -197,6 +215,7 @@ paths:
   /rounds:
     get:
       summary: List Rounds
+      description: Returns recent rounds, optionally limited by query parameter.
       operationId: listRounds
       tags:
         - Rounds
@@ -220,6 +239,7 @@ paths:
                   $ref: "#/components/schemas/Round"
     post:
       summary: Record a Round
+      description: Records a completed round and updates leaderboards.
       operationId: createRound
       tags:
         - Rounds
@@ -264,6 +284,7 @@ paths:
   /rounds/{roundId}:
     get:
       summary: Get Round Details
+      description: Returns the details of a specific round.
       operationId: getRound
       tags:
         - Rounds
@@ -287,6 +308,7 @@ paths:
           $ref: "#/components/responses/NotFound"
     put:
       summary: Edit a Round (within 24h)
+      description: Updates round participants or the recorded loser within the edit window.
       operationId: updateRound
       tags:
         - Rounds
@@ -325,6 +347,7 @@ paths:
           $ref: "#/components/responses/Unauthorized"
     delete:
       summary: Soft Delete a Round (within 24h)
+      description: Soft-deletes a round and removes it from leaderboards.
       operationId: deleteRound
       tags:
         - Rounds
@@ -351,6 +374,7 @@ paths:
   /fettmattis:
     get:
       summary: List FettMattis Entries
+      description: Returns recent FettMattis awards.
       operationId: listFettmattis
       tags:
         - FettMattis
@@ -374,6 +398,7 @@ paths:
                   $ref: "#/components/schemas/FettMattis"
     post:
       summary: Create FettMattis
+      description: Grants a FettMattis award to a player.
       operationId: createFettmattis
       tags:
         - FettMattis
@@ -402,6 +427,7 @@ paths:
   /fettmattis/{fettmattisId}:
     delete:
       summary: Delete FettMattis (within 24h)
+      description: Revokes a FettMattis award within the edit window.
       operationId: deleteFettmattis
       tags:
         - FettMattis
@@ -428,6 +454,7 @@ paths:
   /leaderboard/regular:
     get:
       summary: Get Regular Leaderboard
+      description: Returns leaderboard standings for regular play.
       operationId: getRegularLeaderboard
       tags:
         - Leaderboards
@@ -455,6 +482,7 @@ paths:
   /leaderboard/fettmattis:
     get:
       summary: Get Fettmattis Leaderboard
+      description: Returns leaderboard standings for FettMattis awards.
       operationId: getFettmattisLeaderboard
       tags:
         - Leaderboards
@@ -482,6 +510,7 @@ paths:
   /leaderboard/seasons:
     get:
       summary: List Available Leaderboard Seasons
+      description: Returns the list of seasons with available leaderboard data.
       operationId: listLeaderboardSeasons
       tags:
         - Leaderboards
