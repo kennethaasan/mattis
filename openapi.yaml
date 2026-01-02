@@ -34,8 +34,8 @@ tags:
     description: Player roster management.
   - name: Rounds
     description: Round recording and history.
-  - name: FettMattis
-    description: FettMattis awards and revocations.
+  - name: Fettmattis
+    description: Fettmattis awards and revocations.
   - name: Leaderboards
     description: Leaderboard and season statistics.
 paths:
@@ -373,11 +373,11 @@ paths:
 
   /fettmattis:
     get:
-      summary: List FettMattis Entries
-      description: Returns recent FettMattis awards.
+      summary: List Fettmattis Entries
+      description: Returns recent Fettmattis awards.
       operationId: listFettmattis
       tags:
-        - FettMattis
+        - Fettmattis
       security: []
       parameters:
         - name: limit
@@ -386,22 +386,22 @@ paths:
             type: integer
             minimum: 1
             maximum: 100
-          description: Limit the number of FettMattis entries returned. Defaults to 20 when omitted.
+          description: Limit the number of Fettmattis entries returned. Defaults to 20 when omitted.
       responses:
         "200":
-          description: A list of recent FettMattis entries.
+          description: A list of recent Fettmattis entries.
           content:
             application/json:
               schema:
                 type: array
                 items:
-                  $ref: "#/components/schemas/FettMattis"
+                  $ref: "#/components/schemas/Fettmattis"
     post:
-      summary: Create FettMattis
-      description: Grants a FettMattis award to a player.
+      summary: Create Fettmattis
+      description: Grants a Fettmattis award to a player.
       operationId: createFettmattis
       tags:
-        - FettMattis
+        - Fettmattis
       security:
         - bearerAuth: []
       requestBody:
@@ -409,14 +409,14 @@ paths:
         content:
           application/json:
             schema:
-              $ref: "#/components/schemas/FettMattisCreate"
+              $ref: "#/components/schemas/FettmattisCreate"
       responses:
         "201":
-          description: FettMattis created successfully.
+          description: Fettmattis created successfully.
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/FettMattis"
+                $ref: "#/components/schemas/Fettmattis"
         "400":
           $ref: "#/components/responses/BadRequest"
         "409":
@@ -426,11 +426,11 @@ paths:
 
   /fettmattis/{fettmattisId}:
     delete:
-      summary: Delete FettMattis (within 24h)
-      description: Revokes a FettMattis award within the edit window.
+      summary: Delete Fettmattis (within 24h)
+      description: Revokes a Fettmattis award within the edit window.
       operationId: deleteFettmattis
       tags:
-        - FettMattis
+        - Fettmattis
       security:
         - bearerAuth: []
       parameters:
@@ -443,7 +443,7 @@ paths:
             description: UUID v7, time-ordered identifier.
       responses:
         "204":
-          description: FettMattis revoked successfully.
+          description: Fettmattis revoked successfully.
         "403":
           $ref: "#/components/responses/Forbidden"
         "404":
@@ -482,7 +482,7 @@ paths:
   /leaderboard/fettmattis:
     get:
       summary: Get Fettmattis Leaderboard
-      description: Returns leaderboard standings for FettMattis awards.
+      description: Returns leaderboard standings for Fettmattis awards.
       operationId: getFettmattisLeaderboard
       tags:
         - Leaderboards
@@ -721,7 +721,7 @@ components:
           format: uuid
           description: UUID v7, time-ordered identifier.
 
-    FettMattis:
+    Fettmattis:
       type: object
       required:
         - id
@@ -742,7 +742,7 @@ components:
         created_at:
           type: string
           format: date-time
-    FettMattisCreate:
+    FettmattisCreate:
       type: object
       required:
         - player_id
