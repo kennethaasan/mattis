@@ -33,6 +33,7 @@ export default defineConfig({
       reportOnFailure: true,
       reporter: ["text", "text-summary", "json-summary", "json"],
       include: ["src/**/*.{ts,tsx}"],
+      exclude: ["src/scripts/**"],
       thresholds: {
         global: {
           statements: 20,
