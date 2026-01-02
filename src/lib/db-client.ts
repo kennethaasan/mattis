@@ -876,10 +876,28 @@ export async function getOverviewStats(): Promise<OverviewStats> {
 }
 
 function isUniqueViolation(error: unknown): boolean {
-  return (
-    typeof error === "object" &&
-    error !== null &&
-    "code" in error &&
-    (error as { code?: string }).code === "23505"
-  );
+  if (typeof error !== "object" || error === null) {
+    return false;
+  }
+
+  // Check if the error itself has the PostgreSQL unique violation code
+  if ("code" in error && (error as { code?: string }).code === "23505") {
+    return true;
+  }
+
+  // Check if the error has a cause with the PostgreSQL unique violation code
+  // This handles wrapped errors like DrizzleQueryError
+  if ("cause" in error) {
+    const cause = (error as { cause?: unknown }).cause;
+    if (
+      typeof cause === "object" &&
+      cause !== null &&
+      "code" in cause &&
+      (cause as { code?: string }).code === "23505"
+    ) {
+      return true;
+    }
+  }
+
+  return false;
 }
