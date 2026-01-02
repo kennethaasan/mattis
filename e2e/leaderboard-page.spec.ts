@@ -57,21 +57,21 @@ test.describe("Leaderboard Page", () => {
       await expect(regularSection).toBeVisible();
     });
 
-    await test.step("Verify FettMattis leaderboard section", async () => {
+    await test.step("Verify Fettmattis leaderboard section", async () => {
       const fettmattisSection = page
         .getByRole("heading", { name: "Fettmattis-utdelinger" })
         .locator("..");
       await expect(fettmattisSection).toBeVisible();
     });
 
-    await test.step("Verify FettMattis table structure", async () => {
+    await test.step("Verify Fettmattis table structure", async () => {
       // Wait for the page to fully load
       await page.waitForLoadState("networkidle");
 
       const tables = page.getByRole("table");
       const tableCount = await tables.count();
 
-      // Check if we have a second table (FettMattis) or an empty state message
+      // Check if we have a second table (Fettmattis) or an empty state message
       if (tableCount >= 2) {
         const fettmattisTable = tables.nth(1);
         await expect(fettmattisTable).toBeVisible();
@@ -82,7 +82,7 @@ test.describe("Leaderboard Page", () => {
           fettmattisTable.getByRole("columnheader", { name: "Spiller" }),
         ).toBeVisible();
         await expect(
-          fettmattisTable.getByRole("columnheader", { name: "FettMattis" }),
+          fettmattisTable.getByRole("columnheader", { name: "Fettmattis" }),
         ).toBeVisible();
       } else {
         // Verify empty state message is shown

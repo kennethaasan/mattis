@@ -1,4 +1,4 @@
-# Feature Specification: Rewrite Legacy Laravel Mattis Stats App to Modern TypeScript Application (Loss Model + FettMattis Model)
+# Feature Specification: Rewrite Legacy Laravel Mattis Stats App to Modern TypeScript Application (Loss Model + Fettmattis Model)
 
 **Feature Branch**: `001-build-an-application`  
 **Created**: 2025-10-05  
@@ -6,7 +6,7 @@
 **Status**: Draft – 14 resolved / 0 open clarifications (All listed clarifications resolved on 2025-10-05)
 
 **Input (original brief)**: "Rewrite the app in the `laravel` folder to TypeScript. The app tracks statistics for the card game 'Mattis'. Use legacy behavior & UI as reference."  
-**Current Direction Update**: Scoring/winner model removed. System now tracks: participation, a single loser per round, yearly loss percentage, and independent FettMattiss (manually fettmattised, optional round link). Two leaderboards: (1) Regular (lowest loss %), (2) Fettmattis (most fettmattiss). Year resets January 1st (UTC). 24h edit/soft‑delete window for rounds and fettmattiss.
+**Current Direction Update**: Scoring/winner model removed. System now tracks: participation, a single loser per round, yearly loss percentage, and independent Fettmattiss (manually fettmattised, optional round link). Two leaderboards: (1) Regular (lowest loss %), (2) Fettmattis (most fettmattiss). Year resets January 1st (UTC). 24h edit/soft‑delete window for rounds and fettmattiss.
 
 ---
 
@@ -38,18 +38,18 @@ As participants of the Mattis community, we want to record each round (who playe
 
 1. **Create Player**: Given a need to add a new participant, when a user supplies a unique display name, then the player appears in all selection lists and future statistics.
 2. **Record Round**: Given at least 2 participating players, when a round is saved with participants and one marked loser, then yearly stats and leaderboards reflect the change immediately.
-3. **FettMattis Fettmattis**: Given at least 1 existing player (and optionally a recently recorded round), when a user creates a FettMattis specifying a player (and optionally linking a round), then the Fettmattis leaderboard updates fettmattis counts immediately.
-4. **Revoke FettMattis (within 24h)**: Given an fettmattis is less than 24 hours old, when a user revokes it, then the fettmattis no longer contributes to any fettmattis metrics and an audit trail persists the change.
+3. **Fettmattis Fettmattis**: Given at least 1 existing player (and optionally a recently recorded round), when a user creates a Fettmattis specifying a player (and optionally linking a round), then the Fettmattis leaderboard updates fettmattis counts immediately.
+4. **Revoke Fettmattis (within 24h)**: Given an fettmattis is less than 24 hours old, when a user revokes it, then the fettmattis no longer contributes to any fettmattis metrics and an audit trail persists the change.
 5. **View Regular Leaderboard**: Given rounds exist this calendar year (UTC), when the leaderboard is viewed, then players with at least 1 participation this year are ranked by (a) loss percentage ascending (losses / total rounds in the calendar year), (b) participation count descending, (c) player name ascending.
-6. **View Fettmattis Leaderboard**: Given at least one non-revoked FettMattis exists this year, when the Fettmattis leaderboard is opened, then players are ranked by total fettmattiss descending, tie‑break by player name ascending.
+6. **View Fettmattis Leaderboard**: Given at least one non-revoked Fettmattis exists this year, when the Fettmattis leaderboard is opened, then players are ranked by total fettmattiss descending, tie‑break by player name ascending.
 7. **Year Reset**: Given a new calendar year has begun (UTC), when the first new round or fettmattis is recorded, then all per‑year statistics (loss percentage, participations, fettmattis counts) restart from zero without altering historical prior year data.
 8. **Edit Round (within 24h)**: Given a round was created less than 24 hours ago (UTC comparison), when an authorized user edits participants or changes the loser, then statistics recompute accordingly.
 9. **Soft Delete Round (within 24h)**: Given a round is under 24 hours old, when it is deleted, then it no longer contributes to any metrics and an audit trail is preserved (conceptual—stakeholders may review removed counts if governance needed).
 10. **Edit Attempt After Window**: Given a round is older than 24 hours, when a user attempts to edit or delete it, then the system blocks the action and explains the lock policy.
-11. **Revoke Attempt After Window**: Given a FettMattis is older than 24 hours, when a user attempts to revoke it, then the system blocks the action and explains the lock policy.
+11. **Revoke Attempt After Window**: Given a Fettmattis is older than 24 hours, when a user attempts to revoke it, then the system blocks the action and explains the lock policy.
 12. **Inactive Player Visibility**: Given a player was marked inactive but has participated in at least one round this year, when leaderboards are viewed, then the player remains visible (inactive does not hide current‑year participants).
 13. **Validation Failure (Round)**: Given a round submission missing a loser or with fewer than required participants, when submitted, then the system rejects it and associates accessible error messages to relevant inputs.
-14. **Validation Failure (FettMattis)**: Given an fettmattis submission missing a player or duplicating an existing (player + same round link) combination, when submitted, then the system rejects it with accessible error messages.
+14. **Validation Failure (Fettmattis)**: Given an fettmattis submission missing a player or duplicating an existing (player + same round link) combination, when submitted, then the system rejects it with accessible error messages.
 15. **Player Rename**: Given a player is renamed, when any leaderboard or detail page is viewed, then historical data remains intact while the new display name appears.
 16. **Empty State**: Given no rounds (or fettmattiss) exist this year, when leaderboards are viewed, then clear empty state messaging appears (no players ranked yet).
 17. **Time Zone Consistency**: Given a round or fettmattis near year boundary (e.g., Dec 31 23:59:30 UTC), when recorded, then it is counted in the correct year determined strictly by UTC.
@@ -58,9 +58,9 @@ As participants of the Mattis community, we want to record each round (who playe
 
 - Round with duplicate player entries → reject (no duplicates per round).
 - Multiple losers attempt → reject (single loser enforced).
-- Duplicate FettMattis for same player + same round link → reject.
-- FettMattis referencing a soft-deleted round → reject (round linkage must target active round) OR allow omission of round link (user must re‑fettmattis without linkage) (ABUSE-CLAR-01 may refine; currently reject).
-- Attempt to create an FettMattis then revoke after window (>24h) → block with message.
+- Duplicate Fettmattis for same player + same round link → reject.
+- Fettmattis referencing a soft-deleted round → reject (round linkage must target active round) OR allow omission of round link (user must re‑fettmattis without linkage) (ABUSE-CLAR-01 may refine; currently reject).
+- Attempt to create an Fettmattis then revoke after window (>24h) → block with message.
 - Rapid sequential fettmattiss for same player (potential abuse) → allowed for now (monitor; ABUSE-CLAR-01 placeholder).
 - Player deactivated mid‑year → remains in rankings if participated this year; cannot receive new fettmattiss if policy later restricts (FR-CLAR-03 may extend this).
 - Rapid sequential round submissions near year boundary → ensure correct year attribution.
@@ -79,9 +79,9 @@ As participants of the Mattis community, we want to record each round (who playe
 - **FR-004**: System MUST allow editing a Round’s participants and loser ONLY within 24h of creation (UTC) then lock further edits.
 - **FR-005**: System MUST soft delete a Round within 24h of creation and disallow deletion afterward; soft deleted rounds MUST be excluded from all statistics.
 - **FR-006**: System MUST compute yearly (UTC) statistics for each player: total participations, total losses, loss percentage = losses / total rounds in the calendar year (denominator = total rounds in year; intentional fairness model).
-- **FR-007 (Revised)**: System MUST compute yearly FettMattis count per player (non-revoked fettmattiss), and total global fettmattis count.
+- **FR-007 (Revised)**: System MUST compute yearly Fettmattis count per player (non-revoked fettmattiss), and total global fettmattis count.
 - **FR-008**: System MUST present the Regular Leaderboard with ranking & tie-break logic: primary loss % ascending, secondary participation count descending, tertiary player name ascending.
-- **FR-009 (Revised)**: System MUST present the Fettmattis Leaderboard ranking players by total non-revoked FettMattiss descending, tie-break player name ascending.
+- **FR-009 (Revised)**: System MUST present the Fettmattis Leaderboard ranking players by total non-revoked Fettmattiss descending, tie-break player name ascending.
 - **FR-010**: System MUST reset yearly statistics automatically on January 1st 00:00:00 UTC without modifying persisted historical records.
 - **FR-011**: System MUST ensure player rename propagates to all displays without altering historical participation/loss/fettmattis data.
 - **FR-012**: System MUST expose a player detail view including: yearly metrics, historical trend (optional if clarified), total fettmattiss, and loss percentage trend if stored.
@@ -96,9 +96,9 @@ As participants of the Mattis community, we want to record each round (who playe
 - **FR-021**: System MUST base all time calculations and window enforcement on UTC (no local offset reliance).
 - **FR-022**: System SHOULD provide an overview page summarizing: players (active/total), total rounds this year, total fettmattiss this year, average participants per round.
 - **FR-023**: System SHOULD surface a warning if inactivity (0 participations) results in top loss % placement (potential fairness communication) (pending stakeholder approval FR-CLAR-06).
-- **FR-024 (New)**: System MUST allow creating a FettMattis with: (a) target player (b) optional round reference (nullable) (c) created timestamp (d) created_by actor.
-- **FR-025 (New)**: System MUST allow revoking (soft deleting) a FettMattis within 24h of creation; after 24h fettmattis becomes immutable.
-- **FR-026 (New)**: System MUST enforce uniqueness: no more than one active (non-revoked) FettMattis for the same (player, round) pair (if round link supplied); multiple fettmattiss without round linkage allowed unless limited by ABUSE-CLAR-01 future rule.
+- **FR-024 (New)**: System MUST allow creating a Fettmattis with: (a) target player (b) optional round reference (nullable) (c) created timestamp (d) created_by actor.
+- **FR-025 (New)**: System MUST allow revoking (soft deleting) a Fettmattis within 24h of creation; after 24h fettmattis becomes immutable.
+- **FR-026 (New)**: System MUST enforce uniqueness: no more than one active (non-revoked) Fettmattis for the same (player, round) pair (if round link supplied); multiple fettmattiss without round linkage allowed unless limited by ABUSE-CLAR-01 future rule.
 - **FR-027 (New)**: System MUST maintain an audit trail for fettmattis creation and revocation (timestamps, actor, prior state, optional rationale if later added).
 
 ### Clarification Placeholders (Unresolved — require stakeholder input)
@@ -122,9 +122,9 @@ _See Resolved Clarifications section for FR-CLAR-01 & FR-CLAR-02 decisions._
 
 ### Key Entities
 
-- **Player**: display name (unique), active flag, created date. Relationships: Participates in many Rounds; may receive many FettMattiss.
+- **Player**: display name (unique), active flag, created date. Relationships: Participates in many Rounds; may receive many Fettmattiss.
 - **Round**: created timestamp (UTC), participants (Players), single loser (Player), deleted*at (nullable for soft delete). \_No fettround flag stored.*
-- **FettmattisFettMattis**: id, player_id (required), round_id (optional, nullable), created_at (UTC), revoked_at (nullable), created_by actor id. Represents a discrete recognition; counts only if not revoked.
+- **FettmattisFettmattis**: id, player_id (required), round_id (optional, nullable), created_at (UTC), revoked_at (nullable), created_by actor id. Represents a discrete recognition; counts only if not revoked.
 - **Yearly Statistics (Derived, not persisted unless cached)**: For each calendar year (UTC): participations, losses, loss %, fettmattis count.
 - **User (Actor)**: Person performing actions. Decision: `User` (auth) is separate from `Player` (profile); `created_by` and audit fields reference `user.id`. Players may optionally link to a `user_id` for auth/profile pairing.
 
@@ -150,7 +150,7 @@ _See Resolved Clarifications section for FR-CLAR-01 & FR-CLAR-02 decisions._
 
 ### Observability
 
-- Events: PlayerCreated, PlayerDeactivated, RoundRecorded, RoundEdited, RoundSoftDeleted, FettMattisCreated, FettMattisRevoked, YearStatsViewed, LeaderboardViewed.
+- Events: PlayerCreated, PlayerDeactivated, RoundRecorded, RoundEdited, RoundSoftDeleted, FettmattisCreated, FettmattisRevoked, YearStatsViewed, LeaderboardViewed.
 - Counters/Gauges: totalPlayers, activePlayers, roundsYearToDate, fettmattissYearToDate, avgParticipantsPerRoundYTD.
 - Derived Metrics (Leaderboards): lossPercentage, participationRank, fettmattisRank.
 - Error Events: ValidationFailed(round), ValidationFailed(fettmattis), EditWindowExpired(round/fettmattis), NotFound(player/round/fettmattis), DuplicatePlayerName.
@@ -195,12 +195,12 @@ _See Resolved Clarifications section for FR-CLAR-01 & FR-CLAR-02 decisions._
 | totalPlayers               | Counter              | Total players ever created                            | Player records                          |
 | activePlayers              | Gauge                | Current active players                                | Player.active                           |
 | roundsYearToDate           | Counter              | Non-deleted rounds in current UTC year                | Round.created_at + deleted_at null      |
-| fettmattissYearToDate      | Counter              | Non-revoked fettmattiss in current UTC year           | FettMattis.created_at + revoked_at null |
+| fettmattissYearToDate      | Counter              | Non-revoked fettmattiss in current UTC year           | Fettmattis.created_at + revoked_at null |
 | avgParticipantsPerRoundYTD | Gauge                | Mean participants per non-deleted round (year)        | Derived                                 |
 | losses                     | Counter (per player) | Times player designated loser this year               | Round.loser_id                          |
 | participations             | Counter (per player) | Rounds player joined this year                        | Round participants                      |
 | lossPercentage             | Gauge (per player)   | losses / total rounds in year                         | Derived                                 |
-| playerFettMattiss          | Counter (per player) | FettMattiss granted to player this year (non-revoked) | FettMattis.player_id                    |
+| playerFettmattiss          | Counter (per player) | Fettmattiss granted to player this year (non-revoked) | Fettmattis.player_id                    |
 
 ---
 
@@ -245,7 +245,7 @@ _See Resolved Clarifications section for FR-CLAR-01 & FR-CLAR-02 decisions._
 | ID              | Decision                                                                                                                                              | Rationale                                                                                                                                                      | Date       | Impacted Requirements                                                            |
 | --------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------- | ---------- | -------------------------------------------------------------------------------- |
 | FR-CLAR-01      | Minimum participants per round is 2; codified via FR-003 & FR-014(d).                                                                                 | Ensures statistical relevance; legacy usage never <2 players; avoids degenerate single-player "round" inflating denominators.                                  | 2025-10-05 | FR-003, FR-014                                                                   |
-| FR-CLAR-02      | Adopt standalone manual FettMattis (optional round link). No automatic derivation rule in MVP. No justification text field yet.                       | Maximizes flexibility with low implementation cost; defers complexity & abuse controls; preserves ability to later add thresholds/caps without data migration. | 2025-10-05 | FR-007 (revised), FR-009 (revised), FR-024–FR-027, Metrics Catalog, Key Entities |
+| FR-CLAR-02      | Adopt standalone manual Fettmattis (optional round link). No automatic derivation rule in MVP. No justification text field yet.                       | Maximizes flexibility with low implementation cost; defers complexity & abuse controls; preserves ability to later add thresholds/caps without data migration. | 2025-10-05 | FR-007 (revised), FR-009 (revised), FR-024–FR-027, Metrics Catalog, Key Entities |
 | ABUSE-CLAR-01   | Defer hard caps initially; implement monitoring and alerting. Add rate-limit primitives to be applied later if abuse observed.                        | Low initial friction for community while ensuring observability; enables data‑driven cap policy later.                                                         | 2025-10-05 | FR-026, Security & Observability, Tasks (monitoring)                             |
 | SEC-CLAR-01     | Phase 1: Anonymous reads, authenticated writes (basic actor model). Stronger auth (OIDC/roles) planned as follow-up.                                  | Balances quick MVP delivery with write accountability; allows later migration to federated auth (OIDC).                                                        | 2025-10-05 | Security & Supply Chain, FR-024–FR-027, Key Entities (User/Actor)                |
 | SEC-CLAR-02     | Require rate limiting for write paths (round creation & fettmattiss) with user-id based keys and IP fallback; captcha deferred unless abuse observed. | Prevents automated mass writes while keeping UX friction low; ties into ABUSE monitoring.                                                                      | 2025-10-05 | FR-003, FR-024, Performance & Security sections                                  |

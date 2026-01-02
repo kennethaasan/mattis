@@ -86,7 +86,12 @@ describe("rounds-client", () => {
     mockApiClient.GET.mockResolvedValueOnce({
       data: undefined,
       response: new Response(),
-      error: { detail: "Missing" },
+      error: {
+        type: "about:blank",
+        title: "Missing",
+        status: 400,
+        detail: "Missing",
+      },
     });
 
     await expect(fetchRounds()).rejects.toThrow(
@@ -111,7 +116,12 @@ describe("rounds-client", () => {
     mockApiClient.GET.mockResolvedValueOnce({
       data: undefined,
       response: new Response(),
-      error: { detail: "Missing" },
+      error: {
+        type: "about:blank",
+        title: "Missing",
+        status: 400,
+        detail: "Missing",
+      },
     });
 
     await expect(fetchLatestRound()).rejects.toThrow(

@@ -232,7 +232,7 @@ export function Leaderboard() {
               <TableRow>
                 <TableHead className="w-16">Plass</TableHead>
                 <TableHead>Spiller</TableHead>
-                <TableHead className="text-right">FettMattis</TableHead>
+                <TableHead className="text-right">Fettmattis</TableHead>
               </TableRow>
             </TableHeader>
             <TableBody>

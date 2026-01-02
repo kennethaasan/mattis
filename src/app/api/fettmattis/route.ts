@@ -1,13 +1,13 @@
 import type { NextRequest } from "next/server";
 import { NextResponse } from "next/server";
 import { badRequest, createProblemResponse } from "@/lib/api/problem-details";
-import { toFettMattisResponse } from "@/lib/api/response-helpers";
-import { FettMattisCreateSchema, ListQuerySchema } from "@/lib/api/schemas";
+import { toFettmattisResponse } from "@/lib/api/response-helpers";
+import { FettmattisCreateSchema, ListQuerySchema } from "@/lib/api/schemas";
 import { requireAuthenticatedRequest } from "@/lib/auth/authorize";
 import {
   ConflictError,
-  createFettMattis,
-  listRecentFettMattis,
+  createFettmattis,
+  listRecentFettmattis,
   NotFoundError,
 } from "@/lib/db-client";
 import {
@@ -34,15 +34,15 @@ export async function GET(req: NextRequest) {
   }
 
   try {
-    const fettMattisList = await listRecentFettMattis({
+    const fettmattisList = await listRecentFettmattis({
       limit: validation.data.limit,
     });
     logger.info("Returning fettmattis", {
       ...requestContext,
-      count: fettMattisList.length,
+      count: fettmattisList.length,
       limit: validation.data.limit,
     });
-    return NextResponse.json(fettMattisList.map(toFettMattisResponse));
+    return NextResponse.json(fettmattisList.map(toFettmattisResponse));
   } catch (error) {
     if (error instanceof ConflictError) {
       logger.warn("Conflict while listing fettmattis", {
@@ -100,7 +100,7 @@ export async function POST(req: NextRequest) {
       return badRequest("Malformed JSON in request body.");
     }
 
-    const validatedData = FettMattisCreateSchema.safeParse(body);
+    const validatedData = FettmattisCreateSchema.safeParse(body);
 
     if (!validatedData.success) {
       const detail =
@@ -116,19 +116,19 @@ export async function POST(req: NextRequest) {
 
     ({ player_id: playerId } = validatedData.data);
 
-    const newFettmattis = await createFettMattis({
+    const newFettmattis = await createFettmattis({
       playerId,
       createdBy: auth.user.id,
     });
 
     logger.info("Fettmattis created", {
       ...requestContext,
-      fettMattisId: newFettmattis.id,
+      fettmattisId: newFettmattis.id,
       userId: auth.user.id,
       playerId,
     });
 
-    return NextResponse.json(toFettMattisResponse(newFettmattis), {
+    return NextResponse.json(toFettmattisResponse(newFettmattis), {
       status: 201,
     });
   } catch (error) {

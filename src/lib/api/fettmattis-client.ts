@@ -2,22 +2,22 @@ import type { QueryKey } from "@tanstack/react-query";
 
 import { apiClient, problemToError } from "@/lib/api/client";
 import {
-  type FettMattis,
-  type FettMattisCreate,
-  FettMattisCreateSchema,
+  type Fettmattis,
+  type FettmattisCreate,
+  FettmattisCreateSchema,
 } from "@/lib/api/schemas";
 
-export function createFettMattisListQueryKey(limit?: number) {
+export function createFettmattisListQueryKey(limit?: number) {
   return ["fettmattis", "list", limit ?? "default"] as const satisfies QueryKey;
 }
 
-interface FetchFettMattisOptions {
+interface FetchFettmattisOptions {
   limit?: number;
 }
 
-export async function fetchFettMattis(
-  options: FetchFettMattisOptions = {},
-): Promise<FettMattis[]> {
+export async function fetchFettmattis(
+  options: FetchFettmattisOptions = {},
+): Promise<Fettmattis[]> {
   const { data } = await apiClient.GET("/fettmattis", {
     params: {
       query: options.limit ? { limit: options.limit } : undefined,
@@ -26,19 +26,19 @@ export async function fetchFettMattis(
 
   if (!data) {
     throw new Error(
-      "Vi mottok et ugyldig svar da FettMattis-listen ble lastet.",
+      "Vi mottok et ugyldig svar da Fettmattis-listen ble lastet.",
     );
   }
 
   return data;
 }
 
-export type { FettMattis } from "@/lib/api/schemas";
+export type { Fettmattis } from "@/lib/api/schemas";
 
-export async function createFettMattis(
-  payload: FettMattisCreate,
+export async function createFettmattis(
+  payload: FettmattisCreate,
 ): Promise<void> {
-  const parsedPayload = FettMattisCreateSchema.parse(payload);
+  const parsedPayload = FettmattisCreateSchema.parse(payload);
   const { error } = await apiClient.POST("/fettmattis", {
     body: parsedPayload,
     headers: {
@@ -52,11 +52,11 @@ export async function createFettMattis(
   }
 }
 
-export async function revokeFettMattis(fettMattisId: string): Promise<void> {
+export async function revokeFettmattis(fettmattisId: string): Promise<void> {
   const { error } = await apiClient.DELETE("/fettmattis/{fettmattisId}", {
     params: {
       path: {
-        fettmattisId: fettMattisId,
+        fettmattisId: fettmattisId,
       },
     },
     credentials: "include",

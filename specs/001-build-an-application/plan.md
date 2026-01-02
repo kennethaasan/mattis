@@ -27,7 +27,7 @@
 
 ## Summary
 
-This plan outlines the rewrite of the legacy Laravel-based "Mattis" stats application into a modern, serverless TypeScript application. The new system will track player participation, losses, and special "FettMattis records" using a dual-leaderboard model. The technical approach involves a Next.js frontend, a serverless backend using AWS Lambda and Aurora, and Infrastructure as Code managed by the AWS CDK.
+This plan outlines the rewrite of the legacy Laravel-based "Mattis" stats application into a modern, serverless TypeScript application. The new system will track player participation, losses, and special "Fettmattis records" using a dual-leaderboard model. The technical approach involves a Next.js frontend, a serverless backend using AWS Lambda and Aurora, and Infrastructure as Code managed by the AWS CDK.
 
 ## Technical Context
 
@@ -63,7 +63,7 @@ The following gates from Constitution v1.1.0 are satisfied:
     - UI surfaces (leaderboards, forms) are identified.
     - Requirements adhere to WCAG 2.2 AA, covering forms, semantic HTML, and keyboard navigation as per the spec.
 5.  **Observability Baseline**:
-    - Key events (e.g., `RoundCreate`, `FettMattisCreate`) and metrics are defined in the spec.
+    - Key events (e.g., `RoundCreate`, `FettmattisCreate`) and metrics are defined in the spec.
 6.  **Testing Gates Defined**:
     - The plan includes contract tests (OpenAPI), integration tests (user scenarios), and E2E tests (accessibility).
 7.  **Data / Privacy / Retention**: The spec defines indefinite retention for audit purposes and soft-delete behavior.

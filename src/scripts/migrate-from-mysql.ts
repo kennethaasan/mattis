@@ -15,7 +15,7 @@ type PlayerInsertRow = typeof schema.players.$inferInsert;
 type RoundInsertRow = typeof schema.rounds.$inferInsert;
 type RoundLoserInsertRow = typeof schema.roundLoser.$inferInsert;
 type RoundParticipantInsertRow = typeof schema.roundParticipants.$inferInsert;
-type FettMattisInsertRow = typeof schema.fettmattis.$inferInsert;
+type FettmattisInsertRow = typeof schema.fettmattis.$inferInsert;
 
 type LegacyDateValue = Date | string | null;
 
@@ -162,7 +162,7 @@ async function fetchSourceData(pool: MySqlPool): Promise<SourceData> {
     `${players.length.toString()} players`,
     `${rounds.length.toString()} rounds`,
     `${playerRounds.length.toString()} round participations`,
-    `${fettRounds.length.toString()} FettMattis awards`,
+    `${fettRounds.length.toString()} Fettmattis awards`,
   ];
 
   writeInfo(messages.join(", "));
@@ -232,13 +232,13 @@ async function migrateData(
     warnings.push(...roundInsertData.warnings);
     await insertRounds(tx, roundInsertData);
 
-    const fettMattisInsert = buildFettMattisInsert(
+    const fettmattisInsert = buildFettmattisInsert(
       sourceData.fettRounds,
       playerIdMap,
       options,
     );
-    warnings.push(...fettMattisInsert.warnings);
-    await insertFettMattis(tx, fettMattisInsert.items);
+    warnings.push(...fettmattisInsert.warnings);
+    await insertFettmattis(tx, fettmattisInsert.items);
   });
 
   if (warnings.length > 0) {
@@ -471,23 +471,23 @@ async function insertRounds(
   }
 }
 
-interface FettMattisInsert {
-  items: FettMattisInsertRow[];
+interface FettmattisInsert {
+  items: FettmattisInsertRow[];
   warnings: string[];
 }
 
-function buildFettMattisInsert(
+function buildFettmattisInsert(
   rows: SourceFettRoundRow[],
   playerIdMap: Map<number, string>,
   options: MigrationOptions,
-): FettMattisInsert {
+): FettmattisInsert {
   const warnings: string[] = [];
 
-  const items: FettMattisInsertRow[] = rows
+  const items: FettmattisInsertRow[] = rows
     .map((row) => {
       if (row.loser_id === null) {
         warnings.push(
-          `Skipping FettMattis ${formatLegacyId(row.id)} because it has no associated player.`,
+          `Skipping Fettmattis ${formatLegacyId(row.id)} because it has no associated player.`,
         );
         return null;
       }
@@ -496,12 +496,12 @@ function buildFettMattisInsert(
 
       if (!playerId) {
         warnings.push(
-          `Skipping FettMattis ${formatLegacyId(row.id)} because player ${formatLegacyId(row.loser_id)} could not be resolved.`,
+          `Skipping Fettmattis ${formatLegacyId(row.id)} because player ${formatLegacyId(row.loser_id)} could not be resolved.`,
         );
         return null;
       }
 
-      const item: FettMattisInsertRow = {
+      const item: FettmattisInsertRow = {
         id: generateId(),
         playerId,
         createdBy: options.migrationUserId,
@@ -511,14 +511,14 @@ function buildFettMattisInsert(
 
       return item;
     })
-    .filter((value): value is FettMattisInsertRow => value !== null);
+    .filter((value): value is FettmattisInsertRow => value !== null);
 
   return { items, warnings };
 }
 
-async function insertFettMattis(
+async function insertFettmattis(
   tx: TargetDatabase,
-  items: FettMattisInsertRow[],
+  items: FettmattisInsertRow[],
 ): Promise<void> {
   if (items.length === 0) {
     return;

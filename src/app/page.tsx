@@ -15,12 +15,12 @@ import {
   CardTitle,
 } from "@/components/ui/card";
 import {
-  toFettMattisResponse,
+  toFettmattisResponse,
   toRoundResponse,
 } from "@/lib/api/response-helpers";
 import {
   getOverviewStats,
-  listRecentFettMattis,
+  listRecentFettmattis,
   listRecentRounds,
 } from "@/lib/db-client";
 
@@ -66,15 +66,15 @@ const workflowCards = [
 export default async function Home() {
   await connection();
 
-  const [overviewStats, recentRounds, recentFettMattis] = await Promise.all([
+  const [overviewStats, recentRounds, recentFettmattis] = await Promise.all([
     getOverviewStats(),
     listRecentRounds({ limit: 5 }),
-    listRecentFettMattis({ limit: 5 }),
+    listRecentFettmattis({ limit: 5 }),
   ]);
 
-  const { totalRounds, fettMattisMoments, activePlayers } = overviewStats;
+  const { totalRounds, fettmattisMoments, activePlayers } = overviewStats;
   const roundsForDisplay = recentRounds.map(toRoundResponse);
-  const fettMattisForDisplay = recentFettMattis.map(toFettMattisResponse);
+  const fettmattisForDisplay = recentFettmattis.map(toFettmattisResponse);
   const formatter = new Intl.NumberFormat("nb-NO");
 
   const highlightStats = [
@@ -85,7 +85,7 @@ export default async function Home() {
     },
     {
       label: "Fettmattis-øyeblikk",
-      value: formatter.format(fettMattisMoments),
+      value: formatter.format(fettmattisMoments),
       description: "Feirede utmerkelser du kan finne igjen.",
     },
     {
@@ -148,7 +148,7 @@ export default async function Home() {
                 </Button>
               </CardHeader>
               <CardContent className="p-4 pt-2 sm:p-6 sm:pt-4">
-                <FettmattisTable fettMattis={fettMattisForDisplay} />
+                <FettmattisTable fettmattis={fettmattisForDisplay} />
               </CardContent>
             </Card>
           </div>

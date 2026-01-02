@@ -34,25 +34,25 @@ test.describe("Landing Page", () => {
       name: "De siste rundene",
       level: 3,
     });
-    const fettMattisHeading = page.getByRole("heading", {
+    const fettmattisHeading = page.getByRole("heading", {
       name: "Ferske Fettmattiser",
       level: 3,
     });
 
     await expect(roundsHeading).toBeVisible();
-    await expect(fettMattisHeading).toBeVisible();
+    await expect(fettmattisHeading).toBeVisible();
 
     const leaderboardBox = await leaderboardHeading.boundingBox();
     const roundsBox = await roundsHeading.boundingBox();
-    const fettMattisBox = await fettMattisHeading.boundingBox();
+    const fettmattisBox = await fettmattisHeading.boundingBox();
 
-    if (!leaderboardBox || !roundsBox || !fettMattisBox) {
+    if (!leaderboardBox || !roundsBox || !fettmattisBox) {
       throw new Error(
         "Unable to determine layout for leaderboard or activity tables.",
       );
     }
 
     expect(roundsBox.y).toBeGreaterThan(leaderboardBox.y);
-    expect(fettMattisBox.y).toBeGreaterThan(leaderboardBox.y);
+    expect(fettmattisBox.y).toBeGreaterThan(leaderboardBox.y);
   });
 });

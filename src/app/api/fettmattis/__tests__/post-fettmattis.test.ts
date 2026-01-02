@@ -7,14 +7,14 @@ const mocks = vi.hoisted(() => {
   class MockConflictError extends Error {}
 
   return {
-    createFettMattis: vi.fn(),
+    createFettmattis: vi.fn(),
     MockNotFoundError,
     MockConflictError,
   };
 });
 
 vi.mock("@/lib/db-client", () => ({
-  createFettMattis: mocks.createFettMattis,
+  createFettmattis: mocks.createFettmattis,
   NotFoundError: mocks.MockNotFoundError,
   ConflictError: mocks.MockConflictError,
 }));
@@ -29,7 +29,7 @@ const createRequest = (body: unknown) => {
 };
 
 beforeEach(() => {
-  mocks.createFettMattis.mockReset();
+  mocks.createFettmattis.mockReset();
 });
 
 test("T013: POST /api/fettmattis returns 201 with the created record", async () => {
@@ -43,7 +43,7 @@ test("T013: POST /api/fettmattis returns 201 with the created record", async () 
     createdAt: new Date("2025-01-01T00:00:00.000Z"),
   };
 
-  mocks.createFettMattis.mockResolvedValueOnce(record);
+  mocks.createFettmattis.mockResolvedValueOnce(record);
 
   const request = createRequest({
     player_id: record.player.id,
@@ -62,7 +62,7 @@ test("T013: POST /api/fettmattis returns 201 with the created record", async () 
     },
     created_at: record.createdAt.toISOString(),
   });
-  expect(mocks.createFettMattis).toHaveBeenCalledWith({
+  expect(mocks.createFettmattis).toHaveBeenCalledWith({
     playerId: record.player.id,
     createdBy: process.env.BASIC_AUTH_USER_ID,
   });
@@ -83,11 +83,11 @@ test("T013: POST /api/fettmattis returns 400 when validation fails", async () =>
   expect(() => ProblemDetailsSchema.parse(payload)).not.toThrow();
   expect(payload.title).toBe("Bad Request");
   expect(payload.detail).toBe("Must be a valid UUID.");
-  expect(mocks.createFettMattis).not.toHaveBeenCalled();
+  expect(mocks.createFettmattis).not.toHaveBeenCalled();
 });
 
 test("T013: POST /api/fettmattis returns 404 when the player or round is missing", async () => {
-  mocks.createFettMattis.mockRejectedValueOnce(
+  mocks.createFettmattis.mockRejectedValueOnce(
     new mocks.MockNotFoundError("Missing player"),
   );
 
@@ -103,7 +103,7 @@ test("T013: POST /api/fettmattis returns 404 when the player or round is missing
 });
 
 test("T013: POST /api/fettmattis returns 409 when a duplicate is detected", async () => {
-  mocks.createFettMattis.mockRejectedValueOnce(
+  mocks.createFettmattis.mockRejectedValueOnce(
     new mocks.MockConflictError("Duplicate"),
   );
 

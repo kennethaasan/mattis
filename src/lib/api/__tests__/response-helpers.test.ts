@@ -1,12 +1,12 @@
 import { describe, expect, test } from "vitest";
 
 import {
-  toFettMattisResponse,
+  toFettmattisResponse,
   toPlayerResponse,
   toRoundResponse,
 } from "@/lib/api/response-helpers";
 import type {
-  FettMattisRecord,
+  FettmattisRecord,
   RoundParticipantRecord,
   RoundRecord,
 } from "@/lib/db-client";
@@ -111,9 +111,9 @@ describe("toRoundResponse", () => {
   });
 });
 
-describe("toFettMattisResponse", () => {
+describe("toFettmattisResponse", () => {
   test("transforms fettmattis record with round_id", () => {
-    const record: FettMattisRecord = {
+    const record: FettmattisRecord = {
       id: "fm-123",
       player: { id: "p1", displayName: "Winner", active: true },
       createdAt: new Date("2025-03-10T12:00:00Z"),
@@ -122,7 +122,7 @@ describe("toFettMattisResponse", () => {
       roundId: "round-abc",
     };
 
-    const result = toFettMattisResponse(record);
+    const result = toFettmattisResponse(record);
 
     expect(result).toEqual({
       id: "fm-123",
@@ -133,7 +133,7 @@ describe("toFettMattisResponse", () => {
   });
 
   test("transforms fettmattis record without round_id", () => {
-    const record: FettMattisRecord = {
+    const record: FettmattisRecord = {
       id: "fm-456",
       player: { id: "p2", displayName: "Another Winner", active: true },
       createdAt: new Date("2025-04-15T09:30:00Z"),
@@ -142,7 +142,7 @@ describe("toFettMattisResponse", () => {
       roundId: null,
     };
 
-    const result = toFettMattisResponse(record);
+    const result = toFettmattisResponse(record);
 
     expect(result).toEqual({
       id: "fm-456",
@@ -153,7 +153,7 @@ describe("toFettMattisResponse", () => {
   });
 
   test("transforms fettmattis record with undefined round_id", () => {
-    const record: FettMattisRecord = {
+    const record: FettmattisRecord = {
       id: "fm-789",
       player: { id: "p3", displayName: "Third Player", active: false },
       createdAt: new Date("2025-05-20T18:45:00Z"),
@@ -162,7 +162,7 @@ describe("toFettMattisResponse", () => {
       roundId: undefined,
     };
 
-    const result = toFettMattisResponse(record);
+    const result = toFettmattisResponse(record);
 
     expect(result.round_id).toBeNull();
   });

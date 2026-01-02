@@ -5,7 +5,7 @@ import { requireAuthenticatedRequest } from "@/lib/auth/authorize";
 import {
   ForbiddenError,
   NotFoundError,
-  revokeFettMattis,
+  revokeFettmattis,
 } from "@/lib/db-client";
 
 export async function DELETE(
@@ -31,7 +31,7 @@ export async function DELETE(
   }
 
   try {
-    await revokeFettMattis(fettmattisId);
+    await revokeFettmattis(fettmattisId);
     return new Response(null, { status: 204 });
   } catch (error) {
     if (error instanceof NotFoundError) {

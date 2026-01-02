@@ -40,7 +40,7 @@ export interface RoundRecord {
   loser: RoundParticipantRecord;
 }
 
-export interface FettMattisRecord {
+export interface FettmattisRecord {
   id: string;
   player: RoundParticipantRecord;
   createdAt: Date;
@@ -71,7 +71,7 @@ export interface UpdateRoundInput {
   loserId?: string;
 }
 
-export interface CreateFettMattisInput {
+export interface CreateFettmattisInput {
   playerId: string;
   createdBy: string;
 }
@@ -442,9 +442,9 @@ export async function listRecentRounds(
   return loadedRounds.filter((round): round is RoundRecord => round !== null);
 }
 
-export async function listRecentFettMattis(
+export async function listRecentFettmattis(
   options: RecentListOptions = {},
-): Promise<FettMattisRecord[]> {
+): Promise<FettmattisRecord[]> {
   const listLimit = resolveListLimit(options.limit);
 
   const rows = await db
@@ -563,9 +563,9 @@ export async function deleteRound(roundId: string): Promise<void> {
   });
 }
 
-export async function createFettMattis(
-  input: CreateFettMattisInput,
-): Promise<FettMattisRecord> {
+export async function createFettmattis(
+  input: CreateFettmattisInput,
+): Promise<FettmattisRecord> {
   return db.transaction(async (tx) => {
     await ensureUser(tx, input.createdBy);
 
@@ -602,7 +602,7 @@ export async function createFettMattis(
   });
 }
 
-export async function revokeFettMattis(fettmattisId: string): Promise<void> {
+export async function revokeFettmattis(fettmattisId: string): Promise<void> {
   await db.transaction(async (tx) => {
     const [row] = await tx
       .select()
@@ -618,7 +618,7 @@ export async function revokeFettMattis(fettmattisId: string): Promise<void> {
       return;
     }
 
-    assertEditWindow(row.createdAt, "FettMattis");
+    assertEditWindow(row.createdAt, "Fettmattis");
 
     await tx
       .update(fettmattis)
@@ -635,9 +635,9 @@ export interface RegularLeaderboardEntry {
   player: RoundParticipantRecord;
 }
 
-export interface FettMattisLeaderboardEntry {
+export interface FettmattisLeaderboardEntry {
   rank: number;
-  fettMattisCount: number;
+  fettmattisCount: number;
   player: RoundParticipantRecord;
 }
 
@@ -649,7 +649,7 @@ interface RegularLeaderboardRow extends Record<string, unknown> {
   loss_count: number;
 }
 
-interface FettMattisLeaderboardRow extends Record<string, unknown> {
+interface FettmattisLeaderboardRow extends Record<string, unknown> {
   player_id: string;
   display_name: string;
   active: boolean;
@@ -706,27 +706,27 @@ export async function getRegularLeaderboard(
   }));
 }
 
-export async function getFettMattisLeaderboard(
+export async function getFettmattisLeaderboard(
   year: number | null,
-): Promise<FettMattisLeaderboardEntry[]> {
-  const res = await db.execute<FettMattisLeaderboardRow>(
-    fettMattisLeaderboardQuery(year),
+): Promise<FettmattisLeaderboardEntry[]> {
+  const res = await db.execute<FettmattisLeaderboardRow>(
+    fettmattisLeaderboardQuery(year),
   );
 
   const leaderboard = res.rows
     .map(
-      (row): { player: RoundParticipantRecord; fettMattisCount: number } => ({
+      (row): { player: RoundParticipantRecord; fettmattisCount: number } => ({
         player: {
           id: row.player_id,
           displayName: row.display_name,
           active: row.active,
         },
-        fettMattisCount: row.fettmattis_count,
+        fettmattisCount: row.fettmattis_count,
       }),
     )
     .sort((a, b) => {
-      if (a.fettMattisCount !== b.fettMattisCount) {
-        return b.fettMattisCount - a.fettMattisCount;
+      if (a.fettmattisCount !== b.fettmattisCount) {
+        return b.fettmattisCount - a.fettmattisCount;
       }
       return a.player.displayName.localeCompare(b.player.displayName);
     });
@@ -826,7 +826,7 @@ function regularLeaderboardQuery(year: number | null) {
   `;
 }
 
-function fettMattisLeaderboardQuery(year: number | null): SQL {
+function fettmattisLeaderboardQuery(year: number | null): SQL {
   const yearFilter =
     typeof year === "number"
       ? sql`AND EXTRACT(YEAR FROM f.created_at) = ${year}`
@@ -848,7 +848,7 @@ function fettMattisLeaderboardQuery(year: number | null): SQL {
 
 export interface OverviewStats {
   totalRounds: number;
-  fettMattisMoments: number;
+  fettmattisMoments: number;
   activePlayers: number;
 }
 
@@ -858,7 +858,7 @@ export async function getOverviewStats(): Promise<OverviewStats> {
     .from(rounds)
     .where(isNull(rounds.deletedAt));
 
-  const [fettMattisEntry] = await db
+  const [fettmattisEntry] = await db
     .select({ count: sql<number>`cast(count(*) as int)` })
     .from(fettmattis)
     .where(isNull(fettmattis.revokedAt));
@@ -870,7 +870,7 @@ export async function getOverviewStats(): Promise<OverviewStats> {
 
   return {
     totalRounds: roundsEntry?.count ?? 0,
-    fettMattisMoments: fettMattisEntry?.count ?? 0,
+    fettmattisMoments: fettmattisEntry?.count ?? 0,
     activePlayers: playersEntry?.count ?? 0,
   };
 }

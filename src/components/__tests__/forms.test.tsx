@@ -7,7 +7,7 @@ import {
 } from "@testing-library/react";
 import { afterEach, describe, expect, test, vi } from "vitest";
 
-import { FettMattisForm } from "@/components/FettMattisForm";
+import { FettmattisForm } from "@/components/FettmattisForm";
 import { PlayerForm } from "@/components/PlayerForm";
 import { RoundForm } from "@/components/RoundForm";
 
@@ -111,12 +111,12 @@ describe("RoundForm", () => {
   });
 });
 
-describe("FettMattisForm", () => {
+describe("FettmattisForm", () => {
   test("submits selected player", async () => {
     const onSubmit = vi.fn().mockResolvedValue(undefined);
 
     render(
-      <FettMattisForm onSubmit={onSubmit} players={PLAYERS} rounds={[]} />,
+      <FettmattisForm onSubmit={onSubmit} players={PLAYERS} rounds={[]} />,
     );
 
     const select = screen.getByLabelText("Spiller") as HTMLSelectElement;
@@ -130,7 +130,7 @@ describe("FettMattisForm", () => {
 
   test("resets invalid initial player selection", async () => {
     render(
-      <FettMattisForm
+      <FettmattisForm
         onSubmit={vi.fn()}
         players={PLAYERS}
         rounds={[]}

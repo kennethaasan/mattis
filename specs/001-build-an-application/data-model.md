@@ -10,7 +10,7 @@ This document defines the database schema for the Mattis Stats application. The 
 
 ```
 +-------------+       +--------------------+       +-------------------+
-|   Users     |       |      Players       |       | FettMattis |
+|   Users     |       |      Players       |       | Fettmattis |
 |-------------|       |--------------------|       |-------------------|
 | id (PK)     |----<--| id (PK)            |----<--| id (PK)           |
 | username    |       | display_name       |       | player_id (FK)    |
@@ -101,18 +101,18 @@ Identifies the single loser for a round. A separate table enforces the one-to-on
 
 #### `fettmattis`
 
-Stores records of FettMattis.
+Stores records of Fettmattis.
 
 | Column       | Type          | Constraints                           | Description                                  |
 | ------------ | ------------- | ------------------------------------- | -------------------------------------------- |
-| `id`         | `uuid (v7)`   | Primary Key                           | Unique identifier for the FettMattis record. |
-| `player_id`  | `uuid (v7)`   | Foreign Key -> `players.id`, Not Null | The player receiving the FettMattis.         |
+| `id`         | `uuid (v7)`   | Primary Key                           | Unique identifier for the Fettmattis record. |
+| `player_id`  | `uuid (v7)`   | Foreign Key -> `players.id`, Not Null | The player receiving the Fettmattis.         |
 | `round_id`   | `uuid (v7)`   | Foreign Key -> `rounds.id`, Nullable  | The round associated with the fettmattis.    |
 | `created_by` | `uuid (v7)`   | Foreign Key -> `users.id`, Not Null   | The user who gave the fettmattis.            |
-| `created_at` | `timestamptz` | Not Null, Default `now()`             | Timestamp of FettMattis creation.            |
+| `created_at` | `timestamptz` | Not Null, Default `now()`             | Timestamp of Fettmattis creation.            |
 | `revoked_at` | `timestamptz` | Nullable                              | Timestamp for soft deletion (revocation).    |
 
-**Constraint**: A unique index on `(player_id, round_id)` where `revoked_at IS NULL` will enforce that a player can only receive one FettMattis per round.
+**Constraint**: A unique index on `(player_id, round_id)` where `revoked_at IS NULL` will enforce that a player can only receive one Fettmattis per round.
 
 ### Derived Data
 

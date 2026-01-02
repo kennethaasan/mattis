@@ -26,14 +26,14 @@ describe("leaderboard", () => {
       mockApiClient.GET.mockResolvedValueOnce({
         data: [
           {
-            player: { id: "player-1", display_name: "Alice" },
+            player: { id: "player-1", display_name: "Alice", active: true },
             participation_count: 10,
             loss_count: 3,
             loss_percentage: 30,
             rank: 1,
           },
           {
-            player: { id: "player-2", display_name: "Bob" },
+            player: { id: "player-2", display_name: "Bob", active: true },
             participation_count: 8,
             loss_count: 5,
             loss_percentage: 62.5,
@@ -75,7 +75,7 @@ describe("leaderboard", () => {
       mockApiClient.GET.mockResolvedValueOnce({
         data: [
           {
-            player: { id: "player-1", display_name: "Charlie" },
+            player: { id: "player-1", display_name: "Charlie", active: true },
             participation_count: 5,
             loss_count: 2,
             loss_percentage: 40,
@@ -98,14 +98,14 @@ describe("leaderboard", () => {
       mockApiClient.GET.mockResolvedValueOnce({
         data: [
           {
-            player: { id: "player-1", display_name: "Alice" },
+            player: { id: "player-1", display_name: "Alice", active: true },
             participation_count: 10,
             loss_count: 3,
             loss_percentage: 30,
             rank: null,
           },
           {
-            player: { id: "player-2", display_name: "Bob" },
+            player: { id: "player-2", display_name: "Bob", active: true },
             participation_count: 8,
             loss_count: 5,
             loss_percentage: 62.5,
@@ -126,7 +126,12 @@ describe("leaderboard", () => {
       mockApiClient.GET.mockResolvedValueOnce({
         data: undefined,
         response: new Response(),
-        error: { message: "Not found" },
+        error: {
+          type: "about:blank",
+          title: "Not found",
+          status: 404,
+          detail: "Not found",
+        },
       });
 
       await expect(getRegularLeaderboard("all")).rejects.toThrow(
@@ -140,12 +145,12 @@ describe("leaderboard", () => {
       mockApiClient.GET.mockResolvedValueOnce({
         data: [
           {
-            player: { id: "player-1", display_name: "Alice" },
+            player: { id: "player-1", display_name: "Alice", active: true },
             fettmattis_count: 5,
             rank: 1,
           },
           {
-            player: { id: "player-2", display_name: "Bob" },
+            player: { id: "player-2", display_name: "Bob", active: true },
             fettmattis_count: 3,
             rank: 2,
           },
@@ -184,7 +189,7 @@ describe("leaderboard", () => {
       mockApiClient.GET.mockResolvedValueOnce({
         data: [
           {
-            player: { id: "player-1", display_name: "Charlie" },
+            player: { id: "player-1", display_name: "Charlie", active: true },
             fettmattis_count: 2,
             rank: 1,
           },
@@ -208,12 +213,12 @@ describe("leaderboard", () => {
       mockApiClient.GET.mockResolvedValueOnce({
         data: [
           {
-            player: { id: "player-1", display_name: "Alice" },
+            player: { id: "player-1", display_name: "Alice", active: true },
             fettmattis_count: 5,
             rank: null,
           },
           {
-            player: { id: "player-2", display_name: "Bob" },
+            player: { id: "player-2", display_name: "Bob", active: true },
             fettmattis_count: 3,
             rank: null,
           },
@@ -232,7 +237,12 @@ describe("leaderboard", () => {
       mockApiClient.GET.mockResolvedValueOnce({
         data: undefined,
         response: new Response(),
-        error: { message: "Not found" },
+        error: {
+          type: "about:blank",
+          title: "Not found",
+          status: 404,
+          detail: "Not found",
+        },
       });
 
       await expect(getFettmattisLeaderboard("all")).rejects.toThrow(
@@ -262,7 +272,12 @@ describe("leaderboard", () => {
       mockApiClient.GET.mockResolvedValueOnce({
         data: undefined,
         response: new Response(),
-        error: { message: "Not found" },
+        error: {
+          type: "about:blank",
+          title: "Not found",
+          status: 404,
+          detail: "Not found",
+        },
       });
 
       await expect(getLeaderboardSeasons()).rejects.toThrow(

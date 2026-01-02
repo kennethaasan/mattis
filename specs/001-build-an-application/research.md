@@ -28,7 +28,7 @@ This document outlines the technology stack and architectural decisions for the 
   - **Database**: Amazon Aurora Serverless (PostgreSQL compatible) is a managed, auto-scaling relational database that aligns with the serverless model. It handles unpredictable workloads well and reduces operational overhead. Drizzle ORM will be used for database access as per the constitution.
 - **Alternatives Considered**:
   - **AWS EC2 / Fargate**: Requires more manual configuration and management compared to the serverless approach. Not aligned with the user's request.
-  - **DynamoDB**: A NoSQL option. While highly scalable, the relational nature of the data (Players, Rounds, FettMattis records) makes a SQL database like Aurora a more natural fit.
+  - **DynamoDB**: A NoSQL option. While highly scalable, the relational nature of the data (Players, Rounds, Fettmattis records) makes a SQL database like Aurora a more natural fit.
 
 ### 4. Infrastructure as Code (IaC)
 
