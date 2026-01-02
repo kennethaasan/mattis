@@ -5,13 +5,14 @@ import { defineConfig } from "vitest/config";
 export default defineConfig({
   plugins: [tsconfigPaths(), react()],
   test: {
+    setupFiles: ["./src/test/setup.ts"],
     projects: [
       {
         extends: true,
         test: {
           name: "node",
           environment: "node",
-          include: ["src/**/*.test.ts", "tests/**/*.test.ts"],
+          include: ["src/**/*.test.ts"],
         },
       },
       // React tests with happy-dom
@@ -20,11 +21,10 @@ export default defineConfig({
         test: {
           name: "react",
           environment: "happy-dom",
-          include: ["src/**/*.test.tsx", "tests/**/*.test.tsx"],
+          include: ["src/**/*.test.tsx"],
         },
       },
     ],
-    setupFiles: ["./tests/setup.ts"],
     clearMocks: true,
     testTimeout: 30000,
     reporters: ["verbose"],
@@ -36,10 +36,10 @@ export default defineConfig({
       exclude: ["src/scripts/**"],
       thresholds: {
         global: {
-          statements: 20,
-          functions: 60,
-          branches: 60,
-          lines: 20,
+          statements: 75,
+          functions: 85,
+          branches: 75,
+          lines: 75,
         },
       },
     },

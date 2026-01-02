@@ -1,7 +1,7 @@
 import { expect, test } from "@playwright/test";
 import { v7 as uuidV7 } from "uuid";
 import type { components } from "@/lib/api/generated";
-import { loginAsTestUser } from "../helpers/auth";
+import { loginAsTestUser } from "./helpers/auth";
 
 type ApiPlayer = components["schemas"]["Player"];
 type ApiRound = components["schemas"]["Round"];
