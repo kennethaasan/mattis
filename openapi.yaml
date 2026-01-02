@@ -23,8 +23,8 @@ info:
     **Error Handling**:
     - The API uses RFC 9457 for problem details in error responses.
   contact:
-    name: Mattis API Support
-    email: support@mattis.local
+    name: Kenneth Aasan
+    email: kenneth@aasan.dev
 servers:
   - url: /api
 tags:
