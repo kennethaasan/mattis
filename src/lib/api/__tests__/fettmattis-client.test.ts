@@ -86,7 +86,12 @@ describe("fettmattis-client", () => {
     mockApiClient.GET.mockResolvedValueOnce({
       data: undefined,
       response: new Response(),
-      error: { detail: "Missing" },
+      error: {
+        type: "about:blank",
+        title: "Missing",
+        status: 400,
+        detail: "Missing",
+      },
     });
 
     await expect(fetchFettmattis()).rejects.toThrow(

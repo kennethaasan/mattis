@@ -12,8 +12,8 @@ info:
     - View leaderboards for regular play (loss percentage) and Fettmattis.
 
     **Authentication**:
-    - Write operations (`POST`, `PUT`, `DELETE`) require a bearer token issued by the authentication service.
-    - Read operations (`GET`) are public.
+    - Operations require either a bearer token or a signed session cookie.
+    - Authentication endpoints establish or revoke sessions for clients that are not yet authenticated.
     - The contract defines both a bearer token scheme for API clients and a cookie-based scheme
       for browser sessions. Use the `bearerAuth` security requirement when automating requests
       or calling protected resources from non-browser clients, and the `sessionCookie` requirement
@@ -27,6 +27,7 @@ info:
     email: kenneth@aasan.dev
 servers:
   - url: /api
+    x-internal: false
 tags:
   - name: Authentication
     description: Session and sign-in workflows.
@@ -38,6 +39,9 @@ tags:
     description: Fettmattis awards and revocations.
   - name: Leaderboards
     description: Leaderboard and season statistics.
+security:
+  - bearerAuth: []
+  - sessionCookie: []
 paths:
   /auth/get-session:
     get:
@@ -51,14 +55,29 @@ paths:
       responses:
         "200":
           description: The current session details or null when no session is available.
+          headers:
+            RateLimit-Limit:
+              $ref: "#/components/headers/RateLimit-Limit"
+            RateLimit-Remaining:
+              $ref: "#/components/headers/RateLimit-Remaining"
+            RateLimit-Reset:
+              $ref: "#/components/headers/RateLimit-Reset"
+            Access-Control-Allow-Origin:
+              $ref: "#/components/headers/Access-Control-Allow-Origin"
           content:
             application/json:
               schema:
                 oneOf:
                   - $ref: "#/components/schemas/AuthSession"
                   - type: "null"
+        "400":
+          $ref: "#/components/responses/BadRequest"
         "401":
           $ref: "#/components/responses/Unauthorized"
+        "429":
+          $ref: "#/components/responses/TooManyRequests"
+        "500":
+          $ref: "#/components/responses/InternalServerError"
 
   /auth/sign-in/email:
     post:
@@ -67,7 +86,6 @@ paths:
       operationId: signInWithEmail
       tags:
         - Authentication
-      security: []
       requestBody:
         required: true
         content:
@@ -77,6 +95,15 @@ paths:
       responses:
         "200":
           description: Session token and user details for the authenticated user.
+          headers:
+            RateLimit-Limit:
+              $ref: "#/components/headers/RateLimit-Limit"
+            RateLimit-Remaining:
+              $ref: "#/components/headers/RateLimit-Remaining"
+            RateLimit-Reset:
+              $ref: "#/components/headers/RateLimit-Reset"
+            Access-Control-Allow-Origin:
+              $ref: "#/components/headers/Access-Control-Allow-Origin"
           content:
             application/json:
               schema:
@@ -87,6 +114,10 @@ paths:
           $ref: "#/components/responses/Unauthorized"
         "403":
           $ref: "#/components/responses/Forbidden"
+        "429":
+          $ref: "#/components/responses/TooManyRequests"
+        "500":
+          $ref: "#/components/responses/InternalServerError"
 
   /auth/sign-out:
     post:
@@ -100,12 +131,27 @@ paths:
       responses:
         "200":
           description: Confirmation that the session was terminated.
+          headers:
+            RateLimit-Limit:
+              $ref: "#/components/headers/RateLimit-Limit"
+            RateLimit-Remaining:
+              $ref: "#/components/headers/RateLimit-Remaining"
+            RateLimit-Reset:
+              $ref: "#/components/headers/RateLimit-Reset"
+            Access-Control-Allow-Origin:
+              $ref: "#/components/headers/Access-Control-Allow-Origin"
           content:
             application/json:
               schema:
                 $ref: "#/components/schemas/SignOutResponse"
         "400":
           $ref: "#/components/responses/BadRequest"
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+        "429":
+          $ref: "#/components/responses/TooManyRequests"
+        "500":
+          $ref: "#/components/responses/InternalServerError"
   /players:
     get:
       summary: List Players
@@ -113,16 +159,33 @@ paths:
       operationId: listPlayers
       tags:
         - Players
-      security: []
       responses:
         "200":
           description: A list of players.
+          headers:
+            RateLimit-Limit:
+              $ref: "#/components/headers/RateLimit-Limit"
+            RateLimit-Remaining:
+              $ref: "#/components/headers/RateLimit-Remaining"
+            RateLimit-Reset:
+              $ref: "#/components/headers/RateLimit-Reset"
+            Access-Control-Allow-Origin:
+              $ref: "#/components/headers/Access-Control-Allow-Origin"
           content:
             application/json:
               schema:
                 type: array
+                maxItems: 200
                 items:
                   $ref: "#/components/schemas/Player"
+        "400":
+          $ref: "#/components/responses/BadRequest"
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+        "429":
+          $ref: "#/components/responses/TooManyRequests"
+        "500":
+          $ref: "#/components/responses/InternalServerError"
     post:
       summary: Create Player
       description: Creates a new player in the roster.
@@ -140,6 +203,15 @@ paths:
       responses:
         "201":
           description: Player created successfully.
+          headers:
+            RateLimit-Limit:
+              $ref: "#/components/headers/RateLimit-Limit"
+            RateLimit-Remaining:
+              $ref: "#/components/headers/RateLimit-Remaining"
+            RateLimit-Reset:
+              $ref: "#/components/headers/RateLimit-Reset"
+            Access-Control-Allow-Origin:
+              $ref: "#/components/headers/Access-Control-Allow-Origin"
           content:
             application/json:
               schema:
@@ -150,6 +222,10 @@ paths:
           $ref: "#/components/responses/Conflict"
         "401":
           $ref: "#/components/responses/Unauthorized"
+        "429":
+          $ref: "#/components/responses/TooManyRequests"
+        "500":
+          $ref: "#/components/responses/InternalServerError"
 
   /players/{playerId}:
     get:
@@ -158,7 +234,6 @@ paths:
       operationId: getPlayer
       tags:
         - Players
-      security: []
       parameters:
         - name: playerId
           in: path
@@ -166,16 +241,34 @@ paths:
           schema:
             type: string
             format: uuid
+            maxLength: 36
             description: UUID v7, time-ordered identifier.
       responses:
         "200":
           description: Player details.
+          headers:
+            RateLimit-Limit:
+              $ref: "#/components/headers/RateLimit-Limit"
+            RateLimit-Remaining:
+              $ref: "#/components/headers/RateLimit-Remaining"
+            RateLimit-Reset:
+              $ref: "#/components/headers/RateLimit-Reset"
+            Access-Control-Allow-Origin:
+              $ref: "#/components/headers/Access-Control-Allow-Origin"
           content:
             application/json:
               schema:
                 $ref: "#/components/schemas/Player"
+        "400":
+          $ref: "#/components/responses/BadRequest"
+        "401":
+          $ref: "#/components/responses/Unauthorized"
         "404":
           $ref: "#/components/responses/NotFound"
+        "429":
+          $ref: "#/components/responses/TooManyRequests"
+        "500":
+          $ref: "#/components/responses/InternalServerError"
     put:
       summary: Update Player
       description: Updates player profile fields and status.
@@ -191,6 +284,7 @@ paths:
           schema:
             type: string
             format: uuid
+            maxLength: 36
             description: UUID v7, time-ordered identifier.
       requestBody:
         required: true
@@ -201,6 +295,15 @@ paths:
       responses:
         "200":
           description: Player updated successfully.
+          headers:
+            RateLimit-Limit:
+              $ref: "#/components/headers/RateLimit-Limit"
+            RateLimit-Remaining:
+              $ref: "#/components/headers/RateLimit-Remaining"
+            RateLimit-Reset:
+              $ref: "#/components/headers/RateLimit-Reset"
+            Access-Control-Allow-Origin:
+              $ref: "#/components/headers/Access-Control-Allow-Origin"
           content:
             application/json:
               schema:
@@ -211,6 +314,10 @@ paths:
           $ref: "#/components/responses/NotFound"
         "401":
           $ref: "#/components/responses/Unauthorized"
+        "429":
+          $ref: "#/components/responses/TooManyRequests"
+        "500":
+          $ref: "#/components/responses/InternalServerError"
 
   /rounds:
     get:
@@ -219,24 +326,42 @@ paths:
       operationId: listRounds
       tags:
         - Rounds
-      security: []
       parameters:
         - name: limit
           in: query
           schema:
             type: integer
+            format: int32
             minimum: 1
             maximum: 100
           description: Limit the number of rounds returned. Defaults to 20 when omitted.
       responses:
         "200":
           description: A list of recent rounds.
+          headers:
+            RateLimit-Limit:
+              $ref: "#/components/headers/RateLimit-Limit"
+            RateLimit-Remaining:
+              $ref: "#/components/headers/RateLimit-Remaining"
+            RateLimit-Reset:
+              $ref: "#/components/headers/RateLimit-Reset"
+            Access-Control-Allow-Origin:
+              $ref: "#/components/headers/Access-Control-Allow-Origin"
           content:
             application/json:
               schema:
                 type: array
+                maxItems: 200
                 items:
                   $ref: "#/components/schemas/Round"
+        "400":
+          $ref: "#/components/responses/BadRequest"
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+        "429":
+          $ref: "#/components/responses/TooManyRequests"
+        "500":
+          $ref: "#/components/responses/InternalServerError"
     post:
       summary: Record a Round
       description: Records a completed round and updates leaderboards.
@@ -254,6 +379,15 @@ paths:
       responses:
         "201":
           description: Round created successfully.
+          headers:
+            RateLimit-Limit:
+              $ref: "#/components/headers/RateLimit-Limit"
+            RateLimit-Remaining:
+              $ref: "#/components/headers/RateLimit-Remaining"
+            RateLimit-Reset:
+              $ref: "#/components/headers/RateLimit-Reset"
+            Access-Control-Allow-Origin:
+              $ref: "#/components/headers/Access-Control-Allow-Origin"
           content:
             application/json:
               schema:
@@ -262,6 +396,10 @@ paths:
           $ref: "#/components/responses/BadRequest"
         "401":
           $ref: "#/components/responses/Unauthorized"
+        "429":
+          $ref: "#/components/responses/TooManyRequests"
+        "500":
+          $ref: "#/components/responses/InternalServerError"
 
   /rounds/latest:
     get:
@@ -270,16 +408,32 @@ paths:
       operationId: getLatestRound
       tags:
         - Rounds
-      security: []
       responses:
         "200":
           description: The most recent round or null when no rounds exist.
+          headers:
+            RateLimit-Limit:
+              $ref: "#/components/headers/RateLimit-Limit"
+            RateLimit-Remaining:
+              $ref: "#/components/headers/RateLimit-Remaining"
+            RateLimit-Reset:
+              $ref: "#/components/headers/RateLimit-Reset"
+            Access-Control-Allow-Origin:
+              $ref: "#/components/headers/Access-Control-Allow-Origin"
           content:
             application/json:
               schema:
                 oneOf:
                   - $ref: "#/components/schemas/Round"
                   - type: "null"
+        "400":
+          $ref: "#/components/responses/BadRequest"
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+        "429":
+          $ref: "#/components/responses/TooManyRequests"
+        "500":
+          $ref: "#/components/responses/InternalServerError"
 
   /rounds/{roundId}:
     get:
@@ -288,7 +442,6 @@ paths:
       operationId: getRound
       tags:
         - Rounds
-      security: []
       parameters:
         - name: roundId
           in: path
@@ -296,16 +449,34 @@ paths:
           schema:
             type: string
             format: uuid
+            maxLength: 36
             description: UUID v7, time-ordered identifier.
       responses:
         "200":
           description: Round details.
+          headers:
+            RateLimit-Limit:
+              $ref: "#/components/headers/RateLimit-Limit"
+            RateLimit-Remaining:
+              $ref: "#/components/headers/RateLimit-Remaining"
+            RateLimit-Reset:
+              $ref: "#/components/headers/RateLimit-Reset"
+            Access-Control-Allow-Origin:
+              $ref: "#/components/headers/Access-Control-Allow-Origin"
           content:
             application/json:
               schema:
                 $ref: "#/components/schemas/Round"
+        "400":
+          $ref: "#/components/responses/BadRequest"
+        "401":
+          $ref: "#/components/responses/Unauthorized"
         "404":
           $ref: "#/components/responses/NotFound"
+        "429":
+          $ref: "#/components/responses/TooManyRequests"
+        "500":
+          $ref: "#/components/responses/InternalServerError"
     put:
       summary: Edit a Round (within 24h)
       description: Updates round participants or the recorded loser within the edit window.
@@ -321,6 +492,7 @@ paths:
           schema:
             type: string
             format: uuid
+            maxLength: 36
             description: UUID v7, time-ordered identifier.
       requestBody:
         required: true
@@ -331,6 +503,15 @@ paths:
       responses:
         "200":
           description: Round updated successfully.
+          headers:
+            RateLimit-Limit:
+              $ref: "#/components/headers/RateLimit-Limit"
+            RateLimit-Remaining:
+              $ref: "#/components/headers/RateLimit-Remaining"
+            RateLimit-Reset:
+              $ref: "#/components/headers/RateLimit-Reset"
+            Access-Control-Allow-Origin:
+              $ref: "#/components/headers/Access-Control-Allow-Origin"
           content:
             application/json:
               schema:
@@ -345,6 +526,10 @@ paths:
           $ref: "#/components/responses/Conflict"
         "401":
           $ref: "#/components/responses/Unauthorized"
+        "429":
+          $ref: "#/components/responses/TooManyRequests"
+        "500":
+          $ref: "#/components/responses/InternalServerError"
     delete:
       summary: Soft Delete a Round (within 24h)
       description: Soft-deletes a round and removes it from leaderboards.
@@ -360,16 +545,32 @@ paths:
           schema:
             type: string
             format: uuid
+            maxLength: 36
             description: UUID v7, time-ordered identifier.
       responses:
         "204":
           description: Round deleted successfully.
+          headers:
+            RateLimit-Limit:
+              $ref: "#/components/headers/RateLimit-Limit"
+            RateLimit-Remaining:
+              $ref: "#/components/headers/RateLimit-Remaining"
+            RateLimit-Reset:
+              $ref: "#/components/headers/RateLimit-Reset"
+            Access-Control-Allow-Origin:
+              $ref: "#/components/headers/Access-Control-Allow-Origin"
+        "400":
+          $ref: "#/components/responses/BadRequest"
         "403":
           $ref: "#/components/responses/Forbidden"
         "404":
           $ref: "#/components/responses/NotFound"
         "401":
           $ref: "#/components/responses/Unauthorized"
+        "429":
+          $ref: "#/components/responses/TooManyRequests"
+        "500":
+          $ref: "#/components/responses/InternalServerError"
 
   /fettmattis:
     get:
@@ -378,24 +579,42 @@ paths:
       operationId: listFettmattis
       tags:
         - Fettmattis
-      security: []
       parameters:
         - name: limit
           in: query
           schema:
             type: integer
+            format: int32
             minimum: 1
             maximum: 100
           description: Limit the number of Fettmattis entries returned. Defaults to 20 when omitted.
       responses:
         "200":
           description: A list of recent Fettmattis entries.
+          headers:
+            RateLimit-Limit:
+              $ref: "#/components/headers/RateLimit-Limit"
+            RateLimit-Remaining:
+              $ref: "#/components/headers/RateLimit-Remaining"
+            RateLimit-Reset:
+              $ref: "#/components/headers/RateLimit-Reset"
+            Access-Control-Allow-Origin:
+              $ref: "#/components/headers/Access-Control-Allow-Origin"
           content:
             application/json:
               schema:
                 type: array
+                maxItems: 200
                 items:
                   $ref: "#/components/schemas/Fettmattis"
+        "400":
+          $ref: "#/components/responses/BadRequest"
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+        "429":
+          $ref: "#/components/responses/TooManyRequests"
+        "500":
+          $ref: "#/components/responses/InternalServerError"
     post:
       summary: Create Fettmattis
       description: Grants a Fettmattis award to a player.
@@ -413,6 +632,15 @@ paths:
       responses:
         "201":
           description: Fettmattis created successfully.
+          headers:
+            RateLimit-Limit:
+              $ref: "#/components/headers/RateLimit-Limit"
+            RateLimit-Remaining:
+              $ref: "#/components/headers/RateLimit-Remaining"
+            RateLimit-Reset:
+              $ref: "#/components/headers/RateLimit-Reset"
+            Access-Control-Allow-Origin:
+              $ref: "#/components/headers/Access-Control-Allow-Origin"
           content:
             application/json:
               schema:
@@ -423,6 +651,10 @@ paths:
           $ref: "#/components/responses/Conflict"
         "401":
           $ref: "#/components/responses/Unauthorized"
+        "429":
+          $ref: "#/components/responses/TooManyRequests"
+        "500":
+          $ref: "#/components/responses/InternalServerError"
 
   /fettmattis/{fettmattisId}:
     delete:
@@ -440,16 +672,32 @@ paths:
           schema:
             type: string
             format: uuid
+            maxLength: 36
             description: UUID v7, time-ordered identifier.
       responses:
         "204":
           description: Fettmattis revoked successfully.
+          headers:
+            RateLimit-Limit:
+              $ref: "#/components/headers/RateLimit-Limit"
+            RateLimit-Remaining:
+              $ref: "#/components/headers/RateLimit-Remaining"
+            RateLimit-Reset:
+              $ref: "#/components/headers/RateLimit-Reset"
+            Access-Control-Allow-Origin:
+              $ref: "#/components/headers/Access-Control-Allow-Origin"
+        "400":
+          $ref: "#/components/responses/BadRequest"
         "403":
           $ref: "#/components/responses/Forbidden"
         "404":
           $ref: "#/components/responses/NotFound"
         "401":
           $ref: "#/components/responses/Unauthorized"
+        "429":
+          $ref: "#/components/responses/TooManyRequests"
+        "500":
+          $ref: "#/components/responses/InternalServerError"
 
   /leaderboard/regular:
     get:
@@ -458,13 +706,15 @@ paths:
       operationId: getRegularLeaderboard
       tags:
         - Leaderboards
-      security: []
       parameters:
         - name: year
           in: query
           schema:
             oneOf:
               - type: integer
+                format: int32
+                minimum: 1900
+                maximum: 2100
               - type: string
                 enum:
                   - all
@@ -472,12 +722,30 @@ paths:
       responses:
         "200":
           description: The regular season leaderboard.
+          headers:
+            RateLimit-Limit:
+              $ref: "#/components/headers/RateLimit-Limit"
+            RateLimit-Remaining:
+              $ref: "#/components/headers/RateLimit-Remaining"
+            RateLimit-Reset:
+              $ref: "#/components/headers/RateLimit-Reset"
+            Access-Control-Allow-Origin:
+              $ref: "#/components/headers/Access-Control-Allow-Origin"
           content:
             application/json:
               schema:
                 type: array
+                maxItems: 200
                 items:
                   $ref: "#/components/schemas/RegularLeaderboardItem"
+        "400":
+          $ref: "#/components/responses/BadRequest"
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+        "429":
+          $ref: "#/components/responses/TooManyRequests"
+        "500":
+          $ref: "#/components/responses/InternalServerError"
 
   /leaderboard/fettmattis:
     get:
@@ -486,13 +754,15 @@ paths:
       operationId: getFettmattisLeaderboard
       tags:
         - Leaderboards
-      security: []
       parameters:
         - name: year
           in: query
           schema:
             oneOf:
               - type: integer
+                format: int32
+                minimum: 1900
+                maximum: 2100
               - type: string
                 enum:
                   - all
@@ -500,12 +770,30 @@ paths:
       responses:
         "200":
           description: The Fettmattis leaderboard.
+          headers:
+            RateLimit-Limit:
+              $ref: "#/components/headers/RateLimit-Limit"
+            RateLimit-Remaining:
+              $ref: "#/components/headers/RateLimit-Remaining"
+            RateLimit-Reset:
+              $ref: "#/components/headers/RateLimit-Reset"
+            Access-Control-Allow-Origin:
+              $ref: "#/components/headers/Access-Control-Allow-Origin"
           content:
             application/json:
               schema:
                 type: array
+                maxItems: 200
                 items:
                   $ref: "#/components/schemas/FettmattisLeaderboardItem"
+        "400":
+          $ref: "#/components/responses/BadRequest"
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+        "429":
+          $ref: "#/components/responses/TooManyRequests"
+        "500":
+          $ref: "#/components/responses/InternalServerError"
 
   /leaderboard/seasons:
     get:
@@ -514,14 +802,30 @@ paths:
       operationId: listLeaderboardSeasons
       tags:
         - Leaderboards
-      security: []
       responses:
         "200":
           description: Available leaderboard seasons.
+          headers:
+            RateLimit-Limit:
+              $ref: "#/components/headers/RateLimit-Limit"
+            RateLimit-Remaining:
+              $ref: "#/components/headers/RateLimit-Remaining"
+            RateLimit-Reset:
+              $ref: "#/components/headers/RateLimit-Reset"
+            Access-Control-Allow-Origin:
+              $ref: "#/components/headers/Access-Control-Allow-Origin"
           content:
             application/json:
               schema:
                 $ref: "#/components/schemas/LeaderboardSeasonsResponse"
+        "400":
+          $ref: "#/components/responses/BadRequest"
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+        "429":
+          $ref: "#/components/responses/TooManyRequests"
+        "500":
+          $ref: "#/components/responses/InternalServerError"
 
 components:
   schemas:
@@ -534,16 +838,21 @@ components:
         id:
           type: string
           format: uuid
+          maxLength: 36
           description: UUID v7, time-ordered identifier for the authenticated user.
         email:
           type: string
           format: email
+          maxLength: 254
         name:
           type: string
+          maxLength: 80
+          pattern: "^.{1,80}$"
           nullable: true
         image:
           type: string
           format: uri
+          maxLength: 2048
           nullable: true
         emailVerified:
           type: boolean
@@ -551,10 +860,12 @@ components:
         createdAt:
           type: string
           format: date-time
+          maxLength: 30
           description: Timestamp for when the user record was created.
         updatedAt:
           type: string
           format: date-time
+          maxLength: 30
           description: Timestamp for the last update to the user record.
     AuthSessionData:
       type: object
@@ -563,21 +874,28 @@ components:
       properties:
         token:
           type: string
+          maxLength: 2048
+          pattern: "^\\S{1,2048}$"
           description: Opaque bearer token for authenticated write operations.
         expiresAt:
           type: string
           format: date-time
+          maxLength: 30
           description: Expiration timestamp for the session.
         id:
           type: string
+          maxLength: 64
+          pattern: "^[A-Za-z0-9_-]{1,64}$"
           description: Identifier for the issued session.
         createdAt:
           type: string
           format: date-time
+          maxLength: 30
           description: Timestamp for when the session was created.
         updatedAt:
           type: string
           format: date-time
+          maxLength: 30
           description: Timestamp for the last update to the session.
     AuthSession:
       type: object
@@ -598,14 +916,18 @@ components:
         email:
           type: string
           format: email
+          maxLength: 254
           description: Email address used for the account.
         password:
           type: string
           format: password
+          minLength: 8
+          maxLength: 128
           description: Password associated with the email account.
         callbackURL:
           type: string
           format: uri
+          maxLength: 2048
           description: Optional URL to redirect to after sign-in completes.
         rememberMe:
           type: boolean
@@ -622,10 +944,13 @@ components:
           description: Indicates whether the client should perform a redirect.
         token:
           type: string
+          maxLength: 2048
+          pattern: "^\\S{1,2048}$"
           description: Session token that can be exchanged for authenticated requests.
         url:
           type: string
           format: uri
+          maxLength: 2048
           nullable: true
           description: Redirect destination when `redirect` is true.
         user:
@@ -648,9 +973,12 @@ components:
         id:
           type: string
           format: uuid
+          maxLength: 36
           description: UUID v7, time-ordered identifier.
         display_name:
           type: string
+          maxLength: 64
+          pattern: "^.{1,64}$"
         active:
           type: boolean
     PlayerCreate:
@@ -660,11 +988,15 @@ components:
       properties:
         display_name:
           type: string
+          maxLength: 64
+          pattern: "^.{1,64}$"
     PlayerUpdate:
       type: object
       properties:
         display_name:
           type: string
+          maxLength: 64
+          pattern: "^.{1,64}$"
         active:
           type: boolean
 
@@ -679,12 +1011,16 @@ components:
         id:
           type: string
           format: uuid
+          maxLength: 36
           description: UUID v7, time-ordered identifier.
         created_at:
           type: string
           format: date-time
+          maxLength: 30
         participants:
           type: array
+          minItems: 2
+          maxItems: 8
           items:
             $ref: "#/components/schemas/Player"
         loser:
@@ -697,28 +1033,34 @@ components:
       properties:
         participant_ids:
           type: array
+          maxItems: 8
           items:
             type: string
             format: uuid
+            maxLength: 36
             description: UUID v7, time-ordered identifier.
           minItems: 2
         loser_id:
           type: string
           format: uuid
+          maxLength: 36
           description: UUID v7, time-ordered identifier.
     RoundUpdate:
       type: object
       properties:
         participant_ids:
           type: array
+          maxItems: 8
           items:
             type: string
             format: uuid
+            maxLength: 36
             description: UUID v7, time-ordered identifier.
           minItems: 2
         loser_id:
           type: string
           format: uuid
+          maxLength: 36
           description: UUID v7, time-ordered identifier.
 
     Fettmattis:
@@ -731,17 +1073,20 @@ components:
         id:
           type: string
           format: uuid
+          maxLength: 36
           description: UUID v7, time-ordered identifier.
         player:
           $ref: "#/components/schemas/Player"
         round_id:
           type: string
           format: uuid
+          maxLength: 36
           description: UUID v7, time-ordered identifier.
           nullable: true
         created_at:
           type: string
           format: date-time
+          maxLength: 30
     FettmattisCreate:
       type: object
       required:
@@ -750,10 +1095,12 @@ components:
         player_id:
           type: string
           format: uuid
+          maxLength: 36
           description: UUID v7, time-ordered identifier.
         round_id:
           type: string
           format: uuid
+          maxLength: 36
           description: UUID v7, time-ordered identifier.
           nullable: true
 
@@ -770,13 +1117,25 @@ components:
           $ref: "#/components/schemas/Player"
         rank:
           type: integer
+          format: int32
+          minimum: 1
+          maximum: 10000
+          nullable: true
         loss_percentage:
           type: number
           format: float
+          minimum: 0
+          maximum: 1
         participation_count:
           type: integer
+          format: int32
+          minimum: 0
+          maximum: 100000
         loss_count:
           type: integer
+          format: int32
+          minimum: 0
+          maximum: 100000
     FettmattisLeaderboardItem:
       type: object
       required:
@@ -788,8 +1147,15 @@ components:
           $ref: "#/components/schemas/Player"
         rank:
           type: integer
+          format: int32
+          minimum: 1
+          maximum: 10000
+          nullable: true
         fettmattis_count:
           type: integer
+          format: int32
+          minimum: 0
+          maximum: 100000
 
     LeaderboardSeasonsResponse:
       type: object
@@ -799,8 +1165,12 @@ components:
         seasons:
           type: array
           description: Years with leaderboard data available.
+          maxItems: 100
           items:
             type: integer
+            format: int32
+            minimum: 1900
+            maximum: 2100
 
     Problem:
       type: object
@@ -813,48 +1183,169 @@ components:
         type:
           type: string
           format: uri
+          maxLength: 2048
           default: "about:blank"
         title:
           type: string
+          maxLength: 200
+          pattern: "^.{1,200}$"
         status:
           type: integer
+          format: int32
+          minimum: 100
+          maximum: 599
         detail:
           type: string
+          maxLength: 2000
+          pattern: "^.{1,2000}$"
         instance:
           type: string
           format: uri
+          maxLength: 2048
 
   responses:
     BadRequest:
       description: The request body is invalid.
+      headers:
+        RateLimit-Limit:
+          $ref: "#/components/headers/RateLimit-Limit"
+        RateLimit-Remaining:
+          $ref: "#/components/headers/RateLimit-Remaining"
+        RateLimit-Reset:
+          $ref: "#/components/headers/RateLimit-Reset"
+        Access-Control-Allow-Origin:
+          $ref: "#/components/headers/Access-Control-Allow-Origin"
       content:
         application/problem+json:
           schema:
             $ref: "#/components/schemas/Problem"
     Unauthorized:
       description: Authentication is required for this operation.
+      headers:
+        RateLimit-Limit:
+          $ref: "#/components/headers/RateLimit-Limit"
+        RateLimit-Remaining:
+          $ref: "#/components/headers/RateLimit-Remaining"
+        RateLimit-Reset:
+          $ref: "#/components/headers/RateLimit-Reset"
+        Access-Control-Allow-Origin:
+          $ref: "#/components/headers/Access-Control-Allow-Origin"
       content:
         application/problem+json:
           schema:
             $ref: "#/components/schemas/Problem"
     NotFound:
       description: The requested resource was not found.
+      headers:
+        RateLimit-Limit:
+          $ref: "#/components/headers/RateLimit-Limit"
+        RateLimit-Remaining:
+          $ref: "#/components/headers/RateLimit-Remaining"
+        RateLimit-Reset:
+          $ref: "#/components/headers/RateLimit-Reset"
+        Access-Control-Allow-Origin:
+          $ref: "#/components/headers/Access-Control-Allow-Origin"
       content:
         application/problem+json:
           schema:
             $ref: "#/components/schemas/Problem"
     Forbidden:
       description: The action is forbidden, e.g., editing an item outside the 24h window.
+      headers:
+        RateLimit-Limit:
+          $ref: "#/components/headers/RateLimit-Limit"
+        RateLimit-Remaining:
+          $ref: "#/components/headers/RateLimit-Remaining"
+        RateLimit-Reset:
+          $ref: "#/components/headers/RateLimit-Reset"
+        Access-Control-Allow-Origin:
+          $ref: "#/components/headers/Access-Control-Allow-Origin"
       content:
         application/problem+json:
           schema:
             $ref: "#/components/schemas/Problem"
     Conflict:
       description: The resource already exists or the request conflicts with the current state.
+      headers:
+        RateLimit-Limit:
+          $ref: "#/components/headers/RateLimit-Limit"
+        RateLimit-Remaining:
+          $ref: "#/components/headers/RateLimit-Remaining"
+        RateLimit-Reset:
+          $ref: "#/components/headers/RateLimit-Reset"
+        Access-Control-Allow-Origin:
+          $ref: "#/components/headers/Access-Control-Allow-Origin"
       content:
         application/problem+json:
           schema:
             $ref: "#/components/schemas/Problem"
+    TooManyRequests:
+      description: The client has sent too many requests in a given amount of time.
+      headers:
+        RateLimit-Limit:
+          $ref: "#/components/headers/RateLimit-Limit"
+        RateLimit-Remaining:
+          $ref: "#/components/headers/RateLimit-Remaining"
+        RateLimit-Reset:
+          $ref: "#/components/headers/RateLimit-Reset"
+        Access-Control-Allow-Origin:
+          $ref: "#/components/headers/Access-Control-Allow-Origin"
+        Retry-After:
+          $ref: "#/components/headers/Retry-After"
+      content:
+        application/problem+json:
+          schema:
+            $ref: "#/components/schemas/Problem"
+    InternalServerError:
+      description: The server encountered an unexpected error.
+      headers:
+        RateLimit-Limit:
+          $ref: "#/components/headers/RateLimit-Limit"
+        RateLimit-Remaining:
+          $ref: "#/components/headers/RateLimit-Remaining"
+        RateLimit-Reset:
+          $ref: "#/components/headers/RateLimit-Reset"
+        Access-Control-Allow-Origin:
+          $ref: "#/components/headers/Access-Control-Allow-Origin"
+      content:
+        application/problem+json:
+          schema:
+            $ref: "#/components/schemas/Problem"
+  headers:
+    Access-Control-Allow-Origin:
+      description: Allowed origin for cross-origin requests.
+      schema:
+        type: string
+        maxLength: 2048
+        pattern: "^\\S+$"
+    RateLimit-Limit:
+      description: The maximum number of requests permitted in the current window.
+      schema:
+        type: integer
+        format: int32
+        minimum: 0
+        maximum: 10000
+    RateLimit-Remaining:
+      description: The number of remaining requests in the current window.
+      schema:
+        type: integer
+        format: int32
+        minimum: 0
+        maximum: 10000
+    RateLimit-Reset:
+      description: Seconds remaining until the rate limit window resets.
+      schema:
+        type: integer
+        format: int32
+        minimum: 0
+        maximum: 86400
+    Retry-After:
+      description: Seconds to wait before making a new request.
+      schema:
+        type: integer
+        format: int32
+        minimum: 1
+        maximum: 86400
   securitySchemes:
     bearerAuth:
       type: http

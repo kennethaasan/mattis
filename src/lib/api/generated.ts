@@ -448,15 +448,20 @@ export interface components {
     };
     RegularLeaderboardItem: {
       player: components["schemas"]["Player"];
-      rank: number;
+      /** Format: int32 */
+      rank: number | null;
       /** Format: float */
       loss_percentage: number;
+      /** Format: int32 */
       participation_count: number;
+      /** Format: int32 */
       loss_count: number;
     };
     FettmattisLeaderboardItem: {
       player: components["schemas"]["Player"];
-      rank: number;
+      /** Format: int32 */
+      rank: number | null;
+      /** Format: int32 */
       fettmattis_count: number;
     };
     LeaderboardSeasonsResponse: {
@@ -471,6 +476,7 @@ export interface components {
        */
       type: string;
       title: string;
+      /** Format: int32 */
       status: number;
       detail?: string;
       /** Format: uri */
@@ -481,6 +487,10 @@ export interface components {
     /** @description The request body is invalid. */
     BadRequest: {
       headers: {
+        "RateLimit-Limit": components["headers"]["RateLimit-Limit"];
+        "RateLimit-Remaining": components["headers"]["RateLimit-Remaining"];
+        "RateLimit-Reset": components["headers"]["RateLimit-Reset"];
+        "Access-Control-Allow-Origin": components["headers"]["Access-Control-Allow-Origin"];
         [name: string]: unknown;
       };
       content: {
@@ -490,6 +500,10 @@ export interface components {
     /** @description Authentication is required for this operation. */
     Unauthorized: {
       headers: {
+        "RateLimit-Limit": components["headers"]["RateLimit-Limit"];
+        "RateLimit-Remaining": components["headers"]["RateLimit-Remaining"];
+        "RateLimit-Reset": components["headers"]["RateLimit-Reset"];
+        "Access-Control-Allow-Origin": components["headers"]["Access-Control-Allow-Origin"];
         [name: string]: unknown;
       };
       content: {
@@ -499,6 +513,10 @@ export interface components {
     /** @description The requested resource was not found. */
     NotFound: {
       headers: {
+        "RateLimit-Limit": components["headers"]["RateLimit-Limit"];
+        "RateLimit-Remaining": components["headers"]["RateLimit-Remaining"];
+        "RateLimit-Reset": components["headers"]["RateLimit-Reset"];
+        "Access-Control-Allow-Origin": components["headers"]["Access-Control-Allow-Origin"];
         [name: string]: unknown;
       };
       content: {
@@ -508,6 +526,10 @@ export interface components {
     /** @description The action is forbidden, e.g., editing an item outside the 24h window. */
     Forbidden: {
       headers: {
+        "RateLimit-Limit": components["headers"]["RateLimit-Limit"];
+        "RateLimit-Remaining": components["headers"]["RateLimit-Remaining"];
+        "RateLimit-Reset": components["headers"]["RateLimit-Reset"];
+        "Access-Control-Allow-Origin": components["headers"]["Access-Control-Allow-Origin"];
         [name: string]: unknown;
       };
       content: {
@@ -517,6 +539,37 @@ export interface components {
     /** @description The resource already exists or the request conflicts with the current state. */
     Conflict: {
       headers: {
+        "RateLimit-Limit": components["headers"]["RateLimit-Limit"];
+        "RateLimit-Remaining": components["headers"]["RateLimit-Remaining"];
+        "RateLimit-Reset": components["headers"]["RateLimit-Reset"];
+        "Access-Control-Allow-Origin": components["headers"]["Access-Control-Allow-Origin"];
+        [name: string]: unknown;
+      };
+      content: {
+        "application/problem+json": components["schemas"]["Problem"];
+      };
+    };
+    /** @description The client has sent too many requests in a given amount of time. */
+    TooManyRequests: {
+      headers: {
+        "RateLimit-Limit": components["headers"]["RateLimit-Limit"];
+        "RateLimit-Remaining": components["headers"]["RateLimit-Remaining"];
+        "RateLimit-Reset": components["headers"]["RateLimit-Reset"];
+        "Access-Control-Allow-Origin": components["headers"]["Access-Control-Allow-Origin"];
+        "Retry-After": components["headers"]["Retry-After"];
+        [name: string]: unknown;
+      };
+      content: {
+        "application/problem+json": components["schemas"]["Problem"];
+      };
+    };
+    /** @description The server encountered an unexpected error. */
+    InternalServerError: {
+      headers: {
+        "RateLimit-Limit": components["headers"]["RateLimit-Limit"];
+        "RateLimit-Remaining": components["headers"]["RateLimit-Remaining"];
+        "RateLimit-Reset": components["headers"]["RateLimit-Reset"];
+        "Access-Control-Allow-Origin": components["headers"]["Access-Control-Allow-Origin"];
         [name: string]: unknown;
       };
       content: {
@@ -526,7 +579,18 @@ export interface components {
   };
   parameters: never;
   requestBodies: never;
-  headers: never;
+  headers: {
+    /** @description Allowed origin for cross-origin requests. */
+    "Access-Control-Allow-Origin": string;
+    /** @description The maximum number of requests permitted in the current window. */
+    "RateLimit-Limit": number;
+    /** @description The number of remaining requests in the current window. */
+    "RateLimit-Remaining": number;
+    /** @description Seconds remaining until the rate limit window resets. */
+    "RateLimit-Reset": number;
+    /** @description Seconds to wait before making a new request. */
+    "Retry-After": number;
+  };
   pathItems: never;
 }
 export type $defs = Record<string, never>;
@@ -543,13 +607,20 @@ export interface operations {
       /** @description The current session details or null when no session is available. */
       200: {
         headers: {
+          "RateLimit-Limit": components["headers"]["RateLimit-Limit"];
+          "RateLimit-Remaining": components["headers"]["RateLimit-Remaining"];
+          "RateLimit-Reset": components["headers"]["RateLimit-Reset"];
+          "Access-Control-Allow-Origin": components["headers"]["Access-Control-Allow-Origin"];
           [name: string]: unknown;
         };
         content: {
           "application/json": components["schemas"]["AuthSession"] | null;
         };
       };
+      400: components["responses"]["BadRequest"];
       401: components["responses"]["Unauthorized"];
+      429: components["responses"]["TooManyRequests"];
+      500: components["responses"]["InternalServerError"];
     };
   };
   signInWithEmail: {
@@ -568,6 +639,10 @@ export interface operations {
       /** @description Session token and user details for the authenticated user. */
       200: {
         headers: {
+          "RateLimit-Limit": components["headers"]["RateLimit-Limit"];
+          "RateLimit-Remaining": components["headers"]["RateLimit-Remaining"];
+          "RateLimit-Reset": components["headers"]["RateLimit-Reset"];
+          "Access-Control-Allow-Origin": components["headers"]["Access-Control-Allow-Origin"];
           [name: string]: unknown;
         };
         content: {
@@ -577,6 +652,8 @@ export interface operations {
       400: components["responses"]["BadRequest"];
       401: components["responses"]["Unauthorized"];
       403: components["responses"]["Forbidden"];
+      429: components["responses"]["TooManyRequests"];
+      500: components["responses"]["InternalServerError"];
     };
   };
   signOut: {
@@ -591,6 +668,10 @@ export interface operations {
       /** @description Confirmation that the session was terminated. */
       200: {
         headers: {
+          "RateLimit-Limit": components["headers"]["RateLimit-Limit"];
+          "RateLimit-Remaining": components["headers"]["RateLimit-Remaining"];
+          "RateLimit-Reset": components["headers"]["RateLimit-Reset"];
+          "Access-Control-Allow-Origin": components["headers"]["Access-Control-Allow-Origin"];
           [name: string]: unknown;
         };
         content: {
@@ -598,6 +679,9 @@ export interface operations {
         };
       };
       400: components["responses"]["BadRequest"];
+      401: components["responses"]["Unauthorized"];
+      429: components["responses"]["TooManyRequests"];
+      500: components["responses"]["InternalServerError"];
     };
   };
   listPlayers: {
@@ -612,12 +696,20 @@ export interface operations {
       /** @description A list of players. */
       200: {
         headers: {
+          "RateLimit-Limit": components["headers"]["RateLimit-Limit"];
+          "RateLimit-Remaining": components["headers"]["RateLimit-Remaining"];
+          "RateLimit-Reset": components["headers"]["RateLimit-Reset"];
+          "Access-Control-Allow-Origin": components["headers"]["Access-Control-Allow-Origin"];
           [name: string]: unknown;
         };
         content: {
           "application/json": components["schemas"]["Player"][];
         };
       };
+      400: components["responses"]["BadRequest"];
+      401: components["responses"]["Unauthorized"];
+      429: components["responses"]["TooManyRequests"];
+      500: components["responses"]["InternalServerError"];
     };
   };
   createPlayer: {
@@ -636,6 +728,10 @@ export interface operations {
       /** @description Player created successfully. */
       201: {
         headers: {
+          "RateLimit-Limit": components["headers"]["RateLimit-Limit"];
+          "RateLimit-Remaining": components["headers"]["RateLimit-Remaining"];
+          "RateLimit-Reset": components["headers"]["RateLimit-Reset"];
+          "Access-Control-Allow-Origin": components["headers"]["Access-Control-Allow-Origin"];
           [name: string]: unknown;
         };
         content: {
@@ -645,6 +741,8 @@ export interface operations {
       400: components["responses"]["BadRequest"];
       401: components["responses"]["Unauthorized"];
       409: components["responses"]["Conflict"];
+      429: components["responses"]["TooManyRequests"];
+      500: components["responses"]["InternalServerError"];
     };
   };
   getPlayer: {
@@ -661,13 +759,21 @@ export interface operations {
       /** @description Player details. */
       200: {
         headers: {
+          "RateLimit-Limit": components["headers"]["RateLimit-Limit"];
+          "RateLimit-Remaining": components["headers"]["RateLimit-Remaining"];
+          "RateLimit-Reset": components["headers"]["RateLimit-Reset"];
+          "Access-Control-Allow-Origin": components["headers"]["Access-Control-Allow-Origin"];
           [name: string]: unknown;
         };
         content: {
           "application/json": components["schemas"]["Player"];
         };
       };
+      400: components["responses"]["BadRequest"];
+      401: components["responses"]["Unauthorized"];
       404: components["responses"]["NotFound"];
+      429: components["responses"]["TooManyRequests"];
+      500: components["responses"]["InternalServerError"];
     };
   };
   updatePlayer: {
@@ -688,6 +794,10 @@ export interface operations {
       /** @description Player updated successfully. */
       200: {
         headers: {
+          "RateLimit-Limit": components["headers"]["RateLimit-Limit"];
+          "RateLimit-Remaining": components["headers"]["RateLimit-Remaining"];
+          "RateLimit-Reset": components["headers"]["RateLimit-Reset"];
+          "Access-Control-Allow-Origin": components["headers"]["Access-Control-Allow-Origin"];
           [name: string]: unknown;
         };
         content: {
@@ -697,6 +807,8 @@ export interface operations {
       400: components["responses"]["BadRequest"];
       401: components["responses"]["Unauthorized"];
       404: components["responses"]["NotFound"];
+      429: components["responses"]["TooManyRequests"];
+      500: components["responses"]["InternalServerError"];
     };
   };
   listRounds: {
@@ -714,12 +826,20 @@ export interface operations {
       /** @description A list of recent rounds. */
       200: {
         headers: {
+          "RateLimit-Limit": components["headers"]["RateLimit-Limit"];
+          "RateLimit-Remaining": components["headers"]["RateLimit-Remaining"];
+          "RateLimit-Reset": components["headers"]["RateLimit-Reset"];
+          "Access-Control-Allow-Origin": components["headers"]["Access-Control-Allow-Origin"];
           [name: string]: unknown;
         };
         content: {
           "application/json": components["schemas"]["Round"][];
         };
       };
+      400: components["responses"]["BadRequest"];
+      401: components["responses"]["Unauthorized"];
+      429: components["responses"]["TooManyRequests"];
+      500: components["responses"]["InternalServerError"];
     };
   };
   createRound: {
@@ -738,6 +858,10 @@ export interface operations {
       /** @description Round created successfully. */
       201: {
         headers: {
+          "RateLimit-Limit": components["headers"]["RateLimit-Limit"];
+          "RateLimit-Remaining": components["headers"]["RateLimit-Remaining"];
+          "RateLimit-Reset": components["headers"]["RateLimit-Reset"];
+          "Access-Control-Allow-Origin": components["headers"]["Access-Control-Allow-Origin"];
           [name: string]: unknown;
         };
         content: {
@@ -746,6 +870,8 @@ export interface operations {
       };
       400: components["responses"]["BadRequest"];
       401: components["responses"]["Unauthorized"];
+      429: components["responses"]["TooManyRequests"];
+      500: components["responses"]["InternalServerError"];
     };
   };
   getLatestRound: {
@@ -760,12 +886,20 @@ export interface operations {
       /** @description The most recent round or null when no rounds exist. */
       200: {
         headers: {
+          "RateLimit-Limit": components["headers"]["RateLimit-Limit"];
+          "RateLimit-Remaining": components["headers"]["RateLimit-Remaining"];
+          "RateLimit-Reset": components["headers"]["RateLimit-Reset"];
+          "Access-Control-Allow-Origin": components["headers"]["Access-Control-Allow-Origin"];
           [name: string]: unknown;
         };
         content: {
           "application/json": components["schemas"]["Round"] | null;
         };
       };
+      400: components["responses"]["BadRequest"];
+      401: components["responses"]["Unauthorized"];
+      429: components["responses"]["TooManyRequests"];
+      500: components["responses"]["InternalServerError"];
     };
   };
   getRound: {
@@ -782,13 +916,21 @@ export interface operations {
       /** @description Round details. */
       200: {
         headers: {
+          "RateLimit-Limit": components["headers"]["RateLimit-Limit"];
+          "RateLimit-Remaining": components["headers"]["RateLimit-Remaining"];
+          "RateLimit-Reset": components["headers"]["RateLimit-Reset"];
+          "Access-Control-Allow-Origin": components["headers"]["Access-Control-Allow-Origin"];
           [name: string]: unknown;
         };
         content: {
           "application/json": components["schemas"]["Round"];
         };
       };
+      400: components["responses"]["BadRequest"];
+      401: components["responses"]["Unauthorized"];
       404: components["responses"]["NotFound"];
+      429: components["responses"]["TooManyRequests"];
+      500: components["responses"]["InternalServerError"];
     };
   };
   updateRound: {
@@ -809,6 +951,10 @@ export interface operations {
       /** @description Round updated successfully. */
       200: {
         headers: {
+          "RateLimit-Limit": components["headers"]["RateLimit-Limit"];
+          "RateLimit-Remaining": components["headers"]["RateLimit-Remaining"];
+          "RateLimit-Reset": components["headers"]["RateLimit-Reset"];
+          "Access-Control-Allow-Origin": components["headers"]["Access-Control-Allow-Origin"];
           [name: string]: unknown;
         };
         content: {
@@ -820,6 +966,8 @@ export interface operations {
       403: components["responses"]["Forbidden"];
       404: components["responses"]["NotFound"];
       409: components["responses"]["Conflict"];
+      429: components["responses"]["TooManyRequests"];
+      500: components["responses"]["InternalServerError"];
     };
   };
   deleteRound: {
@@ -836,13 +984,20 @@ export interface operations {
       /** @description Round deleted successfully. */
       204: {
         headers: {
+          "RateLimit-Limit": components["headers"]["RateLimit-Limit"];
+          "RateLimit-Remaining": components["headers"]["RateLimit-Remaining"];
+          "RateLimit-Reset": components["headers"]["RateLimit-Reset"];
+          "Access-Control-Allow-Origin": components["headers"]["Access-Control-Allow-Origin"];
           [name: string]: unknown;
         };
         content?: never;
       };
+      400: components["responses"]["BadRequest"];
       401: components["responses"]["Unauthorized"];
       403: components["responses"]["Forbidden"];
       404: components["responses"]["NotFound"];
+      429: components["responses"]["TooManyRequests"];
+      500: components["responses"]["InternalServerError"];
     };
   };
   listFettmattis: {
@@ -860,12 +1015,20 @@ export interface operations {
       /** @description A list of recent Fettmattis entries. */
       200: {
         headers: {
+          "RateLimit-Limit": components["headers"]["RateLimit-Limit"];
+          "RateLimit-Remaining": components["headers"]["RateLimit-Remaining"];
+          "RateLimit-Reset": components["headers"]["RateLimit-Reset"];
+          "Access-Control-Allow-Origin": components["headers"]["Access-Control-Allow-Origin"];
           [name: string]: unknown;
         };
         content: {
           "application/json": components["schemas"]["Fettmattis"][];
         };
       };
+      400: components["responses"]["BadRequest"];
+      401: components["responses"]["Unauthorized"];
+      429: components["responses"]["TooManyRequests"];
+      500: components["responses"]["InternalServerError"];
     };
   };
   createFettmattis: {
@@ -884,6 +1047,10 @@ export interface operations {
       /** @description Fettmattis created successfully. */
       201: {
         headers: {
+          "RateLimit-Limit": components["headers"]["RateLimit-Limit"];
+          "RateLimit-Remaining": components["headers"]["RateLimit-Remaining"];
+          "RateLimit-Reset": components["headers"]["RateLimit-Reset"];
+          "Access-Control-Allow-Origin": components["headers"]["Access-Control-Allow-Origin"];
           [name: string]: unknown;
         };
         content: {
@@ -893,6 +1060,8 @@ export interface operations {
       400: components["responses"]["BadRequest"];
       401: components["responses"]["Unauthorized"];
       409: components["responses"]["Conflict"];
+      429: components["responses"]["TooManyRequests"];
+      500: components["responses"]["InternalServerError"];
     };
   };
   deleteFettmattis: {
@@ -909,13 +1078,20 @@ export interface operations {
       /** @description Fettmattis revoked successfully. */
       204: {
         headers: {
+          "RateLimit-Limit": components["headers"]["RateLimit-Limit"];
+          "RateLimit-Remaining": components["headers"]["RateLimit-Remaining"];
+          "RateLimit-Reset": components["headers"]["RateLimit-Reset"];
+          "Access-Control-Allow-Origin": components["headers"]["Access-Control-Allow-Origin"];
           [name: string]: unknown;
         };
         content?: never;
       };
+      400: components["responses"]["BadRequest"];
       401: components["responses"]["Unauthorized"];
       403: components["responses"]["Forbidden"];
       404: components["responses"]["NotFound"];
+      429: components["responses"]["TooManyRequests"];
+      500: components["responses"]["InternalServerError"];
     };
   };
   getRegularLeaderboard: {
@@ -933,12 +1109,20 @@ export interface operations {
       /** @description The regular season leaderboard. */
       200: {
         headers: {
+          "RateLimit-Limit": components["headers"]["RateLimit-Limit"];
+          "RateLimit-Remaining": components["headers"]["RateLimit-Remaining"];
+          "RateLimit-Reset": components["headers"]["RateLimit-Reset"];
+          "Access-Control-Allow-Origin": components["headers"]["Access-Control-Allow-Origin"];
           [name: string]: unknown;
         };
         content: {
           "application/json": components["schemas"]["RegularLeaderboardItem"][];
         };
       };
+      400: components["responses"]["BadRequest"];
+      401: components["responses"]["Unauthorized"];
+      429: components["responses"]["TooManyRequests"];
+      500: components["responses"]["InternalServerError"];
     };
   };
   getFettmattisLeaderboard: {
@@ -956,12 +1140,20 @@ export interface operations {
       /** @description The Fettmattis leaderboard. */
       200: {
         headers: {
+          "RateLimit-Limit": components["headers"]["RateLimit-Limit"];
+          "RateLimit-Remaining": components["headers"]["RateLimit-Remaining"];
+          "RateLimit-Reset": components["headers"]["RateLimit-Reset"];
+          "Access-Control-Allow-Origin": components["headers"]["Access-Control-Allow-Origin"];
           [name: string]: unknown;
         };
         content: {
           "application/json": components["schemas"]["FettmattisLeaderboardItem"][];
         };
       };
+      400: components["responses"]["BadRequest"];
+      401: components["responses"]["Unauthorized"];
+      429: components["responses"]["TooManyRequests"];
+      500: components["responses"]["InternalServerError"];
     };
   };
   listLeaderboardSeasons: {
@@ -976,12 +1168,20 @@ export interface operations {
       /** @description Available leaderboard seasons. */
       200: {
         headers: {
+          "RateLimit-Limit": components["headers"]["RateLimit-Limit"];
+          "RateLimit-Remaining": components["headers"]["RateLimit-Remaining"];
+          "RateLimit-Reset": components["headers"]["RateLimit-Reset"];
+          "Access-Control-Allow-Origin": components["headers"]["Access-Control-Allow-Origin"];
           [name: string]: unknown;
         };
         content: {
           "application/json": components["schemas"]["LeaderboardSeasonsResponse"];
         };
       };
+      400: components["responses"]["BadRequest"];
+      401: components["responses"]["Unauthorized"];
+      429: components["responses"]["TooManyRequests"];
+      500: components["responses"]["InternalServerError"];
     };
   };
 }
