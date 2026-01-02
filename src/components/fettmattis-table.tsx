@@ -12,7 +12,7 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
-import type { FettMattis } from "@/lib/api/fettmattis-client";
+import type { Fettmattis } from "@/lib/api/fettmattis-client";
 
 const DATETIME_FORMATTER = new Intl.DateTimeFormat("nb-NO", {
   dateStyle: "medium",
@@ -32,21 +32,21 @@ const FETTMATTIS_TABLE_SKELETON_KEYS = [
 ] as const;
 
 interface FettmattisTableProps {
-  readonly fettMattis: FettMattis[];
+  readonly fettmattis: Fettmattis[];
   readonly className?: string;
   readonly isLoading?: boolean;
-  readonly onDelete?: (fettMattisId: string) => void | Promise<void>;
+  readonly onDelete?: (fettmattisId: string) => void | Promise<void>;
   readonly deletingIds?: ReadonlySet<string>;
   readonly emptyMessage?: string;
 }
 
 export function FettmattisTable({
-  fettMattis,
+  fettmattis,
   className,
   isLoading = false,
   onDelete,
   deletingIds,
-  emptyMessage = "Ingen FettMattis-utdelinger registrert ennå.",
+  emptyMessage = "Ingen Fettmattis-utdelinger registrert ennå.",
 }: FettmattisTableProps) {
   const [expanded, setExpanded] = useState<ReadonlySet<string>>(
     () => new Set(),
@@ -74,7 +74,7 @@ export function FettmattisTable({
     ));
   };
 
-  const hasEntries = fettMattis.length > 0;
+  const hasEntries = fettmattis.length > 0;
 
   return (
     <Table className={className}>
@@ -88,7 +88,7 @@ export function FettmattisTable({
       <TableBody>
         {isLoading ? renderSkeletonRows() : null}
         {!isLoading && hasEntries
-          ? fettMattis.map((entry) => {
+          ? fettmattis.map((entry) => {
               const createdAt = new Date(entry.created_at);
               const formattedDate = DATETIME_FORMATTER.format(createdAt);
               const detailDate = DETAIL_DATETIME_FORMATTER.format(createdAt);

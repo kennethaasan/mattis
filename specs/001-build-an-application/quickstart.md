@@ -99,6 +99,6 @@ To validate the acceptance criteria from the feature specification:
 
 1.  **Create Players**: Use the UI or send `POST` requests to `/api/players` with a `display_name`.
 2.  **Record a Round**: Send a `POST` request to `/api/rounds` with `participant_ids` and a `loser_id`.
-3.  **Grant a FettMattis**: Send a `POST` request to `/api/fettmattis` with a `player_id` and an optional `round_id`.
+3.  **Grant a Fettmattis**: Send a `POST` request to `/api/fettmattis` with a `player_id` and an optional `round_id`.
 4.  **View Leaderboards**: Access the leaderboard pages in the application to verify that stats are calculated and displayed correctly.
-5.  **Test 24h Window**: Record a round/FettMattis and attempt to edit/delete it immediately. Wait 24 hours (or manually adjust the `created_at` timestamp in the database for testing) and confirm the action is forbidden.
+5.  **Test 24h Window**: Record a round/Fettmattis and attempt to edit/delete it immediately. Wait 24 hours (or manually adjust the `created_at` timestamp in the database for testing) and confirm the action is forbidden.

@@ -193,7 +193,7 @@ export const fettmattisRelations = relations(fettmattis, ({ one }) => ({
 export type User = typeof users.$inferSelect;
 export type Player = typeof players.$inferSelect;
 export type Round = typeof rounds.$inferSelect;
-export type FettMattis = typeof fettmattis.$inferSelect;
+export type Fettmattis = typeof fettmattis.$inferSelect;
 export type Account = typeof accounts.$inferSelect;
 export type Session = typeof sessions.$inferSelect;
 export type Verification = typeof verifications.$inferSelect;

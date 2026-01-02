@@ -7,14 +7,14 @@ const mocks = vi.hoisted(() => {
   class MockForbiddenError extends Error {}
 
   return {
-    revokeFettMattis: vi.fn(),
+    revokeFettmattis: vi.fn(),
     MockNotFoundError,
     MockForbiddenError,
   };
 });
 
 vi.mock("@/lib/db-client", () => ({
-  revokeFettMattis: mocks.revokeFettMattis,
+  revokeFettmattis: mocks.revokeFettmattis,
   NotFoundError: mocks.MockNotFoundError,
   ForbiddenError: mocks.MockForbiddenError,
 }));
@@ -30,11 +30,11 @@ const createMockRequest = () => {
 };
 
 beforeEach(() => {
-  mocks.revokeFettMattis.mockReset();
+  mocks.revokeFettmattis.mockReset();
 });
 
 test("T014: DELETE /api/fettmattis/{fettmattisId} should return 404 if the fettmattis does not exist", async () => {
-  mocks.revokeFettMattis.mockRejectedValueOnce(
+  mocks.revokeFettmattis.mockRejectedValueOnce(
     new mocks.MockNotFoundError("Fettmattis not found."),
   );
 
@@ -55,7 +55,7 @@ test("T014: DELETE /api/fettmattis/{fettmattisId} should return 404 if the fettm
 });
 
 test("T014: DELETE /api/fettmattis/{fettmattisId} should return 204 on success", async () => {
-  mocks.revokeFettMattis.mockResolvedValueOnce(undefined);
+  mocks.revokeFettmattis.mockResolvedValueOnce(undefined);
 
   const req = createMockRequest();
   const res = await DELETE(req, {
@@ -67,7 +67,7 @@ test("T014: DELETE /api/fettmattis/{fettmattisId} should return 204 on success",
   expect(res.status).toBe(204);
 
   // Ensure the database function was called with the correct data
-  expect(mocks.revokeFettMattis).toHaveBeenCalledWith(
+  expect(mocks.revokeFettmattis).toHaveBeenCalledWith(
     "00000000-0000-7000-0000-000000000005",
   );
 });

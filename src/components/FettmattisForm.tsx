@@ -5,8 +5,8 @@ import { useEffect, useId, useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
 import {
-  type FettMattisCreate,
-  FettMattisCreateSchema,
+  type FettmattisCreate,
+  FettmattisCreateSchema,
 } from "@/lib/api/schemas";
 
 interface SimplePlayer {
@@ -19,18 +19,18 @@ interface SimpleRound {
   readonly id: string;
 }
 
-interface FettMattisFormProps {
-  readonly onSubmit: (data: FettMattisCreate) => void | Promise<void>;
+interface FettmattisFormProps {
+  readonly onSubmit: (data: FettmattisCreate) => void | Promise<void>;
   readonly players: readonly SimplePlayer[];
   readonly rounds: readonly SimpleRound[];
-  readonly initialData?: FettMattisCreate;
+  readonly initialData?: FettmattisCreate;
 }
 
-export function FettMattisForm({
+export function FettmattisForm({
   onSubmit,
   players,
   initialData,
-}: FettMattisFormProps) {
+}: FettmattisFormProps) {
   const [playerId, setPlayerId] = useState(initialData?.player_id ?? "");
   const [roundId, setRoundId] = useState(initialData?.round_id ?? "");
   const [error, setError] = useState<string | null>(null);
@@ -55,12 +55,12 @@ export function FettMattisForm({
   const handleSubmit = async (event: React.FormEvent<HTMLFormElement>) => {
     event.preventDefault();
 
-    const payload: FettMattisCreate = {
+    const payload: FettmattisCreate = {
       player_id: playerId,
       ...(roundId ? { round_id: roundId } : {}),
     };
 
-    const parsed = FettMattisCreateSchema.safeParse(payload);
+    const parsed = FettmattisCreateSchema.safeParse(payload);
     if (!parsed.success) {
       const firstIssue = parsed.error.issues.at(0);
       setError(firstIssue?.message ?? "Kunne ikke sende inn Fettmattis.");

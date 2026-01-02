@@ -17,13 +17,13 @@ const {
   mockReplace,
   mockGetOverviewStats,
   mockListRecentRounds,
-  mockListRecentFettMattis,
+  mockListRecentFettmattis,
 } = vi.hoisted(() => ({
   mockUseAuth: vi.fn(),
   mockReplace: vi.fn(),
   mockGetOverviewStats: vi.fn(),
   mockListRecentRounds: vi.fn(),
-  mockListRecentFettMattis: vi.fn(),
+  mockListRecentFettmattis: vi.fn(),
 }));
 
 vi.mock("next/navigation", () => ({
@@ -57,7 +57,7 @@ vi.mock("@/components/Leaderboard", () => ({
 vi.mock("@/lib/db-client", () => ({
   getOverviewStats: mockGetOverviewStats,
   listRecentRounds: mockListRecentRounds,
-  listRecentFettMattis: mockListRecentFettMattis,
+  listRecentFettmattis: mockListRecentFettmattis,
 }));
 
 vi.mock("next/server", () => ({
@@ -162,7 +162,7 @@ describe("Home page", () => {
   test("renders highlights from overview stats", async () => {
     mockGetOverviewStats.mockResolvedValue({
       totalRounds: 12,
-      fettMattisMoments: 3,
+      fettmattisMoments: 3,
       activePlayers: 4,
     });
 
@@ -180,7 +180,7 @@ describe("Home page", () => {
       },
     ]);
 
-    mockListRecentFettMattis.mockResolvedValue([
+    mockListRecentFettmattis.mockResolvedValue([
       {
         id: "fm-1",
         player: { id: "p2", displayName: "Nils", active: true },

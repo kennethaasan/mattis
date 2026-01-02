@@ -12,10 +12,10 @@ The script exercises the API directly, following the acceptance criteria in `qui
 | ----------------------------- | ------ | ------------------------------------------------------------------------------------------------------------------------------ |
 | Create Player                 | ✓ PASS | `POST /api/players` returned `201`, and subsequent `GET /api/players` showed the newly created records.                        |
 | Record Round                  | ✓ PASS | `POST /api/rounds` (with two participants) succeeded and an immediate `PUT` within the 24h window returned `200`.              |
-| FettMattis Grant/Revoke       | ✓ PASS | `POST /api/fettmattis` returned `201`, regular leaderboard reflected the award, and an immediate `DELETE` responded `204`.     |
+| Fettmattis Grant/Revoke       | ✓ PASS | `POST /api/fettmattis` returned `201`, regular leaderboard reflected the award, and an immediate `DELETE` responded `204`.     |
 | View Regular Leaderboard      | ✓ PASS | `GET /api/leaderboard/regular?year=2025` returned entries with correct participation/loss counts for both test players.        |
-| View FettMattis Leaderboard   | ✓ PASS | `GET /api/leaderboard/fettmattis?year=2025` showed the active FettMattis counts.                                               |
+| View Fettmattis Leaderboard   | ✓ PASS | `GET /api/leaderboard/fettmattis?year=2025` showed the active Fettmattis counts.                                               |
 | 24h Edit/Delete Lock (Rounds) | ✓ PASS | After shifting `created_at` back 26 hours, `PUT /api/rounds/{id}` and `DELETE /api/rounds/{id}` both returned `403 Forbidden`. |
-| 24h Revoke Lock (FettMattis)  | ✓ PASS | After shifting `created_at` back 26 hours, `DELETE /api/fettmattis/{id}` returned `403 Forbidden`.                             |
+| 24h Revoke Lock (Fettmattis)  | ✓ PASS | After shifting `created_at` back 26 hours, `DELETE /api/fettmattis/{id}` returned `403 Forbidden`.                             |
 
 All acceptance validations now pass; task **T040** is complete.

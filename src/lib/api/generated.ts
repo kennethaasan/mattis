@@ -71,10 +71,16 @@ export interface paths {
       path?: never;
       cookie?: never;
     };
-    /** List Players */
+    /**
+     * List Players
+     * @description Returns all players, ordered by display name.
+     */
     get: operations["listPlayers"];
     put?: never;
-    /** Create Player */
+    /**
+     * Create Player
+     * @description Creates a new player in the roster.
+     */
     post: operations["createPlayer"];
     delete?: never;
     options?: never;
@@ -89,9 +95,15 @@ export interface paths {
       path?: never;
       cookie?: never;
     };
-    /** Get Player Details */
+    /**
+     * Get Player Details
+     * @description Returns details for a single player.
+     */
     get: operations["getPlayer"];
-    /** Update Player */
+    /**
+     * Update Player
+     * @description Updates player profile fields and status.
+     */
     put: operations["updatePlayer"];
     post?: never;
     delete?: never;
@@ -107,10 +119,16 @@ export interface paths {
       path?: never;
       cookie?: never;
     };
-    /** List Rounds */
+    /**
+     * List Rounds
+     * @description Returns recent rounds, optionally limited by query parameter.
+     */
     get: operations["listRounds"];
     put?: never;
-    /** Record a Round */
+    /**
+     * Record a Round
+     * @description Records a completed round and updates leaderboards.
+     */
     post: operations["createRound"];
     delete?: never;
     options?: never;
@@ -145,12 +163,21 @@ export interface paths {
       path?: never;
       cookie?: never;
     };
-    /** Get Round Details */
+    /**
+     * Get Round Details
+     * @description Returns the details of a specific round.
+     */
     get: operations["getRound"];
-    /** Edit a Round (within 24h) */
+    /**
+     * Edit a Round (within 24h)
+     * @description Updates round participants or the recorded loser within the edit window.
+     */
     put: operations["updateRound"];
     post?: never;
-    /** Soft Delete a Round (within 24h) */
+    /**
+     * Soft Delete a Round (within 24h)
+     * @description Soft-deletes a round and removes it from leaderboards.
+     */
     delete: operations["deleteRound"];
     options?: never;
     head?: never;
@@ -164,10 +191,16 @@ export interface paths {
       path?: never;
       cookie?: never;
     };
-    /** List FettMattis Entries */
+    /**
+     * List Fettmattis Entries
+     * @description Returns recent Fettmattis awards.
+     */
     get: operations["listFettmattis"];
     put?: never;
-    /** Create FettMattis */
+    /**
+     * Create Fettmattis
+     * @description Grants a Fettmattis award to a player.
+     */
     post: operations["createFettmattis"];
     delete?: never;
     options?: never;
@@ -185,7 +218,10 @@ export interface paths {
     get?: never;
     put?: never;
     post?: never;
-    /** Delete FettMattis (within 24h) */
+    /**
+     * Delete Fettmattis (within 24h)
+     * @description Revokes a Fettmattis award within the edit window.
+     */
     delete: operations["deleteFettmattis"];
     options?: never;
     head?: never;
@@ -199,7 +235,10 @@ export interface paths {
       path?: never;
       cookie?: never;
     };
-    /** Get Regular Leaderboard */
+    /**
+     * Get Regular Leaderboard
+     * @description Returns leaderboard standings for regular play.
+     */
     get: operations["getRegularLeaderboard"];
     put?: never;
     post?: never;
@@ -216,7 +255,10 @@ export interface paths {
       path?: never;
       cookie?: never;
     };
-    /** Get Fettmattis Leaderboard */
+    /**
+     * Get Fettmattis Leaderboard
+     * @description Returns leaderboard standings for Fettmattis awards.
+     */
     get: operations["getFettmattisLeaderboard"];
     put?: never;
     post?: never;
@@ -233,7 +275,10 @@ export interface paths {
       path?: never;
       cookie?: never;
     };
-    /** List Available Leaderboard Seasons */
+    /**
+     * List Available Leaderboard Seasons
+     * @description Returns the list of seasons with available leaderboard data.
+     */
     get: operations["listLeaderboardSeasons"];
     put?: never;
     post?: never;
@@ -374,7 +419,7 @@ export interface components {
        */
       loser_id?: string;
     };
-    FettMattis: {
+    Fettmattis: {
       /**
        * Format: uuid
        * @description UUID v7, time-ordered identifier.
@@ -389,7 +434,7 @@ export interface components {
       /** Format: date-time */
       created_at: string;
     };
-    FettMattisCreate: {
+    FettmattisCreate: {
       /**
        * Format: uuid
        * @description UUID v7, time-ordered identifier.
@@ -803,7 +848,7 @@ export interface operations {
   listFettmattis: {
     parameters: {
       query?: {
-        /** @description Limit the number of FettMattis entries returned. Defaults to 20 when omitted. */
+        /** @description Limit the number of Fettmattis entries returned. Defaults to 20 when omitted. */
         limit?: number;
       };
       header?: never;
@@ -812,13 +857,13 @@ export interface operations {
     };
     requestBody?: never;
     responses: {
-      /** @description A list of recent FettMattis entries. */
+      /** @description A list of recent Fettmattis entries. */
       200: {
         headers: {
           [name: string]: unknown;
         };
         content: {
-          "application/json": components["schemas"]["FettMattis"][];
+          "application/json": components["schemas"]["Fettmattis"][];
         };
       };
     };
@@ -832,17 +877,17 @@ export interface operations {
     };
     requestBody: {
       content: {
-        "application/json": components["schemas"]["FettMattisCreate"];
+        "application/json": components["schemas"]["FettmattisCreate"];
       };
     };
     responses: {
-      /** @description FettMattis created successfully. */
+      /** @description Fettmattis created successfully. */
       201: {
         headers: {
           [name: string]: unknown;
         };
         content: {
-          "application/json": components["schemas"]["FettMattis"];
+          "application/json": components["schemas"]["Fettmattis"];
         };
       };
       400: components["responses"]["BadRequest"];
@@ -861,7 +906,7 @@ export interface operations {
     };
     requestBody?: never;
     responses: {
-      /** @description FettMattis revoked successfully. */
+      /** @description Fettmattis revoked successfully. */
       204: {
         headers: {
           [name: string]: unknown;

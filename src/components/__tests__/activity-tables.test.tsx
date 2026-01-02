@@ -3,7 +3,7 @@ import { afterEach, describe, expect, test, vi } from "vitest";
 
 import { FettmattisTable } from "@/components/fettmattis-table";
 import { RoundsTable } from "@/components/rounds-table";
-import type { FettMattis } from "@/lib/api/fettmattis-client";
+import type { Fettmattis } from "@/lib/api/fettmattis-client";
 import type { Round } from "@/lib/api/schemas";
 
 const DAY_IN_MS = 24 * 60 * 60 * 1000;
@@ -35,21 +35,21 @@ function createRound(overrides: Partial<Round> = {}): Round {
   } satisfies Round;
 }
 
-function createFettMattis(overrides: Partial<FettMattis> = {}): FettMattis {
+function createFettmattis(overrides: Partial<Fettmattis> = {}): Fettmattis {
   const player =
     overrides.player ??
     ({
       id: "fett-1",
       display_name: "Ada",
       active: true,
-    } as FettMattis["player"]);
+    } as Fettmattis["player"]);
 
   return {
     id: "fettmattis-1",
     created_at: new Date().toISOString(),
     player,
     ...overrides,
-  } satisfies FettMattis;
+  } satisfies Fettmattis;
 }
 
 describe("Activity tables", () => {
@@ -115,12 +115,12 @@ describe("Activity tables", () => {
     expect(screen.queryByRole("button", { name: "Slett" })).toBeNull();
   });
 
-  test("T193: FettMattis table exposes entry metadata when expanded", async () => {
-    const entry = createFettMattis({
+  test("T193: Fettmattis table exposes entry metadata when expanded", async () => {
+    const entry = createFettmattis({
       created_at: new Date(Date.now() - 90 * 60 * 1000).toISOString(),
     });
 
-    render(<FettmattisTable fettMattis={[entry]} />);
+    render(<FettmattisTable fettmattis={[entry]} />);
 
     expect(screen.queryByText("Spillerstatus")).toBeNull();
 
@@ -136,24 +136,24 @@ describe("Activity tables", () => {
     expect(detailSection?.textContent).toContain("Endringsvindu");
   });
 
-  test("T193: FettMattis table restricts deletion after 24 hours", () => {
-    const staleEntry = createFettMattis({
+  test("T193: Fettmattis table restricts deletion after 24 hours", () => {
+    const staleEntry = createFettmattis({
       created_at: new Date(Date.now() - DAY_IN_MS * 3).toISOString(),
     });
 
     render(
       <FettmattisTable
-        fettMattis={[staleEntry]}
+        fettmattis={[staleEntry]}
         onDelete={vi.fn()}
-        emptyMessage="Ingen FettMattis"
+        emptyMessage="Ingen Fettmattis"
       />,
     );
 
     expect(screen.queryByRole("button", { name: "Slett" })).toBeNull();
   });
 
-  test("T193: FettMattis table surfaces delete button for recent entries", async () => {
-    const recentEntry = createFettMattis({
+  test("T193: Fettmattis table surfaces delete button for recent entries", async () => {
+    const recentEntry = createFettmattis({
       id: "recent-fettmattis",
       created_at: new Date().toISOString(),
     });
@@ -161,9 +161,9 @@ describe("Activity tables", () => {
 
     render(
       <FettmattisTable
-        fettMattis={[recentEntry]}
+        fettmattis={[recentEntry]}
         onDelete={onDelete}
-        emptyMessage="Ingen FettMattis"
+        emptyMessage="Ingen Fettmattis"
       />,
     );
 

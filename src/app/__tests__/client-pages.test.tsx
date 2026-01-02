@@ -13,7 +13,7 @@ import { afterEach, beforeEach, describe, expect, test, vi } from "vitest";
 import PlayersClientPage from "@/app/players/players-client";
 import RoundsClientPage from "@/app/rounds/rounds-client";
 import type { Player } from "@/lib/api/players-client";
-import type { FettMattis, Round } from "@/lib/api/schemas";
+import type { Fettmattis, Round } from "@/lib/api/schemas";
 
 vi.mock("@tanstack/react-query", () => ({
   useQuery: vi.fn(),
@@ -202,7 +202,7 @@ describe("RoundsClientPage", () => {
 
     const rounds: Round[] = [latestRound];
 
-    const fettmattis: FettMattis[] = [
+    const fettmattis: Fettmattis[] = [
       {
         id: "00000000-0000-4000-8000-000000000200",
         created_at: new Date().toISOString(),
@@ -231,7 +231,7 @@ describe("RoundsClientPage", () => {
       }
 
       if (Array.isArray(key) && key[0] === "fettmattis" && key[1] === "list") {
-        return createQueryResult<FettMattis[]>({
+        return createQueryResult<Fettmattis[]>({
           data: fettmattis,
           isLoading: false,
         });
@@ -299,7 +299,7 @@ describe("RoundsClientPage", () => {
         createQueryResult<Round[]>({ data: [], isLoading: false }),
       )
       .mockImplementationOnce(() =>
-        createQueryResult<FettMattis[]>({ data: [], isLoading: false }),
+        createQueryResult<Fettmattis[]>({ data: [], isLoading: false }),
       );
 
     mockMutationSequence([

@@ -12,9 +12,9 @@ const {
   listRecentRounds,
   updateRound,
   deleteRound,
-  createFettMattis,
-  listRecentFettMattis,
-  revokeFettMattis,
+  createFettmattis,
+  listRecentFettmattis,
+  revokeFettmattis,
   getLeaderboardSeasons,
   getOverviewStats,
   NotFoundError,
@@ -377,15 +377,15 @@ describe("Round CRUD operations", () => {
   });
 });
 
-describe("FettMattis CRUD operations", () => {
-  test("createFettMattis creates a new FettMattis record", async () => {
+describe("Fettmattis CRUD operations", () => {
+  test("createFettmattis creates a new Fettmattis record", async () => {
     const userId = process.env.BASIC_AUTH_USER_ID as string;
     const player = await createPlayer({
       id: generateId(),
       displayName: `FM-${generateId().slice(0, 8)}`,
     });
 
-    const fm = await createFettMattis({
+    const fm = await createFettmattis({
       playerId: player.id,
       createdBy: userId,
     });
@@ -395,44 +395,44 @@ describe("FettMattis CRUD operations", () => {
     expect(fm.revokedAt).toBeNull();
   });
 
-  test("createFettMattis throws NotFoundError for non-existent player", async () => {
+  test("createFettmattis throws NotFoundError for non-existent player", async () => {
     const userId = process.env.BASIC_AUTH_USER_ID as string;
 
     await expect(
-      createFettMattis({
+      createFettmattis({
         playerId: generateId(),
         createdBy: userId,
       }),
     ).rejects.toThrow(NotFoundError);
   });
 
-  test("listRecentFettMattis returns FettMattis records", async () => {
-    const records = await listRecentFettMattis({ limit: 5 });
+  test("listRecentFettmattis returns Fettmattis records", async () => {
+    const records = await listRecentFettmattis({ limit: 5 });
     expect(Array.isArray(records)).toBe(true);
   });
 
-  test("revokeFettMattis soft-revokes a FettMattis", async () => {
+  test("revokeFettmattis soft-revokes a Fettmattis", async () => {
     const userId = process.env.BASIC_AUTH_USER_ID as string;
     const player = await createPlayer({
       id: generateId(),
       displayName: `Revoke-${generateId().slice(0, 8)}`,
     });
 
-    const fm = await createFettMattis({
+    const fm = await createFettmattis({
       playerId: player.id,
       createdBy: userId,
     });
 
-    await revokeFettMattis(fm.id);
+    await revokeFettmattis(fm.id);
 
     // Verify it's no longer in the active list
-    const activeRecords = await listRecentFettMattis({ limit: 100 });
+    const activeRecords = await listRecentFettmattis({ limit: 100 });
     const found = activeRecords.find((r) => r.id === fm.id);
     expect(found).toBeUndefined();
   });
 
-  test("revokeFettMattis throws NotFoundError for non-existent FettMattis", async () => {
-    await expect(revokeFettMattis(generateId())).rejects.toThrow(NotFoundError);
+  test("revokeFettmattis throws NotFoundError for non-existent Fettmattis", async () => {
+    await expect(revokeFettmattis(generateId())).rejects.toThrow(NotFoundError);
   });
 });
 
@@ -448,10 +448,10 @@ describe("Leaderboard and Stats operations", () => {
     const stats = await getOverviewStats();
 
     expect(stats).toHaveProperty("totalRounds");
-    expect(stats).toHaveProperty("fettMattisMoments");
+    expect(stats).toHaveProperty("fettmattisMoments");
     expect(stats).toHaveProperty("activePlayers");
     expect(typeof stats.totalRounds).toBe("number");
-    expect(typeof stats.fettMattisMoments).toBe("number");
+    expect(typeof stats.fettmattisMoments).toBe("number");
     expect(typeof stats.activePlayers).toBe("number");
   });
 });

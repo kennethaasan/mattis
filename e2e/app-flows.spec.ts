@@ -5,7 +5,7 @@ import { loginAsTestUser } from "./helpers/auth";
 
 type ApiPlayer = components["schemas"]["Player"];
 type ApiRound = components["schemas"]["Round"];
-type ApiFettMattis = components["schemas"]["FettMattis"];
+type ApiFettmattis = components["schemas"]["Fettmattis"];
 
 const ASTRID = "Astrid Nygaard";
 const EMIL = "Emil Kavli";
@@ -141,7 +141,7 @@ test("T037: user can toggle player activity from the roster", async ({
   ).toBeVisible();
 });
 
-test("T037: leaderboard view surfaces regular and FettMattis standings", async ({
+test("T037: leaderboard view surfaces regular and Fettmattis standings", async ({
   page,
 }) => {
   await page.goto("/leaderboard", { waitUntil: "domcontentloaded" });
@@ -163,18 +163,18 @@ test("T037: leaderboard view surfaces regular and FettMattis standings", async (
     regularTable.getByRole("row", { name: new RegExp(LINA, "i") }),
   ).toBeVisible();
 
-  const fettMattisTable = page.getByRole("table").filter({
+  const fettmattisTable = page.getByRole("table").filter({
     has: page.getByRole("columnheader", {
-      name: "FettMattis",
+      name: "Fettmattis",
       exact: true,
     }),
   });
-  await expect(fettMattisTable).toBeVisible();
+  await expect(fettmattisTable).toBeVisible();
   await expect(
-    fettMattisTable.getByRole("row", { name: new RegExp(ASTRID, "i") }),
+    fettmattisTable.getByRole("row", { name: new RegExp(ASTRID, "i") }),
   ).toBeVisible();
   await expect(
-    fettMattisTable.getByRole("row", { name: new RegExp(LINA, "i") }),
+    fettmattisTable.getByRole("row", { name: new RegExp(LINA, "i") }),
   ).toBeVisible();
 });
 
@@ -244,17 +244,17 @@ test("T193: rounds dashboard enforces 24-hour deletion window", async ({
     page.locator(`button[aria-controls="round-details-${latestRound.id}"]`),
   ).toHaveCount(0);
 
-  const archivedFettMattisButton = page.locator(
+  const archivedFettmattisButton = page.locator(
     'button[aria-controls="fettmattis-details-30000000-0000-4000-8000-000000000302"]',
   );
-  await expect(archivedFettMattisButton).toBeVisible();
+  await expect(archivedFettmattisButton).toBeVisible();
 
-  const archivedFettMattisRow = page
+  const archivedFettmattisRow = page
     .locator("tr")
-    .filter({ has: archivedFettMattisButton })
+    .filter({ has: archivedFettmattisButton })
     .first();
   await expect(
-    archivedFettMattisRow.getByRole("button", { name: "Slett" }),
+    archivedFettmattisRow.getByRole("button", { name: "Slett" }),
   ).toHaveCount(0);
 
   await page.getByLabel("Spiller").selectOption({ label: LINA });
@@ -263,48 +263,48 @@ test("T193: rounds dashboard enforces 24-hour deletion window", async ({
     page.getByText("Fettmattis tildelt. Klar for feiring!"),
   ).toBeVisible();
 
-  const fettMattisResponse = await page.request.get("/api/fettmattis?limit=1");
-  expect(fettMattisResponse.ok()).toBeTruthy();
-  const [latestFettMattis] =
-    (await fettMattisResponse.json()) as ApiFettMattis[];
-  if (!latestFettMattis) {
+  const fettmattisResponse = await page.request.get("/api/fettmattis?limit=1");
+  expect(fettmattisResponse.ok()).toBeTruthy();
+  const [latestFettmattis] =
+    (await fettmattisResponse.json()) as ApiFettmattis[];
+  if (!latestFettmattis) {
     throw new Error("Latest Fettmattis entry was not returned after creation.");
   }
 
-  const latestFettMattisDetailsButton = page
+  const latestFettmattisDetailsButton = page
     .locator(
-      `button[aria-controls="fettmattis-details-${latestFettMattis.id}"]`,
+      `button[aria-controls="fettmattis-details-${latestFettmattis.id}"]`,
     )
     .first();
-  const latestFettMattisRow = page
+  const latestFettmattisRow = page
     .locator("tr")
-    .filter({ has: latestFettMattisDetailsButton })
+    .filter({ has: latestFettmattisDetailsButton })
     .first();
-  await latestFettMattisDetailsButton.click();
+  await latestFettmattisDetailsButton.click();
 
-  const latestFettMattisDetails = page.locator(
-    `#fettmattis-details-${latestFettMattis.id}`,
+  const latestFettmattisDetails = page.locator(
+    `#fettmattis-details-${latestFettmattis.id}`,
   );
-  await expect(latestFettMattisDetails).toBeVisible();
+  await expect(latestFettmattisDetails).toBeVisible();
   await expect(
-    latestFettMattisDetails.getByText("Spillerstatus"),
+    latestFettmattisDetails.getByText("Spillerstatus"),
   ).toBeVisible();
   await expect(
-    latestFettMattisDetails.getByText("Endringsvindu"),
+    latestFettmattisDetails.getByText("Endringsvindu"),
   ).toBeVisible();
 
-  const latestFettMattisDeleteButton = latestFettMattisRow.getByRole("button", {
+  const latestFettmattisDeleteButton = latestFettmattisRow.getByRole("button", {
     name: "Slett",
   });
-  await expect(latestFettMattisDeleteButton).toBeVisible();
-  await latestFettMattisDeleteButton.click();
+  await expect(latestFettmattisDeleteButton).toBeVisible();
+  await latestFettmattisDeleteButton.click();
 
   await expect(
     page.getByText("Fettmattis fjernet. Oversikten er oppdatert."),
   ).toBeVisible();
   await expect(
     page.locator(
-      `button[aria-controls="fettmattis-details-${latestFettMattis.id}"]`,
+      `button[aria-controls="fettmattis-details-${latestFettmattis.id}"]`,
     ),
   ).toHaveCount(0);
 });

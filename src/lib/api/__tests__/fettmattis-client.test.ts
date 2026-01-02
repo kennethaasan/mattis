@@ -11,12 +11,12 @@ vi.mock("@/lib/api/client", () => ({
 
 import { apiClient, problemToError } from "@/lib/api/client";
 import {
-  createFettMattis,
-  createFettMattisListQueryKey,
-  fetchFettMattis,
-  revokeFettMattis,
+  createFettmattis,
+  createFettmattisListQueryKey,
+  fetchFettmattis,
+  revokeFettmattis,
 } from "@/lib/api/fettmattis-client";
-import type { FettMattis, FettMattisCreate } from "@/lib/api/schemas";
+import type { Fettmattis, FettmattisCreate } from "@/lib/api/schemas";
 
 const mockApiClient = vi.mocked(apiClient);
 const mockProblemToError = vi.mocked(problemToError);
@@ -29,20 +29,20 @@ beforeEach(() => {
 
 describe("fettmattis-client", () => {
   test("creates stable list query keys", () => {
-    expect(createFettMattisListQueryKey()).toEqual([
+    expect(createFettmattisListQueryKey()).toEqual([
       "fettmattis",
       "list",
       "default",
     ]);
-    expect(createFettMattisListQueryKey(10)).toEqual([
+    expect(createFettmattisListQueryKey(10)).toEqual([
       "fettmattis",
       "list",
       10,
     ]);
   });
 
-  test("fetchFettMattis returns data", async () => {
-    const entries: FettMattis[] = [
+  test("fetchFettmattis returns data", async () => {
+    const entries: Fettmattis[] = [
       {
         id: "00000000-0000-4000-8000-000000000011",
         created_at: new Date().toISOString(),
@@ -56,7 +56,7 @@ describe("fettmattis-client", () => {
       error: undefined,
     });
 
-    const result = await fetchFettMattis();
+    const result = await fetchFettmattis();
 
     expect(mockApiClient.GET).toHaveBeenCalledWith("/fettmattis", {
       params: {
@@ -66,14 +66,14 @@ describe("fettmattis-client", () => {
     expect(result).toEqual(entries);
   });
 
-  test("fetchFettMattis includes limit", async () => {
+  test("fetchFettmattis includes limit", async () => {
     mockApiClient.GET.mockResolvedValueOnce({
       data: [],
       response: new Response(),
       error: undefined,
     });
 
-    await fetchFettMattis({ limit: 2 });
+    await fetchFettmattis({ limit: 2 });
 
     expect(mockApiClient.GET).toHaveBeenCalledWith("/fettmattis", {
       params: {
@@ -82,20 +82,20 @@ describe("fettmattis-client", () => {
     });
   });
 
-  test("fetchFettMattis throws when data is missing", async () => {
+  test("fetchFettmattis throws when data is missing", async () => {
     mockApiClient.GET.mockResolvedValueOnce({
       data: undefined,
       response: new Response(),
       error: { detail: "Missing" },
     });
 
-    await expect(fetchFettMattis()).rejects.toThrow(
-      "Vi mottok et ugyldig svar da FettMattis-listen ble lastet.",
+    await expect(fetchFettmattis()).rejects.toThrow(
+      "Vi mottok et ugyldig svar da Fettmattis-listen ble lastet.",
     );
   });
 
-  test("createFettMattis posts validated payload", async () => {
-    const payload: FettMattisCreate = {
+  test("createFettmattis posts validated payload", async () => {
+    const payload: FettmattisCreate = {
       player_id: PLAYER_ID,
       round_id: "00000000-0000-4000-8000-000000000022",
     };
@@ -106,7 +106,7 @@ describe("fettmattis-client", () => {
       error: undefined,
     });
 
-    await createFettMattis(payload);
+    await createFettmattis(payload);
 
     expect(mockApiClient.POST).toHaveBeenCalledWith("/fettmattis", {
       body: payload,
@@ -117,8 +117,8 @@ describe("fettmattis-client", () => {
     });
   });
 
-  test("createFettMattis surfaces API errors", async () => {
-    const payload: FettMattisCreate = {
+  test("createFettmattis surfaces API errors", async () => {
+    const payload: FettmattisCreate = {
       player_id: PLAYER_ID,
     };
     const apiError = {
@@ -134,7 +134,7 @@ describe("fettmattis-client", () => {
       error: apiError,
     });
 
-    await expect(createFettMattis(payload)).rejects.toThrow(
+    await expect(createFettmattis(payload)).rejects.toThrow(
       "Kunne ikke tildele en Fettmattis.",
     );
     expect(mockProblemToError).toHaveBeenCalledWith(
@@ -143,14 +143,14 @@ describe("fettmattis-client", () => {
     );
   });
 
-  test("revokeFettMattis sends path params", async () => {
+  test("revokeFettmattis sends path params", async () => {
     mockApiClient.DELETE.mockResolvedValueOnce({
       data: undefined,
       response: new Response(),
       error: undefined,
     });
 
-    await revokeFettMattis("fett-1");
+    await revokeFettmattis("fett-1");
 
     expect(mockApiClient.DELETE).toHaveBeenCalledWith(
       "/fettmattis/{fettmattisId}",
@@ -165,7 +165,7 @@ describe("fettmattis-client", () => {
     );
   });
 
-  test("revokeFettMattis surfaces API errors", async () => {
+  test("revokeFettmattis surfaces API errors", async () => {
     const apiError = {
       type: "about:blank",
       title: "Not Found",
@@ -179,7 +179,7 @@ describe("fettmattis-client", () => {
       error: apiError,
     });
 
-    await expect(revokeFettMattis("fett-2")).rejects.toThrow(
+    await expect(revokeFettmattis("fett-2")).rejects.toThrow(
       "Kunne ikke slette Fettmattis.",
     );
     expect(mockProblemToError).toHaveBeenCalledWith(

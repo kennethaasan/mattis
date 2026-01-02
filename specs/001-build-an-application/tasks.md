@@ -43,7 +43,7 @@
 
 - [x] **T027**: [P] Create a reusable `PlayerForm` component for creating and editing players.
 - [x] **T028**: [P] Create a `RoundForm` component for recording and editing rounds.
-- [x] **T029**: [P] Create a `FettMattisForm` component for creating FettMattis records.
+- [x] **T029**: [P] Create a `FettmattisForm` component for creating Fettmattis records.
 - [x] **T030**: [P] Develop the main `Leaderboard` component to display both regular and Fettmattis leaderboards.
 - [x] **T031**: Implement the player management page.
 - [x] **T032**: Implement the round creation/editing page.

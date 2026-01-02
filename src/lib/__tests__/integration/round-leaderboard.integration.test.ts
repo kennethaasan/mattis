@@ -1,18 +1,18 @@
 import { eq } from "drizzle-orm";
 import { expect, test } from "vitest";
 import { db } from "@/lib/db/db";
-import { fettmattis as fettMattisTable, rounds } from "@/lib/db/schema";
+import { fettmattis as fettmattisTable, rounds } from "@/lib/db/schema";
 import { generateId } from "@/lib/utils/id";
 
 const {
   createPlayer,
   createRound,
-  createFettMattis,
+  createFettmattis,
   getRegularLeaderboard,
-  getFettMattisLeaderboard,
+  getFettmattisLeaderboard,
 } = await import("@/lib/db-client");
 
-test("T016: recording a round updates the regular and FettMattis leaderboards", async () => {
+test("T016: recording a round updates the regular and Fettmattis leaderboards", async () => {
   const userId = process.env.BASIC_AUTH_USER_ID as never;
 
   const [ola, kari] = await Promise.all([
@@ -42,20 +42,20 @@ test("T016: recording a round updates the regular and FettMattis leaderboards", 
     lossCount: 0,
   });
 
-  await createFettMattis({
+  await createFettmattis({
     playerId: kari.id,
     createdBy: userId,
   });
 
-  const fettMattisLeaderboard = await getFettMattisLeaderboard(
+  const fettmattisLeaderboard = await getFettmattisLeaderboard(
     new Date().getFullYear(),
   );
 
-  expect(fettMattisLeaderboard).toHaveLength(1);
-  expect(fettMattisLeaderboard[0]).toMatchObject({
+  expect(fettmattisLeaderboard).toHaveLength(1);
+  expect(fettmattisLeaderboard[0]).toMatchObject({
     rank: 1,
     player: { displayName: "Kari" },
-    fettMattisCount: 1,
+    fettmattisCount: 1,
   });
 });
 
@@ -85,20 +85,20 @@ test("T068: all-time leaderboards aggregate results across seasons", async () =>
     .set({ createdAt: new Date(Date.UTC(previousYear, 5, 1, 12)) })
     .where(eq(rounds.id, pastRound.id));
 
-  await createFettMattis({
+  await createFettmattis({
     playerId: ada.id,
     createdBy: process.env.BASIC_AUTH_USER_ID as never,
   });
 
-  const historicalFettMattis = await createFettMattis({
+  const historicalFettmattis = await createFettmattis({
     playerId: ada.id,
     createdBy: process.env.BASIC_AUTH_USER_ID as never,
   });
 
   await db
-    .update(fettMattisTable)
+    .update(fettmattisTable)
     .set({ createdAt: new Date(Date.UTC(previousYear, 2, 14, 8)) })
-    .where(eq(fettMattisTable.id, historicalFettMattis.id));
+    .where(eq(fettmattisTable.id, historicalFettmattis.id));
 
   const currentRegularLeaderboard = await getRegularLeaderboard(currentYear);
 
@@ -144,32 +144,32 @@ test("T068: all-time leaderboards aggregate results across seasons", async () =>
   });
   expect(topAllTimeEntry.lossPercentage).toBeCloseTo(100);
 
-  const currentFettMattisLeaderboard =
-    await getFettMattisLeaderboard(currentYear);
-  expect(currentFettMattisLeaderboard).toHaveLength(2);
+  const currentFettmattisLeaderboard =
+    await getFettmattisLeaderboard(currentYear);
+  expect(currentFettmattisLeaderboard).toHaveLength(2);
 
-  const currentFettMattisLeader = expectDefined(
-    currentFettMattisLeaderboard[0],
-    "Expected Ada to lead the current year FettMattis leaderboard.",
+  const currentFettmattisLeader = expectDefined(
+    currentFettmattisLeaderboard[0],
+    "Expected Ada to lead the current year Fettmattis leaderboard.",
   );
 
-  expect(currentFettMattisLeader).toMatchObject({
+  expect(currentFettmattisLeader).toMatchObject({
     player: { displayName: "Ada" },
-    fettMattisCount: 1,
+    fettmattisCount: 1,
     rank: 1,
   });
 
-  const allTimeFettMattisLeaderboard = await getFettMattisLeaderboard(null);
-  expect(allTimeFettMattisLeaderboard).toHaveLength(2);
+  const allTimeFettmattisLeaderboard = await getFettmattisLeaderboard(null);
+  expect(allTimeFettmattisLeaderboard).toHaveLength(2);
 
-  const allTimeFettMattisLeader = expectDefined(
-    allTimeFettMattisLeaderboard[0],
-    "Expected Ada to lead the all-time FettMattis leaderboard.",
+  const allTimeFettmattisLeader = expectDefined(
+    allTimeFettmattisLeaderboard[0],
+    "Expected Ada to lead the all-time Fettmattis leaderboard.",
   );
 
-  expect(allTimeFettMattisLeader).toMatchObject({
+  expect(allTimeFettmattisLeader).toMatchObject({
     player: { displayName: "Ada" },
-    fettMattisCount: 2,
+    fettmattisCount: 2,
     rank: 1,
   });
 });

@@ -26,7 +26,7 @@ interface RoundSeed {
   createdBy: string;
 }
 
-interface FettMattisSeed {
+interface FettmattisSeed {
   id: string;
   player: string;
   round: string | null;
@@ -158,7 +158,7 @@ const roundSeeds: RoundSeed[] = [
   },
 ];
 
-const fettMattisSeeds: FettMattisSeed[] = [
+const fettmattisSeeds: FettmattisSeed[] = [
   // Last year fettmattis - for 24-hour deletion window test (no delete button)
   {
     id: "30000000-0000-4000-8000-000000000301",
@@ -182,7 +182,7 @@ const fettMattisSeeds: FettMattisSeed[] = [
     createdBy: devUserId,
   },
   // Current year fettmattis - for leaderboard visibility (uses explicit current year dates)
-  // T037 expects Astrid and Lina in the FettMattis table
+  // T037 expects Astrid and Lina in the Fettmattis table
   {
     id: "30000000-0000-4000-8000-000000000304",
     player: "astrid",
@@ -225,7 +225,7 @@ async function seed(): Promise<void> {
       );
       const players = await insertPlayers(tx);
       const rounds = await insertRounds(tx, players);
-      await insertFettMattis(tx, players, rounds);
+      await insertFettmattis(tx, players, rounds);
     });
 
     writeLine(process.stdout, "Database seed completed successfully.");
@@ -336,14 +336,14 @@ async function insertRounds(
   return roundsMap;
 }
 
-async function insertFettMattis(
+async function insertFettmattis(
   client: DbExecutor,
   players: Map<string, PlayerRecord>,
   rounds: Map<string, RoundRecord>,
 ): Promise<void> {
   writeLine(process.stdout, "Awarding Fettmattis records...");
 
-  for (const entry of fettMattisSeeds) {
+  for (const entry of fettmattisSeeds) {
     const player = players.get(entry.player);
     if (!player) {
       throw new Error(`Fettmattis player ${entry.player} not found.`);

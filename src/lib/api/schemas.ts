@@ -123,16 +123,16 @@ export const ListQuerySchema = z.object({
   limit: z.coerce.number().int().min(1).max(100).optional(),
 });
 
-// --- FettMattis Schemas ---
+// --- Fettmattis Schemas ---
 
-export const FettMattisSchema = z.object({
+export const FettmattisSchema = z.object({
   id: uuidSchema,
   player: PlayerSchema,
   round_id: uuidSchema.nullish(),
   created_at: isoDateTimeSchema,
 });
 
-export const FettMattisCreateSchema = z.object({
+export const FettmattisCreateSchema = z.object({
   player_id: uuidSchema,
   round_id: uuidSchema.optional(),
 });
@@ -199,8 +199,8 @@ export type LeaderboardSeasonsResponse =
 export type Round = ApiSchemas["Round"];
 export type RoundCreate = ApiSchemas["RoundCreate"];
 export type RoundUpdate = ApiSchemas["RoundUpdate"];
-export type FettMattis = ApiSchemas["FettMattis"];
-export type FettMattisCreate = ApiSchemas["FettMattisCreate"];
+export type Fettmattis = ApiSchemas["Fettmattis"];
+export type FettmattisCreate = ApiSchemas["FettmattisCreate"];
 export type RegularLeaderboardItem = ApiSchemas["RegularLeaderboardItem"];
 export type FettmattisLeaderboardItem = ApiSchemas["FettmattisLeaderboardItem"];
 export type ProblemDetails = ApiSchemas["Problem"];
