@@ -1,4 +1,4 @@
-import { expect, test, describe } from "vitest";
+import { describe, expect, test } from "vitest";
 import { generateId } from "@/lib/utils/id";
 
 const {
@@ -19,7 +19,6 @@ const {
   getOverviewStats,
   NotFoundError,
   ConflictError,
-  ForbiddenError,
 } = await import("@/lib/db-client");
 
 describe("Player CRUD operations", () => {
