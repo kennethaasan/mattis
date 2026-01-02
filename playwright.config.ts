@@ -4,7 +4,7 @@ import { defineConfig, devices } from "@playwright/test";
 const BASE_URL = "http://localhost:3000";
 
 export default defineConfig({
-  testDir: "./tests/e2e",
+  testDir: "./e2e",
   fullyParallel: false,
   forbidOnly: !!process.env.CI,
   retries: 1,
