@@ -42,6 +42,26 @@ tags:
 security:
   - bearerAuth: []
   - sessionCookie: []
+x-templates:
+  standardResponseHeaders: &standardResponseHeaders
+    Access-Control-Allow-Origin:
+      $ref: "#/components/headers/Access-Control-Allow-Origin"
+    RateLimit-Limit:
+      $ref: "#/components/headers/RateLimit-Limit"
+    RateLimit-Remaining:
+      $ref: "#/components/headers/RateLimit-Remaining"
+    RateLimit-Reset:
+      $ref: "#/components/headers/RateLimit-Reset"
+  standardErrorResponses: &standardErrorResponses
+    "400":
+      $ref: "#/components/responses/BadRequest"
+    "401":
+      $ref: "#/components/responses/Unauthorized"
+    "429":
+      $ref: "#/components/responses/TooManyRequests"
+    "500":
+      $ref: "#/components/responses/InternalServerError"
+
 paths:
   /auth/get-session:
     get:
@@ -53,31 +73,16 @@ paths:
       security:
         - sessionCookie: []
       responses:
+        <<: *standardErrorResponses
         "200":
           description: The current session details or null when no session is available.
-          headers:
-            RateLimit-Limit:
-              $ref: "#/components/headers/RateLimit-Limit"
-            RateLimit-Remaining:
-              $ref: "#/components/headers/RateLimit-Remaining"
-            RateLimit-Reset:
-              $ref: "#/components/headers/RateLimit-Reset"
-            Access-Control-Allow-Origin:
-              $ref: "#/components/headers/Access-Control-Allow-Origin"
+          headers: *standardResponseHeaders
           content:
             application/json:
               schema:
                 oneOf:
                   - $ref: "#/components/schemas/AuthSession"
                   - type: "null"
-        "400":
-          $ref: "#/components/responses/BadRequest"
-        "401":
-          $ref: "#/components/responses/Unauthorized"
-        "429":
-          $ref: "#/components/responses/TooManyRequests"
-        "500":
-          $ref: "#/components/responses/InternalServerError"
 
   /auth/sign-in/email:
     post:
@@ -93,31 +98,16 @@ paths:
             schema:
               $ref: "#/components/schemas/EmailPasswordSignInRequest"
       responses:
+        <<: *standardErrorResponses
         "200":
           description: Session token and user details for the authenticated user.
-          headers:
-            RateLimit-Limit:
-              $ref: "#/components/headers/RateLimit-Limit"
-            RateLimit-Remaining:
-              $ref: "#/components/headers/RateLimit-Remaining"
-            RateLimit-Reset:
-              $ref: "#/components/headers/RateLimit-Reset"
-            Access-Control-Allow-Origin:
-              $ref: "#/components/headers/Access-Control-Allow-Origin"
+          headers: *standardResponseHeaders
           content:
             application/json:
               schema:
                 $ref: "#/components/schemas/EmailPasswordSignInResponse"
-        "400":
-          $ref: "#/components/responses/BadRequest"
-        "401":
-          $ref: "#/components/responses/Unauthorized"
         "403":
           $ref: "#/components/responses/Forbidden"
-        "429":
-          $ref: "#/components/responses/TooManyRequests"
-        "500":
-          $ref: "#/components/responses/InternalServerError"
 
   /auth/sign-out:
     post:
@@ -129,29 +119,14 @@ paths:
       security:
         - sessionCookie: []
       responses:
+        <<: *standardErrorResponses
         "200":
           description: Confirmation that the session was terminated.
-          headers:
-            RateLimit-Limit:
-              $ref: "#/components/headers/RateLimit-Limit"
-            RateLimit-Remaining:
-              $ref: "#/components/headers/RateLimit-Remaining"
-            RateLimit-Reset:
-              $ref: "#/components/headers/RateLimit-Reset"
-            Access-Control-Allow-Origin:
-              $ref: "#/components/headers/Access-Control-Allow-Origin"
+          headers: *standardResponseHeaders
           content:
             application/json:
               schema:
                 $ref: "#/components/schemas/SignOutResponse"
-        "400":
-          $ref: "#/components/responses/BadRequest"
-        "401":
-          $ref: "#/components/responses/Unauthorized"
-        "429":
-          $ref: "#/components/responses/TooManyRequests"
-        "500":
-          $ref: "#/components/responses/InternalServerError"
   /players:
     get:
       summary: List Players
@@ -160,17 +135,10 @@ paths:
       tags:
         - Players
       responses:
+        <<: *standardErrorResponses
         "200":
           description: A list of players.
-          headers:
-            RateLimit-Limit:
-              $ref: "#/components/headers/RateLimit-Limit"
-            RateLimit-Remaining:
-              $ref: "#/components/headers/RateLimit-Remaining"
-            RateLimit-Reset:
-              $ref: "#/components/headers/RateLimit-Reset"
-            Access-Control-Allow-Origin:
-              $ref: "#/components/headers/Access-Control-Allow-Origin"
+          headers: *standardResponseHeaders
           content:
             application/json:
               schema:
@@ -178,14 +146,6 @@ paths:
                 maxItems: 200
                 items:
                   $ref: "#/components/schemas/Player"
-        "400":
-          $ref: "#/components/responses/BadRequest"
-        "401":
-          $ref: "#/components/responses/Unauthorized"
-        "429":
-          $ref: "#/components/responses/TooManyRequests"
-        "500":
-          $ref: "#/components/responses/InternalServerError"
     post:
       summary: Create Player
       description: Creates a new player in the roster.
@@ -201,31 +161,16 @@ paths:
             schema:
               $ref: "#/components/schemas/PlayerCreate"
       responses:
+        <<: *standardErrorResponses
         "201":
           description: Player created successfully.
-          headers:
-            RateLimit-Limit:
-              $ref: "#/components/headers/RateLimit-Limit"
-            RateLimit-Remaining:
-              $ref: "#/components/headers/RateLimit-Remaining"
-            RateLimit-Reset:
-              $ref: "#/components/headers/RateLimit-Reset"
-            Access-Control-Allow-Origin:
-              $ref: "#/components/headers/Access-Control-Allow-Origin"
+          headers: *standardResponseHeaders
           content:
             application/json:
               schema:
                 $ref: "#/components/schemas/Player"
-        "400":
-          $ref: "#/components/responses/BadRequest"
         "409":
           $ref: "#/components/responses/Conflict"
-        "401":
-          $ref: "#/components/responses/Unauthorized"
-        "429":
-          $ref: "#/components/responses/TooManyRequests"
-        "500":
-          $ref: "#/components/responses/InternalServerError"
 
   /players/{playerId}:
     get:
@@ -244,31 +189,16 @@ paths:
             maxLength: 36
             description: UUID v7, time-ordered identifier.
       responses:
+        <<: *standardErrorResponses
         "200":
           description: Player details.
-          headers:
-            RateLimit-Limit:
-              $ref: "#/components/headers/RateLimit-Limit"
-            RateLimit-Remaining:
-              $ref: "#/components/headers/RateLimit-Remaining"
-            RateLimit-Reset:
-              $ref: "#/components/headers/RateLimit-Reset"
-            Access-Control-Allow-Origin:
-              $ref: "#/components/headers/Access-Control-Allow-Origin"
+          headers: *standardResponseHeaders
           content:
             application/json:
               schema:
                 $ref: "#/components/schemas/Player"
-        "400":
-          $ref: "#/components/responses/BadRequest"
-        "401":
-          $ref: "#/components/responses/Unauthorized"
         "404":
           $ref: "#/components/responses/NotFound"
-        "429":
-          $ref: "#/components/responses/TooManyRequests"
-        "500":
-          $ref: "#/components/responses/InternalServerError"
     put:
       summary: Update Player
       description: Updates player profile fields and status.
@@ -293,31 +223,16 @@ paths:
             schema:
               $ref: "#/components/schemas/PlayerUpdate"
       responses:
+        <<: *standardErrorResponses
         "200":
           description: Player updated successfully.
-          headers:
-            RateLimit-Limit:
-              $ref: "#/components/headers/RateLimit-Limit"
-            RateLimit-Remaining:
-              $ref: "#/components/headers/RateLimit-Remaining"
-            RateLimit-Reset:
-              $ref: "#/components/headers/RateLimit-Reset"
-            Access-Control-Allow-Origin:
-              $ref: "#/components/headers/Access-Control-Allow-Origin"
+          headers: *standardResponseHeaders
           content:
             application/json:
               schema:
                 $ref: "#/components/schemas/Player"
-        "400":
-          $ref: "#/components/responses/BadRequest"
         "404":
           $ref: "#/components/responses/NotFound"
-        "401":
-          $ref: "#/components/responses/Unauthorized"
-        "429":
-          $ref: "#/components/responses/TooManyRequests"
-        "500":
-          $ref: "#/components/responses/InternalServerError"
 
   /rounds:
     get:
@@ -336,17 +251,10 @@ paths:
             maximum: 100
           description: Limit the number of rounds returned. Defaults to 20 when omitted.
       responses:
+        <<: *standardErrorResponses
         "200":
           description: A list of recent rounds.
-          headers:
-            RateLimit-Limit:
-              $ref: "#/components/headers/RateLimit-Limit"
-            RateLimit-Remaining:
-              $ref: "#/components/headers/RateLimit-Remaining"
-            RateLimit-Reset:
-              $ref: "#/components/headers/RateLimit-Reset"
-            Access-Control-Allow-Origin:
-              $ref: "#/components/headers/Access-Control-Allow-Origin"
+          headers: *standardResponseHeaders
           content:
             application/json:
               schema:
@@ -354,14 +262,6 @@ paths:
                 maxItems: 200
                 items:
                   $ref: "#/components/schemas/Round"
-        "400":
-          $ref: "#/components/responses/BadRequest"
-        "401":
-          $ref: "#/components/responses/Unauthorized"
-        "429":
-          $ref: "#/components/responses/TooManyRequests"
-        "500":
-          $ref: "#/components/responses/InternalServerError"
     post:
       summary: Record a Round
       description: Records a completed round and updates leaderboards.
@@ -377,29 +277,14 @@ paths:
             schema:
               $ref: "#/components/schemas/RoundCreate"
       responses:
+        <<: *standardErrorResponses
         "201":
           description: Round created successfully.
-          headers:
-            RateLimit-Limit:
-              $ref: "#/components/headers/RateLimit-Limit"
-            RateLimit-Remaining:
-              $ref: "#/components/headers/RateLimit-Remaining"
-            RateLimit-Reset:
-              $ref: "#/components/headers/RateLimit-Reset"
-            Access-Control-Allow-Origin:
-              $ref: "#/components/headers/Access-Control-Allow-Origin"
+          headers: *standardResponseHeaders
           content:
             application/json:
               schema:
                 $ref: "#/components/schemas/Round"
-        "400":
-          $ref: "#/components/responses/BadRequest"
-        "401":
-          $ref: "#/components/responses/Unauthorized"
-        "429":
-          $ref: "#/components/responses/TooManyRequests"
-        "500":
-          $ref: "#/components/responses/InternalServerError"
 
   /rounds/latest:
     get:
@@ -409,31 +294,16 @@ paths:
       tags:
         - Rounds
       responses:
+        <<: *standardErrorResponses
         "200":
           description: The most recent round or null when no rounds exist.
-          headers:
-            RateLimit-Limit:
-              $ref: "#/components/headers/RateLimit-Limit"
-            RateLimit-Remaining:
-              $ref: "#/components/headers/RateLimit-Remaining"
-            RateLimit-Reset:
-              $ref: "#/components/headers/RateLimit-Reset"
-            Access-Control-Allow-Origin:
-              $ref: "#/components/headers/Access-Control-Allow-Origin"
+          headers: *standardResponseHeaders
           content:
             application/json:
               schema:
                 oneOf:
                   - $ref: "#/components/schemas/Round"
                   - type: "null"
-        "400":
-          $ref: "#/components/responses/BadRequest"
-        "401":
-          $ref: "#/components/responses/Unauthorized"
-        "429":
-          $ref: "#/components/responses/TooManyRequests"
-        "500":
-          $ref: "#/components/responses/InternalServerError"
 
   /rounds/{roundId}:
     get:
@@ -452,31 +322,16 @@ paths:
             maxLength: 36
             description: UUID v7, time-ordered identifier.
       responses:
+        <<: *standardErrorResponses
         "200":
           description: Round details.
-          headers:
-            RateLimit-Limit:
-              $ref: "#/components/headers/RateLimit-Limit"
-            RateLimit-Remaining:
-              $ref: "#/components/headers/RateLimit-Remaining"
-            RateLimit-Reset:
-              $ref: "#/components/headers/RateLimit-Reset"
-            Access-Control-Allow-Origin:
-              $ref: "#/components/headers/Access-Control-Allow-Origin"
+          headers: *standardResponseHeaders
           content:
             application/json:
               schema:
                 $ref: "#/components/schemas/Round"
-        "400":
-          $ref: "#/components/responses/BadRequest"
-        "401":
-          $ref: "#/components/responses/Unauthorized"
         "404":
           $ref: "#/components/responses/NotFound"
-        "429":
-          $ref: "#/components/responses/TooManyRequests"
-        "500":
-          $ref: "#/components/responses/InternalServerError"
     put:
       summary: Edit a Round (within 24h)
       description: Updates round participants or the recorded loser within the edit window.
@@ -501,35 +356,20 @@ paths:
             schema:
               $ref: "#/components/schemas/RoundUpdate"
       responses:
+        <<: *standardErrorResponses
         "200":
           description: Round updated successfully.
-          headers:
-            RateLimit-Limit:
-              $ref: "#/components/headers/RateLimit-Limit"
-            RateLimit-Remaining:
-              $ref: "#/components/headers/RateLimit-Remaining"
-            RateLimit-Reset:
-              $ref: "#/components/headers/RateLimit-Reset"
-            Access-Control-Allow-Origin:
-              $ref: "#/components/headers/Access-Control-Allow-Origin"
+          headers: *standardResponseHeaders
           content:
             application/json:
               schema:
                 $ref: "#/components/schemas/Round"
-        "400":
-          $ref: "#/components/responses/BadRequest"
         "403":
           $ref: "#/components/responses/Forbidden"
         "404":
           $ref: "#/components/responses/NotFound"
         "409":
           $ref: "#/components/responses/Conflict"
-        "401":
-          $ref: "#/components/responses/Unauthorized"
-        "429":
-          $ref: "#/components/responses/TooManyRequests"
-        "500":
-          $ref: "#/components/responses/InternalServerError"
     delete:
       summary: Soft Delete a Round (within 24h)
       description: Soft-deletes a round and removes it from leaderboards.
@@ -548,29 +388,14 @@ paths:
             maxLength: 36
             description: UUID v7, time-ordered identifier.
       responses:
+        <<: *standardErrorResponses
         "204":
           description: Round deleted successfully.
-          headers:
-            RateLimit-Limit:
-              $ref: "#/components/headers/RateLimit-Limit"
-            RateLimit-Remaining:
-              $ref: "#/components/headers/RateLimit-Remaining"
-            RateLimit-Reset:
-              $ref: "#/components/headers/RateLimit-Reset"
-            Access-Control-Allow-Origin:
-              $ref: "#/components/headers/Access-Control-Allow-Origin"
-        "400":
-          $ref: "#/components/responses/BadRequest"
+          headers: *standardResponseHeaders
         "403":
           $ref: "#/components/responses/Forbidden"
         "404":
           $ref: "#/components/responses/NotFound"
-        "401":
-          $ref: "#/components/responses/Unauthorized"
-        "429":
-          $ref: "#/components/responses/TooManyRequests"
-        "500":
-          $ref: "#/components/responses/InternalServerError"
 
   /fettmattis:
     get:
@@ -589,17 +414,10 @@ paths:
             maximum: 100
           description: Limit the number of Fettmattis entries returned. Defaults to 20 when omitted.
       responses:
+        <<: *standardErrorResponses
         "200":
           description: A list of recent Fettmattis entries.
-          headers:
-            RateLimit-Limit:
-              $ref: "#/components/headers/RateLimit-Limit"
-            RateLimit-Remaining:
-              $ref: "#/components/headers/RateLimit-Remaining"
-            RateLimit-Reset:
-              $ref: "#/components/headers/RateLimit-Reset"
-            Access-Control-Allow-Origin:
-              $ref: "#/components/headers/Access-Control-Allow-Origin"
+          headers: *standardResponseHeaders
           content:
             application/json:
               schema:
@@ -607,14 +425,6 @@ paths:
                 maxItems: 200
                 items:
                   $ref: "#/components/schemas/Fettmattis"
-        "400":
-          $ref: "#/components/responses/BadRequest"
-        "401":
-          $ref: "#/components/responses/Unauthorized"
-        "429":
-          $ref: "#/components/responses/TooManyRequests"
-        "500":
-          $ref: "#/components/responses/InternalServerError"
     post:
       summary: Create Fettmattis
       description: Grants a Fettmattis award to a player.
@@ -630,31 +440,16 @@ paths:
             schema:
               $ref: "#/components/schemas/FettmattisCreate"
       responses:
+        <<: *standardErrorResponses
         "201":
           description: Fettmattis created successfully.
-          headers:
-            RateLimit-Limit:
-              $ref: "#/components/headers/RateLimit-Limit"
-            RateLimit-Remaining:
-              $ref: "#/components/headers/RateLimit-Remaining"
-            RateLimit-Reset:
-              $ref: "#/components/headers/RateLimit-Reset"
-            Access-Control-Allow-Origin:
-              $ref: "#/components/headers/Access-Control-Allow-Origin"
+          headers: *standardResponseHeaders
           content:
             application/json:
               schema:
                 $ref: "#/components/schemas/Fettmattis"
-        "400":
-          $ref: "#/components/responses/BadRequest"
         "409":
           $ref: "#/components/responses/Conflict"
-        "401":
-          $ref: "#/components/responses/Unauthorized"
-        "429":
-          $ref: "#/components/responses/TooManyRequests"
-        "500":
-          $ref: "#/components/responses/InternalServerError"
 
   /fettmattis/{fettmattisId}:
     delete:
@@ -675,29 +470,14 @@ paths:
             maxLength: 36
             description: UUID v7, time-ordered identifier.
       responses:
+        <<: *standardErrorResponses
         "204":
           description: Fettmattis revoked successfully.
-          headers:
-            RateLimit-Limit:
-              $ref: "#/components/headers/RateLimit-Limit"
-            RateLimit-Remaining:
-              $ref: "#/components/headers/RateLimit-Remaining"
-            RateLimit-Reset:
-              $ref: "#/components/headers/RateLimit-Reset"
-            Access-Control-Allow-Origin:
-              $ref: "#/components/headers/Access-Control-Allow-Origin"
-        "400":
-          $ref: "#/components/responses/BadRequest"
+          headers: *standardResponseHeaders
         "403":
           $ref: "#/components/responses/Forbidden"
         "404":
           $ref: "#/components/responses/NotFound"
-        "401":
-          $ref: "#/components/responses/Unauthorized"
-        "429":
-          $ref: "#/components/responses/TooManyRequests"
-        "500":
-          $ref: "#/components/responses/InternalServerError"
 
   /leaderboard/regular:
     get:
@@ -720,17 +500,10 @@ paths:
                   - all
           description: Filter results by season; use "all" to view the all-time leaderboard.
       responses:
+        <<: *standardErrorResponses
         "200":
           description: The regular season leaderboard.
-          headers:
-            RateLimit-Limit:
-              $ref: "#/components/headers/RateLimit-Limit"
-            RateLimit-Remaining:
-              $ref: "#/components/headers/RateLimit-Remaining"
-            RateLimit-Reset:
-              $ref: "#/components/headers/RateLimit-Reset"
-            Access-Control-Allow-Origin:
-              $ref: "#/components/headers/Access-Control-Allow-Origin"
+          headers: *standardResponseHeaders
           content:
             application/json:
               schema:
@@ -738,14 +511,6 @@ paths:
                 maxItems: 200
                 items:
                   $ref: "#/components/schemas/RegularLeaderboardItem"
-        "400":
-          $ref: "#/components/responses/BadRequest"
-        "401":
-          $ref: "#/components/responses/Unauthorized"
-        "429":
-          $ref: "#/components/responses/TooManyRequests"
-        "500":
-          $ref: "#/components/responses/InternalServerError"
 
   /leaderboard/fettmattis:
     get:
@@ -768,17 +533,10 @@ paths:
                   - all
           description: Filter results by season; use "all" to view the all-time leaderboard.
       responses:
+        <<: *standardErrorResponses
         "200":
           description: The Fettmattis leaderboard.
-          headers:
-            RateLimit-Limit:
-              $ref: "#/components/headers/RateLimit-Limit"
-            RateLimit-Remaining:
-              $ref: "#/components/headers/RateLimit-Remaining"
-            RateLimit-Reset:
-              $ref: "#/components/headers/RateLimit-Reset"
-            Access-Control-Allow-Origin:
-              $ref: "#/components/headers/Access-Control-Allow-Origin"
+          headers: *standardResponseHeaders
           content:
             application/json:
               schema:
@@ -786,14 +544,6 @@ paths:
                 maxItems: 200
                 items:
                   $ref: "#/components/schemas/FettmattisLeaderboardItem"
-        "400":
-          $ref: "#/components/responses/BadRequest"
-        "401":
-          $ref: "#/components/responses/Unauthorized"
-        "429":
-          $ref: "#/components/responses/TooManyRequests"
-        "500":
-          $ref: "#/components/responses/InternalServerError"
 
   /leaderboard/seasons:
     get:
@@ -803,29 +553,14 @@ paths:
       tags:
         - Leaderboards
       responses:
+        <<: *standardErrorResponses
         "200":
           description: Available leaderboard seasons.
-          headers:
-            RateLimit-Limit:
-              $ref: "#/components/headers/RateLimit-Limit"
-            RateLimit-Remaining:
-              $ref: "#/components/headers/RateLimit-Remaining"
-            RateLimit-Reset:
-              $ref: "#/components/headers/RateLimit-Reset"
-            Access-Control-Allow-Origin:
-              $ref: "#/components/headers/Access-Control-Allow-Origin"
+          headers: *standardResponseHeaders
           content:
             application/json:
               schema:
                 $ref: "#/components/schemas/LeaderboardSeasonsResponse"
-        "400":
-          $ref: "#/components/responses/BadRequest"
-        "401":
-          $ref: "#/components/responses/Unauthorized"
-        "429":
-          $ref: "#/components/responses/TooManyRequests"
-        "500":
-          $ref: "#/components/responses/InternalServerError"
 
 components:
   schemas:
@@ -1206,75 +941,35 @@ components:
   responses:
     BadRequest:
       description: The request body is invalid.
-      headers:
-        RateLimit-Limit:
-          $ref: "#/components/headers/RateLimit-Limit"
-        RateLimit-Remaining:
-          $ref: "#/components/headers/RateLimit-Remaining"
-        RateLimit-Reset:
-          $ref: "#/components/headers/RateLimit-Reset"
-        Access-Control-Allow-Origin:
-          $ref: "#/components/headers/Access-Control-Allow-Origin"
+      headers: *standardResponseHeaders
       content:
         application/problem+json:
           schema:
             $ref: "#/components/schemas/Problem"
     Unauthorized:
       description: Authentication is required for this operation.
-      headers:
-        RateLimit-Limit:
-          $ref: "#/components/headers/RateLimit-Limit"
-        RateLimit-Remaining:
-          $ref: "#/components/headers/RateLimit-Remaining"
-        RateLimit-Reset:
-          $ref: "#/components/headers/RateLimit-Reset"
-        Access-Control-Allow-Origin:
-          $ref: "#/components/headers/Access-Control-Allow-Origin"
+      headers: *standardResponseHeaders
       content:
         application/problem+json:
           schema:
             $ref: "#/components/schemas/Problem"
     NotFound:
       description: The requested resource was not found.
-      headers:
-        RateLimit-Limit:
-          $ref: "#/components/headers/RateLimit-Limit"
-        RateLimit-Remaining:
-          $ref: "#/components/headers/RateLimit-Remaining"
-        RateLimit-Reset:
-          $ref: "#/components/headers/RateLimit-Reset"
-        Access-Control-Allow-Origin:
-          $ref: "#/components/headers/Access-Control-Allow-Origin"
+      headers: *standardResponseHeaders
       content:
         application/problem+json:
           schema:
             $ref: "#/components/schemas/Problem"
     Forbidden:
       description: The action is forbidden, e.g., editing an item outside the 24h window.
-      headers:
-        RateLimit-Limit:
-          $ref: "#/components/headers/RateLimit-Limit"
-        RateLimit-Remaining:
-          $ref: "#/components/headers/RateLimit-Remaining"
-        RateLimit-Reset:
-          $ref: "#/components/headers/RateLimit-Reset"
-        Access-Control-Allow-Origin:
-          $ref: "#/components/headers/Access-Control-Allow-Origin"
+      headers: *standardResponseHeaders
       content:
         application/problem+json:
           schema:
             $ref: "#/components/schemas/Problem"
     Conflict:
       description: The resource already exists or the request conflicts with the current state.
-      headers:
-        RateLimit-Limit:
-          $ref: "#/components/headers/RateLimit-Limit"
-        RateLimit-Remaining:
-          $ref: "#/components/headers/RateLimit-Remaining"
-        RateLimit-Reset:
-          $ref: "#/components/headers/RateLimit-Reset"
-        Access-Control-Allow-Origin:
-          $ref: "#/components/headers/Access-Control-Allow-Origin"
+      headers: *standardResponseHeaders
       content:
         application/problem+json:
           schema:
@@ -1282,14 +977,7 @@ components:
     TooManyRequests:
       description: The client has sent too many requests in a given amount of time.
       headers:
-        RateLimit-Limit:
-          $ref: "#/components/headers/RateLimit-Limit"
-        RateLimit-Remaining:
-          $ref: "#/components/headers/RateLimit-Remaining"
-        RateLimit-Reset:
-          $ref: "#/components/headers/RateLimit-Reset"
-        Access-Control-Allow-Origin:
-          $ref: "#/components/headers/Access-Control-Allow-Origin"
+        <<: *standardResponseHeaders
         Retry-After:
           $ref: "#/components/headers/Retry-After"
       content:
@@ -1298,15 +986,7 @@ components:
             $ref: "#/components/schemas/Problem"
     InternalServerError:
       description: The server encountered an unexpected error.
-      headers:
-        RateLimit-Limit:
-          $ref: "#/components/headers/RateLimit-Limit"
-        RateLimit-Remaining:
-          $ref: "#/components/headers/RateLimit-Remaining"
-        RateLimit-Reset:
-          $ref: "#/components/headers/RateLimit-Reset"
-        Access-Control-Allow-Origin:
-          $ref: "#/components/headers/Access-Control-Allow-Origin"
+      headers: *standardResponseHeaders
       content:
         application/problem+json:
           schema:
