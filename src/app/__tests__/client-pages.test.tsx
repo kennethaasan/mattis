@@ -1,3 +1,4 @@
+/* biome-ignore lint/suspicious/noExplicitAny: This is a test mock file */
 import type { UseQueryResult } from "@tanstack/react-query";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import {
@@ -108,7 +109,11 @@ describe("PlayersClientPage", () => {
               ...players.find((p) => p.id === variables.playerId),
               ...variables.payload,
             }
-          : { id: "new-id", display_name: "Nora", active: true };
+          : {
+              id: "00000000-0000-4000-8000-000000000003",
+              display_name: "Nora",
+              active: true,
+            };
 
         if (options.onSuccess) await options.onSuccess(result, variables);
         return result;
@@ -169,20 +174,25 @@ describe("RoundsClientPage", () => {
     const invalidateQueries = vi.fn();
     mockUseQueryClient.mockReturnValue({ invalidateQueries });
 
+    const p1Id = "00000000-0000-4000-8000-000000000011";
+    const p2Id = "00000000-0000-4000-8000-000000000012";
+    const r1Id = "00000000-0000-4000-8000-000000000100";
+    const f1Id = "00000000-0000-4000-8000-000000000200";
+
     const testPlayers: Player[] = [
-      { id: "round-p1", display_name: "Ada", active: true },
-      { id: "round-p2", display_name: "Nils", active: true },
+      { id: p1Id, display_name: "Ada", active: true },
+      { id: p2Id, display_name: "Nils", active: true },
     ];
 
     const testRound: Round = {
-      id: "round-r1",
+      id: r1Id,
       created_at: new Date().toISOString(),
       participants: testPlayers,
       loser: testPlayers[0]!,
     };
 
     const testFettmattis: Fettmattis = {
-      id: "round-f1",
+      id: f1Id,
       created_at: new Date().toISOString(),
       player: testPlayers[1]!,
       round_id: testRound.id,
@@ -210,11 +220,15 @@ describe("RoundsClientPage", () => {
 
     render(<RoundsClientPage />);
 
-    // Award Fettmattis first to avoid participant toggle interference if any
-    fireEvent.change(screen.getByLabelText("Spiller"), {
-      target: { value: "round-p2" },
+    // Award Fettmattis
+    const playerSelect = screen.getByLabelText("Spiller");
+    fireEvent.change(playerSelect, {
+      target: { value: p2Id },
     });
-    fireEvent.click(screen.getByRole("button", { name: "Tildel Fettmattis" }));
+    const tildelButton = screen.getByRole("button", {
+      name: "Tildel Fettmattis",
+    });
+    fireEvent.click(tildelButton);
 
     await waitFor(() => {
       expect(toast.success).toHaveBeenCalledWith(
@@ -224,17 +238,19 @@ describe("RoundsClientPage", () => {
     });
 
     // Save round
-    // Toggling Ada and Nils (they are initially unselected in the form state, even if active in troppen)
-    const adaButton = screen.getByRole("button", { name: /Ada/ });
-    const nilsButton = screen.getByRole("button", { name: /Nils/ });
-    fireEvent.click(adaButton);
-    fireEvent.click(nilsButton);
+    const adaBtn = screen.getByRole("button", { name: /Ada/ });
+    const nilsBtn = screen.getByRole("button", { name: /Nils/ });
+    fireEvent.click(adaBtn);
+    fireEvent.click(nilsBtn);
 
-    fireEvent.change(screen.getByLabelText("Taper"), {
-      target: { value: "round-p1" },
+    // Select loser
+    const loserSelect = screen.getByLabelText("Taper");
+    fireEvent.change(loserSelect, {
+      target: { value: p1Id },
     });
 
-    fireEvent.click(screen.getByRole("button", { name: "Lagre runde" }));
+    const saveRoundButton = screen.getByRole("button", { name: "Lagre runde" });
+    fireEvent.click(saveRoundButton);
 
     await waitFor(() => {
       expect(toast.success).toHaveBeenCalledWith(
