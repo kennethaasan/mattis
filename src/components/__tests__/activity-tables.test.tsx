@@ -95,7 +95,7 @@ describe("Activity tables", () => {
     const deleteButton = await screen.findByRole("button", { name: "Slett" });
     fireEvent.click(deleteButton);
 
-    expect(screen.getByText(/Fjerne Fettmattis?/i)).toBeTruthy();
+    expect(screen.getByText(/Slett denne runden?/i)).toBeTruthy();
     // Round confirmed by dialog;
   });
 

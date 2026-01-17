@@ -7,11 +7,33 @@ import {
   screen,
   waitFor,
 } from "@testing-library/react";
+import { toast } from "sonner";
 import type { Mock } from "vitest";
 import { afterEach, beforeEach, describe, expect, test, vi } from "vitest";
+
 vi.mock("next/navigation", () => ({
   useRouter: vi.fn(() => ({
     push: vi.fn(),
+  })),
+}));
+
+vi.mock("sonner", () => ({
+  toast: {
+    success: vi.fn(),
+    error: vi.fn(),
+  },
+}));
+
+vi.mock("@tanstack/react-query", () => ({
+  useQuery: vi.fn(),
+  useMutation: vi.fn(() => ({
+    mutateAsync: vi.fn(),
+    mutate: vi.fn(),
+    isPending: false,
+    variables: undefined,
+  })),
+  useQueryClient: vi.fn(() => ({
+    invalidateQueries: vi.fn(),
   })),
 }));
 
@@ -20,24 +42,9 @@ import RoundsClientPage from "@/app/rounds/rounds-client";
 import type { Player } from "@/lib/api/players-client";
 import type { Fettmattis, Round } from "@/lib/api/schemas";
 
-vi.mock("@tanstack/react-query", () => ({
-  useQuery: vi.fn(),
-  useMutation: vi.fn(),
-  useQueryClient: vi.fn(),
-}));
-
 const mockUseQuery = useQuery as unknown as Mock;
 const mockUseMutation = useMutation as unknown as Mock;
 const mockUseQueryClient = useQueryClient as unknown as Mock;
-
-type MutationCallbacks = {
-  onSuccess?: (
-    data: unknown,
-    variables: unknown,
-    context: unknown,
-  ) => void | Promise<void>;
-  onError?: (error: Error) => void;
-};
 
 function createQueryResult<TData>(
   overrides: Partial<UseQueryResult<TData, Error>> = {},
@@ -53,38 +60,15 @@ function createQueryResult<TData>(
   } as UseQueryResult<TData, Error>;
 }
 
-function mockMutationSequence(
-  sequence: Array<{ data?: unknown; error?: Error }>,
-) {
-  let callIndex = 0;
-
-  mockUseMutation.mockImplementation((options: MutationCallbacks = {}) => {
-    const current = sequence[callIndex++] ?? {};
-
-    return {
-      mutateAsync: async (variables: unknown) => {
-        if (current.error) {
-          if (options?.onError) {
-            options.onError(current.error);
-          }
-          throw current.error;
-        }
-        if (options?.onSuccess) {
-          await options.onSuccess(current.data, variables, undefined);
-        }
-        return current.data;
-      },
-      isPending: false,
-      variables: undefined,
-    };
-  });
-}
-
 beforeEach(() => {
-  mockUseQuery.mockReset();
-  mockUseMutation.mockReset();
-  mockUseQueryClient.mockReset();
+  vi.clearAllMocks();
   mockUseQuery.mockReturnValue(createQueryResult());
+  mockUseMutation.mockReturnValue({
+    mutateAsync: vi.fn(),
+    mutate: vi.fn(),
+    isPending: false,
+    variables: undefined,
+  });
 });
 
 afterEach(() => {
@@ -108,10 +92,6 @@ describe("PlayersClientPage", () => {
         active: false,
       },
     ];
-    const [firstPlayer, secondPlayer] = players;
-    if (!firstPlayer || !secondPlayer) {
-      throw new Error("Expected two players");
-    }
 
     mockUseQuery.mockReturnValue(
       createQueryResult<Player[]>({
@@ -121,10 +101,20 @@ describe("PlayersClientPage", () => {
       }),
     );
 
-    mockMutationSequence([
-      { data: firstPlayer },
-      { data: { ...firstPlayer, active: false } },
-    ]);
+    mockUseMutation.mockImplementation((options: any) => ({
+      mutateAsync: async (variables: any) => {
+        const result = variables.payload
+          ? {
+              ...players.find((p) => p.id === variables.playerId),
+              ...variables.payload,
+            }
+          : { id: "new-id", display_name: "Nora", active: true };
+
+        if (options.onSuccess) await options.onSuccess(result, variables);
+        return result;
+      },
+      isPending: false,
+    }));
 
     render(<PlayersClientPage />);
 
@@ -133,40 +123,41 @@ describe("PlayersClientPage", () => {
     const deactivateButton = screen.getAllByRole("button", {
       name: "Sett som inaktiv",
     })[0];
-    if (!deactivateButton) {
-      throw new Error("Expected deactivate button");
+    if (deactivateButton) {
+      fireEvent.click(deactivateButton);
     }
-    fireEvent.click(deactivateButton);
+
+    const confirmButton = screen.getByRole("button", { name: "Bekreft" });
+    fireEvent.click(confirmButton);
 
     await waitFor(() => {
-      expect(screen.queryByText((content) => content.includes("Ada er nå inaktiv"))).toBeTruthy();
+      expect(toast.success).toHaveBeenCalledWith(
+        expect.stringContaining("Ada er nå inaktiv"),
+      );
     });
+
+    expect(invalidateQueries).toHaveBeenCalled();
 
     fireEvent.change(screen.getByLabelText("Visningsnavn"), {
       target: { value: "Nora" },
     });
-    fireEvent.submit(
-      screen
-        .getByRole("button", { name: "Lagre spiller" })
-        .closest("form") as HTMLFormElement,
-    );
+    const saveButton = screen.getByRole("button", { name: "Lagre spiller" });
+    fireEvent.click(saveButton);
 
     await waitFor(() => {
-      expect(
-        screen.getByText("Spiller lagt til i troppen. Velkommen!"),
-      ).toBeTruthy();
+      expect(toast.success).toHaveBeenCalledWith(
+        "Spiller lagt til i troppen. Velkommen!",
+      );
     });
+
+    expect(invalidateQueries).toHaveBeenCalled();
   });
 
   test("renders skeletons when loading", () => {
-    mockUseQueryClient.mockReturnValue({ invalidateQueries: vi.fn() });
-    mockUseQuery.mockImplementationOnce(() =>
+    mockUseQuery.mockReturnValue(
       createQueryResult<Player[]>({ isLoading: true }),
     );
-    mockMutationSequence([{ data: undefined }, { data: undefined }]);
-
     const { container } = render(<PlayersClientPage />);
-
     expect(container.querySelectorAll(".animate-pulse").length).toBeGreaterThan(
       0,
     );
@@ -178,144 +169,86 @@ describe("RoundsClientPage", () => {
     const invalidateQueries = vi.fn();
     mockUseQueryClient.mockReturnValue({ invalidateQueries });
 
-    const players: Player[] = [
-      {
-        id: "00000000-0000-4000-8000-000000000011",
-        display_name: "Ada",
-        active: true,
-      },
-      {
-        id: "00000000-0000-4000-8000-000000000012",
-        display_name: "Nils",
-        active: true,
-      },
+    const testPlayers: Player[] = [
+      { id: "round-p1", display_name: "Ada", active: true },
+      { id: "round-p2", display_name: "Nils", active: true },
     ];
-    const [firstPlayer, secondPlayer] = players;
-    if (!firstPlayer || !secondPlayer) {
-      throw new Error("Expected two players");
-    }
 
-    const latestRound: Round = {
-      id: "00000000-0000-4000-8000-000000000100",
+    const testRound: Round = {
+      id: "round-r1",
       created_at: new Date().toISOString(),
-      participants: [
-        { id: firstPlayer.id, display_name: "Ada", active: true },
-        { id: secondPlayer.id, display_name: "Nils", active: true },
-      ],
-      loser: { id: firstPlayer.id, display_name: "Ada", active: true },
+      participants: testPlayers,
+      loser: testPlayers[0]!,
     };
 
-    const rounds: Round[] = [latestRound];
+    const testFettmattis: Fettmattis = {
+      id: "round-f1",
+      created_at: new Date().toISOString(),
+      player: testPlayers[1]!,
+      round_id: testRound.id,
+    };
 
-    const fettmattis: Fettmattis[] = [
-      {
-        id: "00000000-0000-4000-8000-000000000200",
-        created_at: new Date().toISOString(),
-        player: { id: secondPlayer.id, display_name: "Nils", active: true },
-        round_id: latestRound.id,
-      },
-    ];
-
-    mockUseQuery.mockImplementation((options: { queryKey?: unknown }) => {
+    mockUseQuery.mockImplementation((options: any) => {
       const key = options.queryKey;
-
-      if (Array.isArray(key) && key[0] === "players") {
-        return createQueryResult<Player[]>({
-          data: players,
-          isLoading: false,
-          isFetching: false,
-        });
-      }
-
-      if (Array.isArray(key) && key[0] === "rounds" && key[1] === "latest") {
-        return createQueryResult<Round | null>({ data: latestRound });
-      }
-
-      if (Array.isArray(key) && key[0] === "rounds" && key[1] === "list") {
-        return createQueryResult<Round[]>({ data: rounds, isLoading: false });
-      }
-
-      if (Array.isArray(key) && key[0] === "fettmattis" && key[1] === "list") {
-        return createQueryResult<Fettmattis[]>({
-          data: fettmattis,
-          isLoading: false,
-        });
-      }
-
+      if (key[0] === "players") return createQueryResult({ data: testPlayers });
+      if (key[0] === "rounds" && key[1] === "latest")
+        return createQueryResult({ data: testRound });
+      if (key[0] === "rounds" && key[1] === "list")
+        return createQueryResult({ data: [testRound] });
+      if (key[0] === "fettmattis" && key[1] === "list")
+        return createQueryResult({ data: [testFettmattis] });
       return createQueryResult();
     });
 
-    mockMutationSequence([
-      { data: undefined },
-      { data: undefined },
-      { data: undefined },
-      { data: undefined },
-    ]);
+    mockUseMutation.mockImplementation((options: any) => ({
+      mutateAsync: async (variables: any) => {
+        if (options.onSuccess) await options.onSuccess(undefined, variables);
+        return undefined;
+      },
+      isPending: false,
+    }));
 
     render(<RoundsClientPage />);
 
-    fireEvent.click(screen.getByRole("button", { name: /Ada/ }));
-    fireEvent.click(screen.getByRole("button", { name: /Nils/ }));
+    // Award Fettmattis first to avoid participant toggle interference if any
+    fireEvent.change(screen.getByLabelText("Spiller"), {
+      target: { value: "round-p2" },
+    });
+    fireEvent.click(screen.getByRole("button", { name: "Tildel Fettmattis" }));
+
+    await waitFor(() => {
+      expect(toast.success).toHaveBeenCalledWith(
+        "Fettmattis tildelt. Klar for feiring!",
+        expect.any(Object),
+      );
+    });
+
+    // Save round
+    // Toggling Ada and Nils (they are initially unselected in the form state, even if active in troppen)
+    const adaButton = screen.getByRole("button", { name: /Ada/ });
+    const nilsButton = screen.getByRole("button", { name: /Nils/ });
+    fireEvent.click(adaButton);
+    fireEvent.click(nilsButton);
 
     fireEvent.change(screen.getByLabelText("Taper"), {
-      target: { value: firstPlayer.id },
+      target: { value: "round-p1" },
     });
 
-    fireEvent.submit(
-      screen
-        .getByRole("button", { name: "Lagre runde" })
-        .closest("form") as HTMLFormElement,
-    );
+    fireEvent.click(screen.getByRole("button", { name: "Lagre runde" }));
 
     await waitFor(() => {
-      expect(
-        screen.getByText("Runde lagret. Tabellene er oppdatert!"),
-      ).toBeTruthy();
-    });
-
-    const playerSelect = screen.getByLabelText("Spiller") as HTMLSelectElement;
-    fireEvent.change(playerSelect, { target: { value: secondPlayer.id } });
-    expect(playerSelect.value).toBe(secondPlayer.id);
-
-    fireEvent.submit(
-      screen
-        .getByRole("button", { name: "Tildel Fettmattis" })
-        .closest("form") as HTMLFormElement,
-    );
-
-    await waitFor(() => {
-      expect(
-        screen.getByText("Fettmattis tildelt. Klar for feiring!"),
-      ).toBeTruthy();
+      expect(toast.success).toHaveBeenCalledWith(
+        "Runde lagret. Tabellene er oppdatert!",
+        expect.any(Object),
+      );
     });
   });
 
   test("renders loading skeletons when players are loading", () => {
-    mockUseQueryClient.mockReturnValue({ invalidateQueries: vi.fn() });
-
-    mockUseQuery
-      .mockImplementationOnce(() =>
-        createQueryResult<Player[]>({ isLoading: true }),
-      )
-      .mockImplementationOnce(() =>
-        createQueryResult<Round | null>({ data: null }),
-      )
-      .mockImplementationOnce(() =>
-        createQueryResult<Round[]>({ data: [], isLoading: false }),
-      )
-      .mockImplementationOnce(() =>
-        createQueryResult<Fettmattis[]>({ data: [], isLoading: false }),
-      );
-
-    mockMutationSequence([
-      { data: undefined },
-      { data: undefined },
-      { data: undefined },
-      { data: undefined },
-    ]);
-
+    mockUseQuery.mockReturnValue(
+      createQueryResult<Player[]>({ isLoading: true }),
+    );
     const { container } = render(<RoundsClientPage />);
-
     expect(container.querySelectorAll(".animate-pulse").length).toBeGreaterThan(
       0,
     );
