@@ -106,6 +106,13 @@ test("T037: recording a round confirms the success banner", async ({
   await expect(deleteButton).toBeVisible();
   await deleteButton.click();
 
+  // Confirm via AlertDialog
+  const confirmDeleteButton = page.getByRole("button", {
+    name: "Bekreft sletting",
+  });
+  await expect(confirmDeleteButton).toBeVisible();
+  await confirmDeleteButton.click();
+
   await expect(
     page.getByText("Runde slettet. Tabellene er oppdatert!"),
   ).toBeVisible();
@@ -125,6 +132,11 @@ test("T037: user can toggle player activity from the roster", async ({
   });
   await deactivateButton.click();
 
+  // Confirm via AlertDialog
+  const confirmDeactivateButton = page.getByRole("button", { name: "Bekreft" });
+  await expect(confirmDeactivateButton).toBeVisible();
+  await confirmDeactivateButton.click();
+
   await expect(page.getByText(`${REX} er nå inaktiv.`)).toBeVisible();
   await expect(
     targetRow.getByRole("cell", { name: "Inaktiv" }).first(),
@@ -134,6 +146,11 @@ test("T037: user can toggle player activity from the roster", async ({
     name: "Sett som aktiv",
   });
   await activateButton.click();
+
+  // Confirm via AlertDialog
+  const confirmActivateButton = page.getByRole("button", { name: "Bekreft" });
+  await expect(confirmActivateButton).toBeVisible();
+  await confirmActivateButton.click();
 
   await expect(page.getByText(`${REX} er nå aktiv.`)).toBeVisible();
   await expect(
@@ -237,6 +254,13 @@ test("T193: rounds dashboard enforces 24-hour deletion window", async ({
   await expect(latestRoundDeleteButton).toBeVisible();
   await latestRoundDeleteButton.click();
 
+  // Confirm via AlertDialog
+  const confirmRoundDeleteButton = page.getByRole("button", {
+    name: "Bekreft sletting",
+  });
+  await expect(confirmRoundDeleteButton).toBeVisible();
+  await confirmRoundDeleteButton.click();
+
   await expect(
     page.getByText("Runde slettet. Tabellene er oppdatert!"),
   ).toBeVisible();
@@ -298,6 +322,13 @@ test("T193: rounds dashboard enforces 24-hour deletion window", async ({
   });
   await expect(latestFettmattisDeleteButton).toBeVisible();
   await latestFettmattisDeleteButton.click();
+
+  // Confirm via AlertDialog
+  const confirmFettmattisDeleteButton = page.getByRole("button", {
+    name: "Bekreft fjerning",
+  });
+  await expect(confirmFettmattisDeleteButton).toBeVisible();
+  await confirmFettmattisDeleteButton.click();
 
   await expect(
     page.getByText("Fettmattis fjernet. Oversikten er oppdatert."),
