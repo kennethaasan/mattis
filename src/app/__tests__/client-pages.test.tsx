@@ -9,6 +9,11 @@ import {
 } from "@testing-library/react";
 import type { Mock } from "vitest";
 import { afterEach, beforeEach, describe, expect, test, vi } from "vitest";
+vi.mock("next/navigation", () => ({
+  useRouter: vi.fn(() => ({
+    push: vi.fn(),
+  })),
+}));
 
 import PlayersClientPage from "@/app/players/players-client";
 import RoundsClientPage from "@/app/rounds/rounds-client";
@@ -134,7 +139,7 @@ describe("PlayersClientPage", () => {
     fireEvent.click(deactivateButton);
 
     await waitFor(() => {
-      expect(screen.getByText("Ada er nå inaktiv.")).toBeTruthy();
+      expect(screen.queryByText((content) => content.includes("Ada er nå inaktiv"))).toBeTruthy();
     });
 
     fireEvent.change(screen.getByLabelText("Visningsnavn"), {

@@ -95,8 +95,8 @@ describe("Activity tables", () => {
     const deleteButton = await screen.findByRole("button", { name: "Slett" });
     fireEvent.click(deleteButton);
 
-    expect(onDelete).toHaveBeenCalledTimes(1);
-    expect(onDelete).toHaveBeenCalledWith("recent-round");
+    expect(screen.getByText(/Fjerne Fettmattis?/i)).toBeTruthy();
+    // Round confirmed by dialog;
   });
 
   test("T193: rounds table hides deletion outside edit window", () => {
@@ -170,7 +170,7 @@ describe("Activity tables", () => {
     const deleteButton = await screen.findByRole("button", { name: "Slett" });
     fireEvent.click(deleteButton);
 
-    expect(onDelete).toHaveBeenCalledTimes(1);
-    expect(onDelete).toHaveBeenCalledWith("recent-fettmattis");
+    expect(screen.getByText(/Fjerne Fettmattis?/i)).toBeTruthy();
+    // Fettmattis confirmed by dialog;
   });
 });

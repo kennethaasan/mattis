@@ -7,6 +7,7 @@ import { QueryProvider } from "@/components/query-provider";
 import { ThemeProvider } from "@/components/theme-provider";
 import { AuthProvider } from "@/contexts/AuthContext";
 import { cn } from "@/lib/utils";
+import { Toaster } from "@/components/ui/sonner";
 
 export const metadata: Metadata = {
   title: "Mattis",
@@ -40,6 +41,7 @@ export default function RootLayout({
                 <main className="flex-1">{children}</main>
                 <SiteFooter />
               </div>
+              <Toaster />
             </AuthProvider>
           </QueryProvider>
         </ThemeProvider>

@@ -3,6 +3,7 @@
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { RefreshCcw } from "lucide-react";
 import { useMemo, useState } from "react";
+import { toast } from "sonner";
 
 import { PageShell } from "@/components/layout/page-shell";
 import { PlayerForm } from "@/components/PlayerForm";
@@ -16,6 +17,16 @@ import {
   CardHeader,
   CardTitle,
 } from "@/components/ui/card";
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from "@/components/ui/alert-dialog";
 import {
   Table,
   TableBody,
@@ -44,11 +55,11 @@ const ROSTER_SKELETON_KEYS = [
 
 export default function PlayersClientPage() {
   const queryClient = useQueryClient();
-  const [message, setMessage] = useState<string | null>(null);
-  const [formError, setFormError] = useState<string | null>(null);
-  const [rosterMessage, setRosterMessage] = useState<string | null>(null);
-  const [rosterError, setRosterError] = useState<string | null>(null);
   const [updatingPlayerId, setUpdatingPlayerId] = useState<string | null>(null);
+  const [confirmingStatusChange, setConfirmingStatusChange] = useState<{
+    player: Player;
+    newActive: boolean;
+  } | null>(null);
 
   const playersQuery = useQuery<Player[]>({
     queryKey: PLAYERS_QUERY_KEY,
@@ -60,13 +71,11 @@ export default function PlayersClientPage() {
   const createPlayerMutation = useMutation<Player, Error, PlayerCreate>({
     mutationFn: createPlayer,
     onSuccess: async () => {
-      setMessage("Spiller lagt til i troppen. Velkommen!");
-      setFormError(null);
+      toast.success("Spiller lagt til i troppen. Velkommen!");
       await queryClient.invalidateQueries({ queryKey: PLAYERS_QUERY_KEY });
     },
     onError: (error) => {
-      setMessage(null);
-      setFormError(error.message);
+      toast.error(`Kunne ikke legge til spiller: ${error.message}`);
     },
   });
 
@@ -76,8 +85,6 @@ export default function PlayersClientPage() {
   );
 
   const handlePlayerSubmit = async (data: PlayerCreate) => {
-    setMessage(null);
-    setFormError(null);
     await createPlayerMutation.mutateAsync(data);
   };
 
@@ -95,8 +102,6 @@ export default function PlayersClientPage() {
   });
 
   const handlePlayerUpdate = async (player: Player, payload: PlayerUpdate) => {
-    setRosterMessage(null);
-    setRosterError(null);
     setUpdatingPlayerId(player.id);
 
     try {
@@ -105,11 +110,11 @@ export default function PlayersClientPage() {
         payload,
       });
 
-      setRosterMessage(
+      toast.success(
         `${updated.display_name} er nå ${updated.active ? "aktiv" : "inaktiv"}.`,
       );
     } catch (error) {
-      setRosterError(
+      toast.error(
         error instanceof Error
           ? error.message
           : "Kunne ikke oppdatere spillerstatus.",
@@ -163,8 +168,9 @@ export default function PlayersClientPage() {
                         variant="outline"
                         size="sm"
                         onClick={() =>
-                          void handlePlayerUpdate(player, {
-                            active: !player.active,
+                          setConfirmingStatusChange({
+                            player,
+                            newActive: !player.active,
                           })
                         }
                         disabled={updatingPlayerId === player.id}
@@ -184,8 +190,9 @@ export default function PlayersClientPage() {
                     variant="outline"
                     size="sm"
                     onClick={() =>
-                      void handlePlayerUpdate(player, {
-                        active: !player.active,
+                      setConfirmingStatusChange({
+                        player,
+                        newActive: !player.active,
                       })
                     }
                     disabled={updatingPlayerId === player.id}
@@ -234,10 +241,6 @@ export default function PlayersClientPage() {
           </CardHeader>
           <CardContent className="space-y-4">
             <PlayerForm onSubmit={handlePlayerSubmit} />
-            {message ? <p className="text-primary text-sm">{message}</p> : null}
-            {formError ? (
-              <p className="text-destructive text-sm">{formError}</p>
-            ) : null}
             {playersQuery.error ? (
               <p className="text-destructive text-sm">
                 {playersQuery.error.message}
@@ -263,17 +266,45 @@ export default function PlayersClientPage() {
               <RefreshCcw className="mr-2 h-4 w-4" /> Oppdater
             </Button>
           </CardHeader>
-          <CardContent className="space-y-4">
-            {rosterContent}
-            {rosterMessage ? (
-              <p className="text-primary text-sm">{rosterMessage}</p>
-            ) : null}
-            {rosterError ? (
-              <p className="text-destructive text-sm">{rosterError}</p>
-            ) : null}
-          </CardContent>
+          <CardContent className="space-y-4">{rosterContent}</CardContent>
         </Card>
       </div>
+
+      <AlertDialog
+        open={confirmingStatusChange !== null}
+        onOpenChange={(open) => !open && setConfirmingStatusChange(null)}
+      >
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Endre spillerstatus?</AlertDialogTitle>
+            <AlertDialogDescription>
+              Er du sikker på at du vil sette{" "}
+              <span className="font-semibold">
+                {confirmingStatusChange?.player.display_name}
+              </span>{" "}
+              som {confirmingStatusChange?.newActive ? "aktiv" : "inaktiv"}?
+              {confirmingStatusChange?.newActive
+                ? " Spilleren vil bli valgbar i nye runder."
+                : " Spilleren vil ikke lenger dukke opp som et valg når du registrerer nye runder."}
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>Avbryt</AlertDialogCancel>
+            <AlertDialogAction
+              onClick={() => {
+                if (confirmingStatusChange) {
+                  void handlePlayerUpdate(confirmingStatusChange.player, {
+                    active: confirmingStatusChange.newActive,
+                  });
+                  setConfirmingStatusChange(null);
+                }
+              }}
+            >
+              Bekreft
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </PageShell>
   );
 }

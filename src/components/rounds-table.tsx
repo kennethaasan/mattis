@@ -5,6 +5,16 @@ import { Fragment, useState } from "react";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from "@/components/ui/alert-dialog";
+import {
   Table,
   TableBody,
   TableCell,
@@ -53,6 +63,7 @@ export function RoundsTable({
   const [expandedRounds, setExpandedRounds] = useState<ReadonlySet<string>>(
     () => new Set(),
   );
+  const [roundIdToDelete, setRoundIdToDelete] = useState<string | null>(null);
 
   const toggleRound = (roundId: string) => {
     setExpandedRounds((current) => {
@@ -141,7 +152,7 @@ export function RoundsTable({
                           <Button
                             variant="outline"
                             size="sm"
-                            onClick={() => onDeleteRound(round.id)}
+                            onClick={() => setRoundIdToDelete(round.id)}
                             disabled={deleting}
                           >
                             {deleting ? "Sletter…" : "Slett"}
@@ -214,6 +225,34 @@ export function RoundsTable({
           </TableRow>
         ) : null}
       </TableBody>
+      <AlertDialog
+        open={roundIdToDelete !== null}
+        onOpenChange={(open) => !open && setRoundIdToDelete(null)}
+      >
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Slett denne runden?</AlertDialogTitle>
+            <AlertDialogDescription>
+              Er du sikker på at du vil slette denne runden? Denne handlingen
+              kan ikke angres, og tabellene vil bli oppdatert umiddelbart.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>Avbryt</AlertDialogCancel>
+            <AlertDialogAction
+              className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+              onClick={() => {
+                if (roundIdToDelete && onDeleteRound) {
+                  void onDeleteRound(roundIdToDelete);
+                  setRoundIdToDelete(null);
+                }
+              }}
+            >
+              Bekreft sletting
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </Table>
   );
 }

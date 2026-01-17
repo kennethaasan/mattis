@@ -2,7 +2,9 @@
 
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { CalendarCheck, Trophy } from "lucide-react";
+import { useRouter } from "next/navigation";
 import { useMemo, useState } from "react";
+import { toast } from "sonner";
 import { FettmattisForm } from "@/components/FettmattisForm";
 import { FettmattisTable } from "@/components/fettmattis-table";
 import { PageShell } from "@/components/layout/page-shell";
@@ -59,8 +61,7 @@ const FETTMATTIS_LIST_LIMIT = 25;
 
 export default function RoundsClientPage() {
   const queryClient = useQueryClient();
-  const [status, setStatus] = useState<string | null>(null);
-  const [error, setError] = useState<string | null>(null);
+  const router = useRouter();
 
   const playersQuery = useQuery<Player[]>({
     queryKey: PLAYERS_QUERY_KEY,
@@ -146,8 +147,12 @@ export default function RoundsClientPage() {
   const roundMutation = useMutation<void, Error, RoundCreate>({
     mutationFn: createRound,
     onSuccess: () => {
-      setStatus("Runde lagret. Tabellene er oppdatert!");
-      setError(null);
+      toast.success("Runde lagret. Tabellene er oppdatert!", {
+        action: {
+          label: "Se tabellen",
+          onClick: () => router.push("/leaderboard"),
+        },
+      });
       void queryClient.invalidateQueries({
         queryKey: roundsListQueryKey,
       });
@@ -157,24 +162,26 @@ export default function RoundsClientPage() {
       void queryClient.invalidateQueries({ queryKey: ["leaderboard"] });
     },
     onError: (mutationError) => {
-      setStatus(null);
-      setError(mutationError.message);
+      toast.error(`Kunne ikke lagre runden: ${mutationError.message}`);
     },
   });
 
   const fettmattisMutation = useMutation<void, Error, FettmattisCreate>({
     mutationFn: createFettmattis,
     onSuccess: () => {
-      setStatus("Fettmattis tildelt. Klar for feiring!");
-      setError(null);
+      toast.success("Fettmattis tildelt. Klar for feiring!", {
+        action: {
+          label: "Se tabellen",
+          onClick: () => router.push("/leaderboard"),
+        },
+      });
       void queryClient.invalidateQueries({
         queryKey: fettmattisListQueryKey,
       });
       void queryClient.invalidateQueries({ queryKey: ["leaderboard"] });
     },
     onError: (mutationError) => {
-      setStatus(null);
-      setError(mutationError.message);
+      toast.error(`Kunne ikke tildele Fettmattis: ${mutationError.message}`);
     },
   });
 
@@ -189,8 +196,7 @@ export default function RoundsClientPage() {
   const deleteRoundMutation = useMutation<void, Error, string>({
     mutationFn: async (roundId) => deleteRound(roundId),
     onSuccess: () => {
-      setStatus("Runde slettet. Tabellene er oppdatert!");
-      setError(null);
+      toast.success("Runde slettet. Tabellene er oppdatert!");
       void queryClient.invalidateQueries({ queryKey: roundsListQueryKey });
       void queryClient.invalidateQueries({
         queryKey: LATEST_ROUND_QUERY_KEY,
@@ -198,22 +204,19 @@ export default function RoundsClientPage() {
       void queryClient.invalidateQueries({ queryKey: ["leaderboard"] });
     },
     onError: (mutationError) => {
-      setStatus(null);
-      setError(mutationError.message);
+      toast.error(`Kunne ikke slette runden: ${mutationError.message}`);
     },
   });
 
   const revokeFettmattisMutation = useMutation<void, Error, string>({
     mutationFn: async (fettmattisId) => revokeFettmattis(fettmattisId),
     onSuccess: () => {
-      setStatus("Fettmattis fjernet. Oversikten er oppdatert.");
-      setError(null);
+      toast.success("Fettmattis fjernet. Oversikten er oppdatert.");
       void queryClient.invalidateQueries({ queryKey: fettmattisListQueryKey });
       void queryClient.invalidateQueries({ queryKey: ["leaderboard"] });
     },
     onError: (mutationError) => {
-      setStatus(null);
-      setError(mutationError.message);
+      toast.error(`Kunne ikke fjerne Fettmattis: ${mutationError.message}`);
     },
   });
 
@@ -317,8 +320,6 @@ export default function RoundsClientPage() {
         </Card>
       </div>
 
-      {status ? <p className="text-primary text-sm">{status}</p> : null}
-      {error ? <p className="text-destructive text-sm">{error}</p> : null}
       {playersQuery.error ? (
         <p className="text-destructive text-sm">{playersQuery.error.message}</p>
       ) : null}

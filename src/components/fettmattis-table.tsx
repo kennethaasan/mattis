@@ -5,6 +5,16 @@ import { Fragment, useState } from "react";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from "@/components/ui/alert-dialog";
+import {
   Table,
   TableBody,
   TableCell,
@@ -51,6 +61,7 @@ export function FettmattisTable({
   const [expanded, setExpanded] = useState<ReadonlySet<string>>(
     () => new Set(),
   );
+  const [idToDelete, setIdToDelete] = useState<string | null>(null);
 
   const toggle = (id: string) => {
     setExpanded((current) => {
@@ -134,7 +145,7 @@ export function FettmattisTable({
                           <Button
                             variant="outline"
                             size="sm"
-                            onClick={() => onDelete(entry.id)}
+                            onClick={() => setIdToDelete(entry.id)}
                             disabled={deleting}
                           >
                             {deleting ? "Sletter…" : "Slett"}
@@ -196,6 +207,34 @@ export function FettmattisTable({
           </TableRow>
         ) : null}
       </TableBody>
+      <AlertDialog
+        open={idToDelete !== null}
+        onOpenChange={(open) => !open && setIdToDelete(null)}
+      >
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Fjerne Fettmattis?</AlertDialogTitle>
+            <AlertDialogDescription>
+              Er du sikker på at du vil fjerne denne Fettmattis-utdelingen?
+              Denne handlingen kan ikke angres.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>Avbryt</AlertDialogCancel>
+            <AlertDialogAction
+              className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+              onClick={() => {
+                if (idToDelete && onDelete) {
+                  void onDelete(idToDelete);
+                  setIdToDelete(null);
+                }
+              }}
+            >
+              Bekreft fjerning
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </Table>
   );
 }
